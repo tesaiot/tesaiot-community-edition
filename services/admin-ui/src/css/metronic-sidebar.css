@@ -1,0 +1,173 @@
+/* TESA IoT Platform - Metronic-style Sidebar CSS
+ * Based on Metronic v9.2.1 demo1 implementation
+ */
+
+/* CSS Variables */
+.tesa-layout {
+  --sidebar-width: 290px;
+  --sidebar-width-collapse: 80px;
+  --sidebar-transition-duration: 0.3s;
+  --sidebar-transition-timing: ease;
+  --header-height: 70px;
+}
+
+/* Reset body and html for full width */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.tesa-layout {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Base sidebar styles */
+.sidebar {
+  width: var(--sidebar-width);
+  transition: width var(--sidebar-transition-duration) var(--sidebar-transition-timing);
+  overflow: visible !important;
+}
+
+/* Sidebar collapse state */
+.sidebar-collapse .sidebar {
+  width: var(--sidebar-width-collapse);
+}
+
+/* Remove hover expansion - only manual toggle */
+/* .sidebar-collapse .sidebar:hover {
+  width: var(--sidebar-width);
+} */
+
+/* Hide text elements when collapsed */
+.sidebar-collapse .sidebar .menu-link span:not(.menu-icon),
+.sidebar-collapse .sidebar .aside-logo h1,
+.sidebar-collapse .sidebar .aside-logo .badge,
+.sidebar-collapse .sidebar .user-info {
+  display: none;
+}
+
+/* Center icons when collapsed */
+.sidebar-collapse .sidebar .menu-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar-collapse .sidebar .menu-icon {
+  margin: 0;
+}
+
+/* Logo adjustments when collapsed */
+.sidebar-collapse .sidebar .aside-logo {
+  justify-content: center;
+  padding: 0;
+}
+
+/* Wrapper with padding-based layout like Metronic */
+.wrapper {
+  width: 100%;
+  padding-left: var(--sidebar-width);
+  transition: padding-left var(--sidebar-transition-duration) var(--sidebar-transition-timing);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When sidebar is collapsed */
+.sidebar-collapse .wrapper {
+  padding-left: var(--sidebar-width-collapse);
+}
+
+/* Fixed positioning for sidebar */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .wrapper {
+    padding-left: 0 !important;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Smooth transitions for all child elements */
+.sidebar * {
+  transition: all var(--sidebar-transition-duration) var(--sidebar-transition-timing);
+}
+
+/* Prevent text wrapping during transition */
+.sidebar .menu-link {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Three dots indicator when collapsed */
+.sidebar-collapse .sidebar .menu-link[data-has-submenu="true"]::after {
+  content: '...';
+  position: absolute;
+  right: 1rem;
+  color: currentColor;
+  font-size: 0.875rem;
+}
+
+/* Toggle button rotation */
+.sidebar-toggle-btn {
+  transition: transform var(--sidebar-transition-duration) var(--sidebar-transition-timing);
+}
+
+.sidebar-collapse .sidebar-toggle-btn {
+  transform: rotate(180deg);
+}
+
+/* Ensure content area uses full width */
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Header should use full width */
+.header {
+  width: 100%;
+}
+
+/* Fix tooltip positioning - no flying from top-left */
+[data-radix-popper-content-wrapper] {
+  pointer-events: none !important;
+}
+
+[data-radix-popper-content-wrapper] > * {
+  pointer-events: auto !important;
+}
+
+/* Force tooltips to not animate from top-left */
+[role="tooltip"] {
+  animation: none !important;
+  transition: opacity 0.15s ease !important;
+}
+
+/* Ensure menu items don't clip tooltips */
+.aside-menu {
+  overflow: visible !important;
+}
+
+.menu-item {
+  overflow: visible !important;
+  position: relative;
+}

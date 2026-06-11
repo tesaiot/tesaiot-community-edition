@@ -1,0 +1,430 @@
+/**
+ * TESA IoT Platform - Professional Card Styles
+ * Modern, clean card UI following best practices
+ */
+
+/* Card Base Styles */
+.dashboard-card {
+  background: var(--card-background);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  border-color: var(--card-border-hover);
+}
+
+/* CSS Variables for Light/Dark Mode */
+:root {
+  /* Light Mode */
+  --card-background: #FFFFFF;
+  --card-border: #E5E7EB;
+  --card-border-hover: #D1D5DB;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --accent-primary: #3B82F6;
+  --accent-success: #10B981;
+  --accent-warning: #F59E0B;
+  --accent-danger: #EF4444;
+  --metric-background: #F9FAFB;
+  --hover-background: #F3F4F6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dark {
+  /* Dark Mode */
+  --card-background: #1F2937;
+  --card-border: #374151;
+  --card-border-hover: #4B5563;
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --accent-primary: #60A5FA;
+  --accent-success: #34D399;
+  --accent-warning: #FBBF24;
+  --accent-danger: #F87171;
+  --metric-background: #111827;
+  --hover-background: #374151;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+/* Card Header */
+.card-header-pro {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.card-header-pro.no-border {
+  border-bottom: none;
+  padding-bottom: 12px;
+}
+
+.card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--metric-background);
+  flex-shrink: 0;
+}
+
+.card-icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-primary);
+}
+
+/* Compact card styles for dashboard */
+.compact-card .card-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.compact-card .card-icon-wrapper svg {
+  width: 18px;
+  height: 18px;
+}
+
+.card-title-group {
+  flex: 1;
+}
+
+.card-title-pro {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.card-subtitle-pro {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* Card Content */
+.card-content-pro {
+  padding: 24px;
+}
+
+.metric-display {
+  margin-bottom: 16px;
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Compact dashboard card styles */
+.dashboard-compact .metric-value {
+  font-size: 24px;
+}
+
+.dashboard-compact .card-content-pro {
+  padding: 16px 20px;
+}
+
+.dashboard-compact .card-header-pro {
+  padding: 16px 20px;
+}
+
+.dashboard-compact .metric-label {
+  font-size: 11px;
+}
+
+.dashboard-compact .metric-trend {
+  font-size: 12px;
+}
+
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.trend-up {
+  color: var(--accent-success);
+}
+
+.trend-down {
+  color: var(--accent-danger);
+}
+
+.trend-neutral {
+  color: var(--text-secondary);
+}
+
+/* Chart Container */
+.card-chart {
+  margin-top: 20px;
+  height: 200px;
+  position: relative;
+}
+
+/* Card Footer */
+.card-footer-pro {
+  padding: 16px 24px;
+  border-top: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--metric-background);
+}
+
+.update-time {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Button Styles */
+.card-action-btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.card-action-btn:hover {
+  background: var(--hover-background);
+}
+
+/* Loading State */
+.card-skeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Grid Layouts */
+.dashboard-grid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Desktop */
+@media (min-width: 1280px) {
+  .dashboard-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .dashboard-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dashboard-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .dashboard-grid-4,
+  .dashboard-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .dashboard-grid-4,
+  .dashboard-grid-3,
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header-pro {
+    padding: 16px 20px;
+  }
+  
+  .card-content-pro {
+    padding: 20px;
+  }
+  
+  .metric-value {
+    font-size: 28px;
+  }
+}
+
+/* Special Card Types */
+.hero-card {
+  grid-column: span 2;
+}
+
+.compact-card .card-content-pro {
+  padding: 16px 20px;
+}
+
+.compact-card .metric-value {
+  font-size: 24px;
+}
+
+/* Status Indicators */
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.status-active {
+  background: var(--accent-success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.status-inactive {
+  background: var(--text-tertiary);
+}
+
+.status-error {
+  background: var(--accent-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Progress Bars */
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--metric-background);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Mini Charts */
+.mini-chart {
+  height: 60px;
+  margin-top: 12px;
+}
+
+/* Hover Effects */
+.interactive-card {
+  cursor: pointer;
+}
+
+.interactive-card:active {
+  transform: scale(0.98);
+}
+
+/* Badge Styles */
+.metric-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--metric-background);
+  color: var(--text-secondary);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--accent-success);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--accent-warning);
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--accent-danger);
+}
+
+/* List Items in Cards */
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card-list-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-list-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Icon Buttons */
+.icon-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.icon-button:hover {
+  background: var(--hover-background);
+  border-color: var(--card-border);
+}
+
+.icon-button svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+}

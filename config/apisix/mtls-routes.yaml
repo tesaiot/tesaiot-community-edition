@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+#
+# OPTIONAL mTLS-protected route patterns (single-organization).
+#
+# These are NOT loaded automatically. To enable mTLS:
+#   1. In config.yaml add a client block to the ssls entry in apisix.yaml:
+#        client:
+#          ca: |
+#            -----BEGIN CERTIFICATE-----   (Vault PKI client-CA / ca_chain)
+#            -----END CERTIFICATE-----
+#          depth: 2
+#          verify_client: true
+#   2. Merge the routes below into apisix.yaml's `routes:` list.
+#
+# The client-control plugin enforces the device-cert CN whitelist after the TLS
+# handshake validates the client certificate against the Vault PKI CA.
+#
+# The whitelist MUST equal the device CA domain. Device certs are issued with
+# CN '<DEVICE_ID>.device.tesa.local' (config/vault-agent/templates/
+# device-cert.tmpl; init-vault-pki.sh DEV_DOMAIN default 'device.tesa.local',
+# overridable via VAULT_PKI_DEVICE_DOMAIN). If you set VAULT_PKI_DEVICE_DOMAIN,
+# change 'CN=*.device.tesa.local' below to 'CN=*.<your-VAULT_PKI_DEVICE_DOMAIN>'
+# to match, or APISIX-terminated mTLS will reject every device.
+#
+# IMPORTANT (device-auth headers): the CE API trusts mTLS device identity ONLY
+# when a request carries the X-Client-* headers AND the X-MTLS-Gateway marker
+# (== MTLS_GATEWAY_SECRET) proving it came from a verified mTLS terminator. The
+# canonical terminator is nginx (config/nginx/conf.d/30-iot-mtls.conf). If you
+# enable APISIX-terminated mTLS via the routes below, you MUST also add a
+# proxy-rewrite plugin that sets X-Client-Verify/X-Client-S-DN/X-Client-Serial
+# from APISIX's verified $ssl_client_* equivalents AND sets
+#   X-MTLS-Gateway: <MTLS_GATEWAY_SECRET>
+# otherwise the API will NOT treat these requests as device-authenticated and
+# will fall back to API-key auth (fail-closed, never spoofable).
+
+routes:
+  - id: "device-mtls"
+    uri: "/api/v1/device/*"
+    name: "Device mTLS Endpoint"
+    methods: ["GET", "POST", "PUT", "DELETE"]
+    plugins:
+      client-control:
+        whitelist:
+          - "CN=*.device.tesa.local"
+      request-validation:
+        body_schema:
+          type: object
+          required: ["device_id", "timestamp"]
+      limit-req:
+        rate: 100
+        burst: 50
+        key: "remote_addr"
+    upstream:
+      type: "roundrobin"
+      nodes:
+        "tesa-api:5566": 1
+      scheme: "http"
+      timeout:
+        connect: 5
+        send: 10
+        read: 10
+
+  - id: "telemetry-mtls"
+    uri: "/api/v1/telemetry/*"
+    name: "Telemetry mTLS Endpoint"
+    methods: ["POST"]
+    plugins:
+      client-control:
+        whitelist:
+          - "CN=*.device.tesa.local"
+      limit-req:
+        rate: 1000
+        burst: 500
+        key: "remote_addr"
+    upstream:
+      type: "roundrobin"
+      nodes:
+        "tesa-api:5566": 1
+      scheme: "http"
+      timeout:
+        connect: 5
+        send: 10
+        read: 10

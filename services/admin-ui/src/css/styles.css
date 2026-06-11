@@ -1,0 +1,90 @@
+/* Tailwind Core */
+@import 'tailwindcss';
+
+/* ReUI Configs */
+@import './config.reui.css';
+
+/** Global Styles **/
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  *:focus-visible {
+    @apply outline-ring rounded-xs shadow-none outline-2 outline-offset-3 transition-none!;
+  }
+}
+
+/* Metronic Components  */
+@import './components/image-input.css';
+@import './components/apexcharts.css';
+@import './components/leaflet.css';
+@import './components/rating.css';
+@import './components/scrollable.css';
+@import './components/sidebar.css';
+
+/* Demos */
+@import './demos/demo1.css';
+
+/** Dark/Light Theme Variant **/
+@custom-variant dark (&:is(.dark *));
+@custom-variant light (&:not(.dark *));
+
+/* Recharts Brush Component Enhancements */
+.recharts-brush {
+  /* Traveller (handle) styling - LARGER for easier clicking */
+  .recharts-brush-traveller {
+    cursor: ew-resize;
+
+    rect {
+      fill: hsl(var(--primary));
+      rx: 4;
+      ry: 4;
+      stroke: hsl(var(--primary));
+      stroke-width: 3;
+      transition: all 0.2s ease;
+      /* Make hit area larger */
+      stroke-linecap: round;
+      paint-order: stroke;
+    }
+
+    line {
+      stroke: hsl(var(--primary-foreground));
+      stroke-width: 2;
+    }
+
+    &:hover rect {
+      fill: hsl(var(--primary) / 0.7);
+      transform: scaleX(1.3);
+      transform-origin: center;
+    }
+  }
+
+  /* Selection slide (middle area) - draggable for panning */
+  .recharts-brush-slide {
+    cursor: grab;
+    fill: hsl(var(--primary) / 0.3);
+    fill-opacity: 0.5;
+    transition: fill-opacity 0.2s ease;
+
+    &:hover {
+      fill-opacity: 0.6;
+    }
+
+    &:active {
+      cursor: grabbing;
+      fill-opacity: 0.7;
+    }
+  }
+
+  /* Background mask - areas outside selection */
+  .recharts-brush-mask {
+    fill: hsl(var(--muted));
+    fill-opacity: 0.6;
+  }
+
+  /* Text labels - hide for cleaner look */
+  .recharts-brush-texts {
+    display: none;
+  }
+}

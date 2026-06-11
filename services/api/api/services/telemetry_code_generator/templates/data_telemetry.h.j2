@@ -1,0 +1,259 @@
+/**
+ * @file data_telemetry.h
+ * @brief Auto-generated telemetry data structures for TESAIoT Platform
+ * @device {{ device_name }}
+ * @device_id {{ device_id }}
+ * @schema_version {{ schema_version }}
+ * @generated {{ generated_at }}
+ *
+ * WARNING: This file is auto-generated. Do not modify manually.
+ * Regenerate using TESAIoT Platform bundle download.
+ *
+ * TESAIoT Community Edition - https://tesaiot.dev
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ */
+
+#ifndef DATA_TELEMETRY_H
+#define DATA_TELEMETRY_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
+
+/* ============================================================
+ * Schema Metadata
+ * ============================================================ */
+#define TELEMETRY_SCHEMA_VERSION    "{{ schema_version }}"
+#define TELEMETRY_DEVICE_ID         "{{ device_id }}"
+#define TELEMETRY_DEVICE_NAME       "{{ device_name }}"
+#define TELEMETRY_MAX_JSON_SIZE     ({{ max_json_size }}U)
+#define TELEMETRY_FIELD_COUNT       ({{ fields | length }}U)
+
+/* ============================================================
+ * Field Constraints
+ * ============================================================ */
+{% for field in fields %}
+{% if field.min_value is not none %}
+{% if field.c_type.value == 'float' %}
+#define {{ field.name | upper }}_MIN            ({{ "%.6f" | format(field.min_value) }}f)
+{% elif field.c_type.value == 'double' %}
+#define {{ field.name | upper }}_MIN            ({{ field.min_value }})
+{% else %}
+#define {{ field.name | upper }}_MIN            ({{ field.min_value | int }})
+{% endif %}
+{% endif %}
+{% if field.max_value is not none %}
+{% if field.c_type.value == 'float' %}
+#define {{ field.name | upper }}_MAX            ({{ "%.6f" | format(field.max_value) }}f)
+{% elif field.c_type.value == 'double' %}
+#define {{ field.name | upper }}_MAX            ({{ field.max_value }})
+{% else %}
+#define {{ field.name | upper }}_MAX            ({{ field.max_value | int }})
+{% endif %}
+{% endif %}
+{% if field.array_size is not none and field.c_type.value == 'char[]' %}
+#define {{ field.name | upper }}_MAX_LEN        ({{ field.array_size }}U)
+{% elif field.array_size is not none %}
+#define {{ field.name | upper }}_ARRAY_SIZE     ({{ field.array_size }}U)
+{% endif %}
+{% endfor %}
+
+/* ============================================================
+ * Result Codes
+ * ============================================================ */
+
+/**
+ * @brief Telemetry operation result codes
+ */
+typedef enum {
+    TELEMETRY_OK = 0,                        /**< Success */
+    TELEMETRY_ERR_NULL_POINTER = -1,         /**< NULL pointer passed */
+    TELEMETRY_ERR_REQUIRED_MISSING = -2,     /**< Required field not set */
+    TELEMETRY_ERR_VALUE_OUT_OF_RANGE = -3,   /**< Value exceeds constraints */
+    TELEMETRY_ERR_BUFFER_TOO_SMALL = -4,     /**< Output buffer too small */
+    TELEMETRY_ERR_INVALID_FORMAT = -5        /**< Invalid data format */
+} telemetry_result_t;
+
+/* ============================================================
+ * Telemetry Data Structure
+ * ============================================================ */
+
+/**
+ * @brief Telemetry data structure
+ *
+ * This struct matches the device's JSON Schema exactly.
+ * All required fields must be set before serialization.
+ *
+ * Required fields: {% for f in required_fields %}{{ f.name }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+ */
+typedef struct {
+{% for field in fields %}
+{% if field.description %}
+    /** {{ field.description }}{% if field.is_required %} [REQUIRED]{% endif %} */
+{% endif %}
+{% if field.c_type.value == 'char[]' %}
+    char {{ field.name }}[{{ field.name | upper }}_MAX_LEN];
+{% elif field.array_size is not none and field.c_type.value != 'struct' %}
+    {{ field.c_type.value }} {{ field.name }}[{{ field.name | upper }}_ARRAY_SIZE];
+    size_t {{ field.name }}_count;  /**< Number of elements in {{ field.name }} array */
+{% else %}
+    {{ field.c_type.value }} {{ field.name }};
+{% endif %}
+
+{% endfor %}
+    /**
+     * @brief Field presence flags
+     *
+     * Set to 1 when field is assigned. Use TELEMETRY_SET_* macros
+     * to automatically set these flags.
+     */
+    struct {
+{% for field in fields %}
+        uint8_t {{ field.name }} : 1;
+{% endfor %}
+    } _has;
+} telemetry_data_t;
+
+/* ============================================================
+ * Function Prototypes
+ * ============================================================ */
+
+/**
+ * @brief Initialize telemetry data structure with default values
+ *
+ * Must be called before using the structure. Sets all fields to
+ * zero/default values and clears all presence flags.
+ *
+ * @param data Pointer to telemetry structure to initialize
+ */
+void telemetry_init(telemetry_data_t *data);
+
+/**
+ * @brief Validate telemetry data against schema constraints
+ *
+ * Checks:
+ * - All required fields are set (presence flags)
+ * - Numeric values are within min/max constraints
+ * - String fields are not empty (if required)
+ *
+ * @param data Pointer to telemetry structure to validate
+ * @return TELEMETRY_OK if valid, error code otherwise
+ */
+telemetry_result_t telemetry_validate(const telemetry_data_t *data);
+
+/**
+ * @brief Serialize telemetry data to JSON string
+ *
+ * Converts the telemetry structure to a JSON string suitable
+ * for publishing to MQTT. Only includes fields with presence
+ * flags set.
+ *
+ * @param data Pointer to telemetry structure to serialize
+ * @param buffer Output buffer for JSON string (null-terminated)
+ * @param buffer_size Size of output buffer in bytes
+ * @return Number of bytes written (excluding null), or negative error code
+ */
+int32_t telemetry_to_json(const telemetry_data_t *data,
+                          char *buffer,
+                          size_t buffer_size);
+
+/**
+ * @brief Get human-readable error message for result code
+ *
+ * @param result Result code from validation or serialization
+ * @return Static string describing the error (do not free)
+ */
+const char* telemetry_error_string(telemetry_result_t result);
+
+/* ============================================================
+ * Field Setter Macros
+ *
+ * Use these macros to set field values. They automatically
+ * set the presence flag so validation knows the field is set.
+ * ============================================================ */
+
+{% for field in fields %}
+{% if field.c_type.value == 'char[]' %}
+/**
+ * @brief Set {{ field.name }} field (string)
+ * @param data Pointer to telemetry_data_t
+ * @param value String value to copy (will be truncated if too long)
+ */
+#define TELEMETRY_SET_{{ field.name | upper }}(data, value) \
+    do { \
+        strncpy((data)->{{ field.name }}, (value), {{ field.name | upper }}_MAX_LEN - 1U); \
+        (data)->{{ field.name }}[{{ field.name | upper }}_MAX_LEN - 1U] = '\0'; \
+        (data)->_has.{{ field.name }} = 1U; \
+    } while(0)
+
+{% elif field.c_type.value == 'bool' %}
+/**
+ * @brief Set {{ field.name }} field (boolean)
+ * @param data Pointer to telemetry_data_t
+ * @param value Boolean value (true/false)
+ */
+#define TELEMETRY_SET_{{ field.name | upper }}(data, value) \
+    do { \
+        (data)->{{ field.name }} = (value) ? true : false; \
+        (data)->_has.{{ field.name }} = 1U; \
+    } while(0)
+
+{% elif field.array_size is not none %}
+/**
+ * @brief Set {{ field.name }} array element
+ * @param data Pointer to telemetry_data_t
+ * @param index Array index
+ * @param value Value to set
+ */
+#define TELEMETRY_SET_{{ field.name | upper }}_ITEM(data, index, value) \
+    do { \
+        if ((index) < {{ field.name | upper }}_ARRAY_SIZE) { \
+            (data)->{{ field.name }}[(index)] = (value); \
+            if ((data)->{{ field.name }}_count <= (index)) { \
+                (data)->{{ field.name }}_count = (index) + 1U; \
+            } \
+            (data)->_has.{{ field.name }} = 1U; \
+        } \
+    } while(0)
+
+{% else %}
+/**
+ * @brief Set {{ field.name }} field
+ * @param data Pointer to telemetry_data_t
+ * @param value Value to set
+ */
+#define TELEMETRY_SET_{{ field.name | upper }}(data, value) \
+    do { \
+        (data)->{{ field.name }} = (value); \
+        (data)->_has.{{ field.name }} = 1U; \
+    } while(0)
+
+{% endif %}
+{% endfor %}
+
+/* ============================================================
+ * Field Getter Macros
+ * ============================================================ */
+
+{% for field in fields %}
+/**
+ * @brief Check if {{ field.name }} field is set
+ * @param data Pointer to telemetry_data_t
+ * @return true if field is set, false otherwise
+ */
+#define TELEMETRY_HAS_{{ field.name | upper }}(data) ((data)->_has.{{ field.name }} != 0U)
+
+{% endfor %}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* DATA_TELEMETRY_H */

@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  TESA IoT Platform Admin UI
+  Build Time: __BUILD_TIME__
+  Build ID: __BUILD_ID__
+  Git Commit: __BUILD_INTEGRITY__
+  Cache Buster: __BUILD_TIMESTAMP__
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    
+    <!-- Cache Control - Prevent HTML caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <!-- X-Frame-Options should be set via HTTP headers, not meta tags -->
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- TESA Favicon - PERMANENT DO NOT CHANGE -->
+    <link rel="icon" type="image/png" href="/media/app/tesa-favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/media/app/tesa-favicon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/media/app/tesa-favicon.png" />
+    <link rel="apple-touch-icon" href="/media/app/tesa-favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="/media/app/tesa-favicon.png" />
+    <!-- Legacy fallback for old browsers -->
+    <link rel="icon" type="image/x-icon" href="/media/app/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TES⩓IoT Admin Portal</title>
+    <!-- Build Version Information -->
+    <meta name="build-version" content="v2025.09-rc.1" />
+    <meta name="build-id" content="__BUILD_ID__" />
+    <meta name="build-time" content="__BUILD_TIME__" />
+    <meta name="build-timestamp" content="__BUILD_TIMESTAMP__" />
+    <meta name="build-integrity" content="__BUILD_INTEGRITY__" />
+    <meta name="cache-buster" content="__BUILD_TIMESTAMP__" />
+    <!-- Pre-module safety: SW+cache cleanup (one-time per build) to prevent mixed assets via Service Worker -->
+    <script>
+      (function () {
+        try {
+          var buildIdMeta = document.querySelector('meta[name="build-id"]');
+          var buildId = buildIdMeta ? buildIdMeta.getAttribute('content') : '';
+          var cleanedKey = 'tesa-ui-sw-cleaned';
+          var cleanedFor = sessionStorage.getItem(cleanedKey);
+          if (cleanedFor !== buildId) {
+            // Unregister all service workers and clear caches, then reload once
+            var doCleanup = function () {
+              var swP = (typeof navigator !== 'undefined' && navigator.serviceWorker)
+                ? navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    return Promise.all(regs.map(function (r) { return r.unregister(); }));
+                  })
+                : Promise.resolve();
+              var cacheP = (typeof caches !== 'undefined' && caches.keys)
+                ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (k) { return caches.delete(k); })); })
+                : Promise.resolve();
+              Promise.all([swP, cacheP]).finally(function () {
+                try { sessionStorage.setItem(cleanedKey, buildId || 'yes'); } catch (e) {}
+                // Force a single reload to ensure we are out of SW control
+                location.reload();
+              });
+            };
+            // If a controller exists, post a skip-waiting message if possible
+            try {
+              if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+              }
+            } catch (e) {}
+            doCleanup();
+          }
+        } catch (e) {
+          // swallow to avoid blocking boot
+          console.debug('Pre-module cleanup error:', e);
+        }
+      })();
+    </script>
+
+    <!-- Enhanced theme and cache management script (plain JS only) -->
+    <script>
+      (() => {
+        try {
+          // Theme management
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (prefersDark) document.documentElement.classList.add('dark');
+          
+          // Cache management - store build info for version checking
+          const buildTimestamp = document.querySelector('meta[name="build-timestamp"]')?.content;
+          const buildId = document.querySelector('meta[name="build-id"]')?.content;
+          
+          if (buildTimestamp && buildId) {
+            // Store current build info
+            sessionStorage.setItem('tesa-build-timestamp', buildTimestamp);
+            sessionStorage.setItem('tesa-build-id', buildId);
+            
+            // Check for version updates (optional runtime check)
+            window.checkForUpdates = async () => {
+              try {
+                const response = await fetch('/version.json?cb=' + Date.now());
+                const versionInfo = await response.json();
+                
+                if (versionInfo.buildTimestamp !== buildTimestamp) {
+                  console.info('New version available. Consider refreshing.');
+                  // Could dispatch custom event here for app to handle
+                  window.dispatchEvent(new CustomEvent('versionUpdate', { detail: versionInfo }));
+                }
+              } catch (e) {
+                console.debug('Version check failed:', e);
+              }
+            };
+          }
+        } catch (e) {
+          console.debug('Initialization script error:', e);
+        }
+      })();
+    </script>
+  </head>
+  <body class="text-foreground bg-background flex h-full text-base antialiased">
+    <div class="flex grow" id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

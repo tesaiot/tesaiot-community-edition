@@ -1,0 +1,9 @@
+{{- /* TESAIoT Community Edition - CA Chain (issuing CA + root CA) */ -}}
+
+{{- with secret "pki-int/issue/emqx-server" (printf "common_name=%s" (env "EMQX_CERT_CN")) (printf "alt_names=%s" (env "EMQX_CERT_ALT_NAMES")) (printf "ip_sans=%s" (env "EMQX_CERT_IP_SANS")) "ttl=2160h" -}}
+{{ .Data.issuing_ca }}
+{{- end -}}
+
+{{- with secret "pki-root/cert/ca" -}}
+{{ .Data.certificate }}
+{{- end -}}

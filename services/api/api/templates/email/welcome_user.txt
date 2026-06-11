@@ -1,0 +1,73 @@
+================================================================================
+                            TESA IoT Platform
+                        Industrial IoT Solutions
+                          🎉 Welcome Aboard!
+================================================================================
+
+Welcome, {{ user_name or 'User' }}!
+
+Thank you for joining the TESA IoT Platform! We're excited to have you as part 
+of our community of innovators who are transforming industrial operations 
+through cutting-edge IoT technology.
+
+🚀 YOUR ACCOUNT IS NOW ACTIVE AND READY TO USE!
+
+You can now start connecting devices, analyzing data, and building powerful 
+IoT solutions.
+
+ACCOUNT INFORMATION:
+--------------------------------------------------------------------------------
+Email:              {{ user_email }}
+Organization:       {{ organization_name or 'Default Organization' }}
+Account Type:       {{ account_type or 'Standard' }}
+Registration Date:  {{ registration_date or 'Today' }}
+
+ACCESS YOUR DASHBOARD: {{ dashboard_url or 'Visit our platform website' }}
+
+GETTING STARTED:
+--------------------------------------------------------------------------------
+1. COMPLETE YOUR PROFILE
+   Add your company information and customize your account settings.
+
+2. CONNECT YOUR FIRST DEVICE
+   Use our device management tools to register and connect your IoT devices.
+
+3. EXPLORE ANALYTICS
+   Start monitoring your devices and gain insights from your data.
+
+4. SET UP ALERTS
+   Configure notifications to stay informed about your device status.
+
+WHAT YOU CAN DO WITH TESA IoT PLATFORM:
+--------------------------------------------------------------------------------
+📱 DEVICE MANAGEMENT
+   Centrally manage all your IoT devices with real-time monitoring
+
+📊 ADVANCED ANALYTICS
+   Gain insights with powerful data visualization and reporting
+
+🔒 ENTERPRISE SECURITY
+   Bank-grade security with PKI authentication and encryption
+
+⚡ REAL-TIME PROCESSING
+   Process and respond to device data in real-time
+
+NEED HELP GETTING STARTED?
+--------------------------------------------------------------------------------
+Our team is here to help you succeed. We offer comprehensive documentation, 
+tutorials, and professional support.
+
+📖 Documentation: {{ documentation_url or 'Available on our website' }}
+🎓 Tutorials: {{ tutorials_url or 'Available on our website' }}
+📧 Support: {{ support_email or 'admin@localhost' }}
+
+Questions? Contact us at {{ support_email or 'admin@localhost' }}
+
+================================================================================
+
+TESA IoT Platform
+Secure • Scalable • Reliable Industrial IoT Solutions
+
+© {{ current_year or 2024 }} TESA IoT Platform. All rights reserved.
+
+================================================================================

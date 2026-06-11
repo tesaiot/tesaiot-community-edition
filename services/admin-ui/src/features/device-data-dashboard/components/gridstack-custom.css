@@ -1,0 +1,171 @@
+/**
+ * TESA IoT Platform - GridStack Custom Styles
+ * Copyright (C) 2024-2025 Wiroon Sriborrirux, Founder, BDH Corporation.
+ *
+ * Licensed through: Thai Embedded Systems Association (TESA)
+ * SPDX-License-Identifier: Apache-2.0 OR Commercial
+ *
+ * Module: Custom GridStack styling for Dashboard Builder
+ */
+
+/* GridStack container */
+.grid-stack {
+  background: transparent;
+  position: relative;
+  min-height: 600px;
+  width: 100%;
+  /* Fallback CSS variables in case GridStack doesn't set them */
+  --gs-cell-height: 80px;
+  --gs-column-width: calc((100% - 55px) / 12); /* 12 columns with 5px margin */
+  --gs-margin: 5px;
+}
+
+/* GridStack items */
+.grid-stack-item {
+  transition: all 0.2s ease;
+  position: absolute;
+  z-index: 1;
+}
+
+/* Remove forced positioning - let GridStack handle it naturally */
+
+.grid-stack-item-content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+}
+
+/* Hover effects */
+.grid-stack-item:hover .grid-stack-item-content {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Dragging state */
+.grid-stack-item.ui-draggable-dragging .grid-stack-item-content {
+  opacity: 0.8;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Resize handles */
+.grid-stack-item .ui-resizable-handle {
+  background: none;
+  z-index: 20;
+}
+
+.grid-stack-item .ui-resizable-se,
+.grid-stack-item .ui-resizable-sw,
+.grid-stack-item .ui-resizable-ne,
+.grid-stack-item .ui-resizable-nw {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.grid-stack-item:hover .ui-resizable-se,
+.grid-stack-item:hover .ui-resizable-sw,
+.grid-stack-item:hover .ui-resizable-ne,
+.grid-stack-item:hover .ui-resizable-nw {
+  opacity: 1;
+}
+
+/* Southeast resize handle */
+.grid-stack-item .ui-resizable-se {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M 10 0 L 20 10 L 20 20 L 0 20 Z' fill='%236b7280' opacity='0.3'/%3E%3C/svg%3E");
+  right: 0;
+  bottom: 0;
+}
+
+/* Southwest resize handle */
+.grid-stack-item .ui-resizable-sw {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M 10 0 L 0 10 L 0 20 L 20 20 Z' fill='%236b7280' opacity='0.3'/%3E%3C/svg%3E");
+  left: 0;
+  bottom: 0;
+}
+
+/* Northeast resize handle */
+.grid-stack-item .ui-resizable-ne {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M 10 20 L 20 10 L 20 0 L 0 0 Z' fill='%236b7280' opacity='0.3'/%3E%3C/svg%3E");
+  right: 0;
+  top: 0;
+}
+
+/* Northwest resize handle */
+.grid-stack-item .ui-resizable-nw {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M 10 20 L 0 10 L 0 0 L 20 0 Z' fill='%236b7280' opacity='0.3'/%3E%3C/svg%3E");
+  left: 0;
+  top: 0;
+}
+
+/* Placeholder when dragging */
+.grid-stack-placeholder > .placeholder-content {
+  background-color: #3b82f6;
+  opacity: 0.1;
+  border: 2px dashed #3b82f6;
+  border-radius: 0.5rem;
+}
+
+/* Widget header drag handle */
+.widget-header {
+  user-select: none;
+  background: #f9fafb;
+}
+
+/* Remove widget button */
+.remove-widget {
+  transition: all 0.2s;
+}
+
+.remove-widget:hover {
+  transform: scale(1.1);
+}
+
+/* Widget settings button */
+.widget-settings {
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 15;
+}
+
+.grid-stack-item:hover .widget-settings {
+  opacity: 1;
+}
+
+.widget-settings:hover {
+  transform: scale(1.05);
+}
+
+/* Ensure settings button doesn't interfere with resize handle */
+.grid-stack-item .ui-resizable-se {
+  z-index: 20;
+}
+
+/* Animations */
+.grid-stack-item.grid-stack-animate,
+.grid-stack-item.ui-draggable-dragging,
+.grid-stack-item.ui-resizable-resizing {
+  transition: none !important;
+}
+
+/* Widget palette icon centering */
+.widget-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .grid-stack-item .ui-resizable-se,
+  .grid-stack-item .ui-resizable-sw,
+  .grid-stack-item .ui-resizable-ne,
+  .grid-stack-item .ui-resizable-nw {
+    opacity: 1;
+    width: 30px;
+    height: 30px;
+  }
+}

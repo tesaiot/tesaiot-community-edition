@@ -1,0 +1,2 @@
+{{- /* TESAIoT Community Edition - Intermediate CA for nginx (client-CA / trust) */ -}}
+{{ with secret "pki-int/cert/ca" }}{{ .Data.certificate }}{{ end }}

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Welcome to TESA IoT Platform</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .welcome-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        
+        /* Content */
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #555555;
+        }
+        
+        /* Welcome card */
+        .welcome-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .account-info {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .account-info h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666666;
+        }
+        
+        .info-value {
+            color: #333333;
+        }
+        
+        /* Getting started */
+        .getting-started {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        
+        .getting-started h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #ffffff;
+            border-radius: 4px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .step-number {
+            background-color: #007bff;
+            color: #ffffff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+        
+        .step-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        /* CTA Button */
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: #ffffff;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 123, 255, 0.4);
+        }
+        
+        /* Features */
+        .features {
+            margin: 30px 0;
+        }
+        
+        .features h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-item {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 14px;
+            color: #666666;
+        }
+        
+        /* Support */
+        .support-section {
+            background-color: #e3f2fd;
+            padding: 25px;
+            border-radius: 6px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .support-section h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+        
+        .support-section p {
+            color: #555555;
+            margin-bottom: 15px;
+        }
+        
+        .support-links a {
+            color: #1976d2;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 600;
+        }
+        
+        .support-links a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .footer p {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive design */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header, .content, .footer {
+                padding: 30px 20px;
+            }
+            
+            .welcome-card, .getting-started, .support-section {
+                padding: 20px;
+            }
+            
+            .logo {
+                font-size: 28px;
+            }
+            
+            .greeting {
+                font-size: 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TESA IoT Platform</div>
+            <div class="subtitle">Industrial IoT Solutions</div>
+            <div class="welcome-badge">🎉 Welcome Aboard!</div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">Welcome, {{ user_name or 'User' }}!</div>
+            
+            <div class="message">
+                Thank you for joining the TESA IoT Platform! We're excited to have you as part of our community of innovators who are transforming industrial operations through cutting-edge IoT technology.
+            </div>
+            
+            <!-- Welcome Card -->
+            <div class="welcome-card">
+                <div class="welcome-icon">🚀</div>
+                <h3>Your account is now active and ready to use!</h3>
+                <p>You can now start connecting devices, analyzing data, and building powerful IoT solutions.</p>
+            </div>
+            
+            <!-- Account Information -->
+            <div class="account-info">
+                <h3>Account Information</h3>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ user_email }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Organization:</span>
+                    <span class="info-value">{{ organization_name or 'Default Organization' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Account Type:</span>
+                    <span class="info-value">{{ account_type or 'Standard' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Registration Date:</span>
+                    <span class="info-value">{{ registration_date or 'Today' }}</span>
+                </div>
+            </div>
+            
+            <!-- CTA Button -->
+            <div class="cta-container">
+                <a href="{{ dashboard_url or '#' }}" class="cta-button">Access Your Dashboard</a>
+            </div>
+            
+            <!-- Getting Started -->
+            <div class="getting-started">
+                <h3>Getting Started</h3>
+                <ul class="steps-list">
+                    <li class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">Complete Your Profile</div>
+                            <div class="step-description">Add your company information and customize your account settings.</div>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">Connect Your First Device</div>
+                            <div class="step-description">Use our device management tools to register and connect your IoT devices.</div>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">Explore Analytics</div>
+                            <div class="step-description">Start monitoring your devices and gain insights from your data.</div>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">Set Up Alerts</div>
+                            <div class="step-description">Configure notifications to stay informed about your device status.</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Key Features -->
+            <div class="features">
+                <h3>What You Can Do with TESA IoT Platform</h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-title">Device Management</div>
+                        <div class="feature-description">Centrally manage all your IoT devices with real-time monitoring</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Advanced Analytics</div>
+                        <div class="feature-description">Gain insights with powerful data visualization and reporting</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-title">Enterprise Security</div>
+                        <div class="feature-description">Bank-grade security with PKI authentication and encryption</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Real-time Processing</div>
+                        <div class="feature-description">Process and respond to device data in real-time</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Support Section -->
+            <div class="support-section">
+                <h3>Need Help Getting Started?</h3>
+                <p>Our team is here to help you succeed. We offer comprehensive documentation, tutorials, and professional support.</p>
+                <div class="support-links">
+                    <a href="{{ documentation_url or '#' }}">📖 Documentation</a>
+                    <a href="{{ tutorials_url or '#' }}">🎓 Tutorials</a>
+                    <a href="mailto:{{ support_email or 'admin@localhost' }}">📧 Support</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>TESA IoT Platform</strong></p>
+            <p>Secure • Scalable • Reliable Industrial IoT Solutions</p>
+            <p>Questions? Contact us at <a href="mailto:{{ support_email or 'admin@localhost' }}">{{ support_email or 'admin@localhost' }}</a></p>
+            <p>© {{ current_year or 2024 }} TESA IoT Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

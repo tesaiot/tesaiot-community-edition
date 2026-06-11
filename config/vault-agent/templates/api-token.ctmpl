@@ -1,0 +1,3 @@
+{{- /* TESAIoT Community Edition - placeholder template.                      */ -}}
+{{- /* The API token is delivered via the auto_auth file sink in          */ -}}
+{{- /* vault-agent.hcl (/vault/token/api-token), not via this template.   */ -}}

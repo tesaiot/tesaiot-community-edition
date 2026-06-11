@@ -1,0 +1,39 @@
+/**
+ * TESA IoT Platform - Tooltip Fix
+ * Removes conflicting black tooltips
+ */
+
+/* Remove any bootstrap or default black tooltips */
+.tooltip,
+.tooltip-inner,
+[role="tooltip"] {
+  display: none !important;
+}
+
+/* Only allow Radix UI tooltips */
+[data-radix-tooltip-content],
+[data-state][data-side][data-align] {
+  display: block !important;
+}
+
+/* Ensure proper tooltip styling */
+.menu-tooltip,
+[data-radix-tooltip-content] {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.dark .menu-tooltip,
+.dark [data-radix-tooltip-content] {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border: 1px solid #4b5563 !important;
+}
+
+/* Remove any conflicting tooltip arrows */
+.tooltip-arrow,
+.tooltip::before,
+.tooltip::after {
+  display: none !important;
+}

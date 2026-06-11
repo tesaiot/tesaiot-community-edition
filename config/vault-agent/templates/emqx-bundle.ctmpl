@@ -1,0 +1,22 @@
+{{- /* TESAIoT Community Edition - EMQX RSA Certificate Bundle (single issuance) */ -}}
+{{- /* Performs ONE issuance and writes: CERT, KEY, ISSUING CA, ROOT CA */ -}}
+
+{{- with pkiCert "pki-int/issue/emqx-server" (printf "common_name=%s" (env "EMQX_CERT_CN")) (printf "alt_names=%s" (env "EMQX_CERT_ALT_NAMES")) (printf "ip_sans=%s" (env "EMQX_CERT_IP_SANS")) "ttl=2160h" -}}
+##### BEGIN EMQX CERTIFICATE #####
+{{ .Cert }}
+##### END EMQX CERTIFICATE #####
+
+##### BEGIN EMQX PRIVATE KEY #####
+{{ .Key }}
+##### END EMQX PRIVATE KEY #####
+
+##### BEGIN ISSUING CA #####
+{{ .CA }}
+##### END ISSUING CA #####
+{{ end }}
+
+##### BEGIN ROOT CA #####
+{{ with secret "pki-root/cert/ca" }}
+{{ .Data.certificate }}
+{{ end }}
+##### END ROOT CA #####

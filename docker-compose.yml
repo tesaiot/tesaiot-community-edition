@@ -1,0 +1,697 @@
+# =============================================================================
+# TESAIoT Community Edition - single-organization self-host stack
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+#
+# 11 services: vault, vault-agent, mongodb, timescaledb, redis, api,
+# admin-ui, emqx, mqtt-bridge, nginx, apisix. (APISIX runs in standalone
+# YAML mode, so etcd is NOT required.)
+#
+# All secrets come from .env (see .env.example). No secrets are inlined here.
+# =============================================================================
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # HashiCorp Vault - PKI + secrets engine
+  # ---------------------------------------------------------------------------
+  vault:
+    image: hashicorp/vault:1.18.3
+    container_name: tesa-vault
+    restart: unless-stopped
+    logging: *default-logging
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_API_ADDR: http://127.0.0.1:8200
+      VAULT_UI: "true"
+    volumes:
+      - ./config/vault/vault-auto-unseal.hcl:/vault/config/vault.hcl:ro
+      - vault-data:/vault/data
+      - vault-credentials:/vault/credentials
+    command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+    ports:
+      # SECURITY: Vault is bound to loopback only. The host publish exists for
+      # local operator access (vault CLI / UI) on the box itself, never the LAN.
+      # All in-cluster consumers reach Vault via the internal DNS name
+      # tesa-vault:8200 on tesa-internal, so Vault is intentionally NOT attached
+      # to tesa-external (which is the LAN-reachable edge network).
+      - "127.0.0.1:8200:8200"
+    networks:
+      - tesa-internal
+    healthcheck:
+      # 0 = unsealed+active, 2 = sealed (still "up"); both mean the API answers.
+      test: ["CMD-SHELL", "wget -q -O- 'http://127.0.0.1:8200/v1/sys/health?standbyok=true&sealedcode=200&uninitcode=200' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Vault Agent - renders/renews EMQX + API-token certs from Vault PKI
+  # ---------------------------------------------------------------------------
+  vault-agent:
+    image: hashicorp/vault:1.18.3
+    container_name: tesa-vault-agent
+    restart: unless-stopped
+    logging: *default-logging
+    user: "0:0"
+    command: ["/bin/sh", "-lc", "sh /vault/scripts/run-agent-with-autorotate.sh"]
+    environment:
+      VAULT_ADDR: http://tesa-vault:8200
+      EMQX_CERT_CN: ${EMQX_CERT_CN:-localhost}
+      EMQX_CERT_ALT_NAMES: ${EMQX_CERT_ALT_NAMES:-localhost,mqtt.localhost,tesa-emqx}
+      EMQX_CERT_IP_SANS: ${EMQX_CERT_IP_SANS:-127.0.0.1}
+      # Re-render the EMQX cert when the rendered file is older than this
+      # (seconds). The emqx-server role issues 2160h (90d) certs; 60d leaves a
+      # 30d margin. The agent image has no openssl, so file age is the signal.
+      CERT_MAX_AGE_SECS: "5184000"
+      SLEEP_SECS: "43200"
+      # EMQX management API credentials for the best-effort TLS-listener
+      # reload after a cert rotation (reload-emqx.sh; busybox wget only).
+      EMQX_DASHBOARD_URL: http://tesa-emqx:18083
+      EMQX_DASHBOARD_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
+      # PRAGMATIC SELF-UNSEAL (availability vs key-custody trade-off):
+      # after a host reboot Vault restarts SEALED and the whole stack stalls.
+      # The wrapper script watches seal-status and, when these key shares are
+      # set, posts them to /v1/sys/unseal. The shares ALREADY live in .env on
+      # this same host, so this adds no new exposure - but it does mean the
+      # host alone can unseal. For production-grade custody, leave the
+      # VAULT_UNSEAL_KEY_* vars out of .env (opt-out: empty disables this) and
+      # use the cloud-KMS auto-unseal stanza in config/vault/vault-auto-unseal.hcl
+      # with keys held by separate custodians. Manual path: make unseal.
+      VAULT_UNSEAL_KEYS: ${VAULT_UNSEAL_KEY_1:-},${VAULT_UNSEAL_KEY_2:-}
+    volumes:
+      - ./config/vault-agent/vault-agent.hcl:/vault/config.hcl:ro
+      - ./config/vault-agent/templates:/vault/templates:ro
+      - ./config/vault-agent/scripts:/vault/scripts:ro
+      - ./config/vault-agent/secrets-unified:/vault/secrets:ro
+      - ./config/vault-agent/token-api:/vault/token
+      - emqx-certs:/opt/emqx/etc/certs
+    networks:
+      - tesa-internal
+    depends_on:
+      vault:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      # -s: the token file must exist AND be non-empty. A bare `cat` would
+      # pass on an empty file (e.g. one left behind by an old teardown).
+      test: ["CMD", "test", "-s", "/vault/token/api-token"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ---------------------------------------------------------------------------
+  # MongoDB - device / user / certificate registry (single-node replica set)
+  # ---------------------------------------------------------------------------
+  mongodb:
+    image: mongo:8.0
+    container_name: tesa-mongodb
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-tesa_iot}
+      # Passed through to init-mongo.js to create the application user.
+      MONGODB_USER: ${MONGODB_USER:-iot_user}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      DEFAULT_ORG_ID: ${DEFAULT_ORG_ID:-default-org}
+    # Cross-platform keyfile handling: the keyfile is bind-mounted read-only at
+    # /tmp, then copied into the container with the perms/owner MongoDB requires
+    # (0400, mongodb:mongodb = 999:999). This avoids the macOS/Windows Docker
+    # "permissions on keyfile are too open" failure, where bind-mount perms are
+    # virtualized and don't satisfy mongod. Still goes through docker-entrypoint.sh
+    # (arg[0]=mongod) so MONGO_INITDB_* + init-mongo.js user bootstrap still run.
+    entrypoint: ["bash", "-c", "cp /tmp/mongo-keyfile /data/keyfile && chmod 400 /data/keyfile && chown 999:999 /data/keyfile && exec docker-entrypoint.sh \"$@\"", "--"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/data/keyfile"]
+    volumes:
+      - mongodb-data:/data/db
+      - ./config/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./config/mongodb/mongodb-keyfile:/tmp/mongo-keyfile:ro
+    networks:
+      tesa-internal:
+        aliases: [mongodb, mongo, tesa-mongodb]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # ---------------------------------------------------------------------------
+  # TimescaleDB - telemetry time-series store
+  # ---------------------------------------------------------------------------
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg14
+    container_name: tesa-timescaledb
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-tesa_telemetry}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=scram-sha-256
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./config/timescaledb/init-timescale.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      tesa-internal:
+        aliases: [timescaledb, tesa-timescaledb, postgres]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-tesa_telemetry}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Redis - cache + rate-limit storage (required by the API)
+  # NOTE: Redis is configured ENTIRELY via the command-line flags below (no
+  # redis.conf is shipped/mounted - a config file would just drift from these
+  # flags). The password comes from .env, never from a file.
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.4.4-alpine
+    container_name: tesa-redis
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --maxmemory
+      - 512mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --save
+      - "900"
+      - "1"
+      - --save
+      - "300"
+      - "10"
+      - --save
+      - "60"
+      - "10000"
+    volumes:
+      - redis-data:/data
+    networks:
+      tesa-internal:
+        aliases: [redis, tesa-redis]
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # API - Flask monolith (+ FastAPI device-management mount). Port 5566.
+  # ---------------------------------------------------------------------------
+  api:
+    image: tesa-api:${BUILD_TAG:-latest}
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+      args:
+        - CACHEBUST=${CACHEBUST:-1}
+        - BUILD_DATE=${BUILD_DATE:-unknown}
+        - BUILD_HASH=${BUILD_HASH:-unknown}
+    container_name: tesa-api
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    environment:
+      FLASK_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 5566
+      DOCKER_ENV: "true"
+      PYTHONUNBUFFERED: "1"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      TZ: ${TZ:-Asia/Bangkok}
+      DEFAULT_ORG_ID: ${DEFAULT_ORG_ID:-default-org}
+
+      # --- Auth / JWT ---
+      JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY: ${SECRET_KEY}
+      BCRYPT_LOG_ROUNDS: ${BCRYPT_LOG_ROUNDS:-12}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_BYPASS_RATE_LIMIT: ${ADMIN_BYPASS_RATE_LIMIT:-true}
+
+      # --- mTLS gateway marker (defence-in-depth anti-spoofing) ---
+      # Shared non-guessable secret injected by the mTLS terminator
+      # (config/nginx/conf.d/30-iot-mtls.conf) as the X-MTLS-Gateway header.
+      # auth.py refuses to honour ANY X-Client-* header unless this marker
+      # matches, so a forged X-Client-Verify=SUCCESS from any other ingress is
+      # rejected. Fail-closed: if unset, mTLS header auth is disabled.
+      MTLS_GATEWAY_SECRET: ${MTLS_GATEWAY_SECRET}
+
+      # --- Vault PKI ---
+      VAULT_ADDR: http://tesa-vault:8200
+      VAULT_PKI_PATH: ${VAULT_PKI_PATH:-pki-int}
+      VAULT_TOKEN_FILE: /vault/token/api-token
+      USE_LOCAL_CERTIFICATE_GENERATOR: "false"
+
+      # --- MongoDB ---
+      MONGODB_USER: ${MONGODB_USER:-iot_user}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      MONGODB_HOST: tesa-mongodb
+      MONGODB_PORT: "27017"
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-tesa_iot}
+      MONGODB_AUTH_SOURCE: ${MONGODB_AUTH_SOURCE:-admin}
+      MONGODB_MAX_POOL_SIZE: "100"
+      MONGODB_MIN_POOL_SIZE: "10"
+
+      # --- TimescaleDB ---
+      POSTGRES_HOST: tesa-timescaledb
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-tesa_telemetry}
+      ENABLE_AUTO_TIMESCALE_SCHEMA: "true"
+      ENABLE_DUAL_STORAGE: "true"
+
+      # --- Redis ---
+      REDIS_HOST: tesa-redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ENABLE_REDIS_CACHE: "true"
+      ENABLE_CONNECTION_POOLING: "true"
+
+      # --- EMQX webhook + MQTT ---
+      EMQX_WEBHOOK_SECRET: ${EMQX_WEBHOOK_SECRET}
+      MQTT_USERNAME: ${MQTT_USERNAME:-mqtt_user}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_BRIDGE_PASSWORD: ${MQTT_BRIDGE_PASSWORD}
+
+      # --- Telemetry-bridge service account (least privilege) ---
+      # The API bootstraps this account with telemetry-only permissions so the
+      # mqtt-bridge never has to log in with admin credentials.
+      BRIDGE_API_USER: ${BRIDGE_API_USER}
+      BRIDGE_API_PASSWORD: ${BRIDGE_API_PASSWORD}
+
+      # --- APISIX gateway admin ---
+      APISIX_ADMIN_URL: ${APISIX_ADMIN_URL:-http://tesa-apisix:9180/apisix/admin}
+      APISIX_ADMIN_KEY: ${APISIX_ADMIN_KEY}
+
+      # --- Public hostname / URLs (all derived from DOMAIN by
+      #     generate-secrets.sh --domain=...). These MUST be passed through so a
+      #     custom domain propagates into device cert bundles, QR provisioning
+      #     URLs and OTP/password-reset email links. Without them the API code
+      #     falls back to its baked-in *.tesaiot.dev / localhost defaults. ---
+      DOMAIN: ${DOMAIN:-localhost}
+      TESA_ADMIN_DOMAIN: ${TESA_ADMIN_DOMAIN:-admin.localhost}
+      TESA_PROVISION_DOMAIN: ${TESA_PROVISION_DOMAIN:-provision.localhost}
+      TESA_MQTT_DOMAIN: ${TESA_MQTT_DOMAIN:-localhost}
+      TESA_PUBLIC_API_BASE_URL: ${TESA_PUBLIC_API_BASE_URL:-https://localhost}
+      TESA_PUBLIC_INGEST_BASE_URL: ${TESA_PUBLIC_INGEST_BASE_URL:-https://localhost:9444}
+      TESA_PUBLIC_MQTT_HOST: ${TESA_PUBLIC_MQTT_HOST:-localhost}
+      TESA_PUBLIC_MQTT_TLS_PORT: ${TESA_PUBLIC_MQTT_TLS_PORT:-8884}
+      TESA_PUBLIC_MQTT_MTLS_PORT: ${TESA_PUBLIC_MQTT_MTLS_PORT:-8883}
+      TESA_PUBLIC_MQTT_WS_PORT: ${TESA_PUBLIC_MQTT_WS_PORT:-8083}
+
+      # --- Email / OTP (optional) ---
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-true}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-noreply@localhost}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-TESAIoT Platform}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      OTP_LENGTH: ${OTP_LENGTH:-6}
+      OTP_EXPIRE_MINUTES: ${OTP_EXPIRE_MINUTES:-15}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS:-3}
+      OTP_COOLDOWN_SECONDS: ${OTP_COOLDOWN_SECONDS:-30}
+    volumes:
+      - ./logs:/var/log/tesa-iot
+      - ./config/vault-agent/token-api:/vault/token:ro
+      - emqx-certs:/opt/emqx/etc/certs:ro
+    # NOTE: no `command:` override - the image's own CMD (gunicorn) applies.
+    # SECURITY: the API is NOT published on the host. Only nginx/APISIX on the
+    # internal Docker network may reach it. Publishing :5566 on 0.0.0.0 would
+    # bypass the mTLS terminator and let a caller forge X-Client-* headers to
+    # spoof a device. Keep it container-internal so the ONLY route that can
+    # assert a verified device identity is the mTLS listener (30-iot-mtls.conf).
+    expose:
+      - "5566"
+    # Network minimisation: every consumer of the API (nginx, APISIX, EMQX
+    # webhooks, mqtt-bridge) resolves tesa-api on tesa-internal, and the API is
+    # never reached from the LAN directly - so it is NOT attached to the
+    # LAN-edge tesa-external network.
+    networks:
+      tesa-internal:
+        aliases: [tesa-api, api]
+    depends_on:
+      vault:
+        condition: service_healthy
+      vault-agent:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+        reservations:
+          memory: 768M
+          cpus: "0.5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5566/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # Admin UI - React SPA served by nginx (internal port 80)
+  # ---------------------------------------------------------------------------
+  admin-ui:
+    image: tesa-admin-ui:${BUILD_TAG:-latest}
+    build:
+      context: ./services/admin-ui
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - CACHEBUST=${CACHEBUST:-1}
+        - BUILD_DATE=${BUILD_DATE:-unknown}
+        - BUILD_HASH=${BUILD_HASH:-unknown}
+    container_name: tesa-admin-ui
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    # Writable scratch dirs for the non-root nginx (uid 1001). mode=1777 keeps
+    # them writable regardless of the tmpfs owner so nginx can drop its pid and
+    # temp/cache files without running as root.
+    tmpfs:
+      - /var/cache/nginx:mode=1777
+      - /var/run:mode=1777
+      - /tmp:mode=1777
+    environment:
+      - CONTAINER_ROLE=frontend
+      - TZ=${TZ:-Asia/Bangkok}
+    networks:
+      tesa-internal:
+        aliases: [admin-ui, tesa-admin-ui, ui, frontend]
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || curl -f http://localhost:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  # ---------------------------------------------------------------------------
+  # EMQX - MQTT broker (serverTLS + mTLS), auth/ACL via API webhooks
+  # ---------------------------------------------------------------------------
+  emqx:
+    image: emqx/emqx:5.10.0
+    container_name: tesa-emqx
+    hostname: tesa-emqx
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      EMQX_LOG__CONSOLE__LEVEL: warning
+      EMQX_LOG__FILE__LEVEL: warning
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
+      EMQX_WEBHOOK_SECRET: ${EMQX_WEBHOOK_SECRET}
+      TZ: ${TZ:-Asia/Bangkok}
+    ports:
+      # Loopback-only: plaintext + management transports must not face the LAN.
+      - "127.0.0.1:1883:1883"   # plain MQTT (local/dev only, no TLS)
+      - "127.0.0.1:8083:8083"   # MQTT-over-WS (no TLS)
+      - "127.0.0.1:18083:18083" # dashboard (management UI)
+      # Device-facing TLS transports stay public.
+      - "0.0.0.0:8883:8883"     # mTLS
+      - "0.0.0.0:8884:8884"     # serverTLS
+      - "0.0.0.0:8084:8084"     # WSS (TLS)
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-certs:/opt/emqx/etc/certs:ro
+      # emqx.conf + the bootstrap CSV are RENDERED files: generate-secrets.sh
+      # produces them from the committed config/emqx/*.tpl templates with the
+      # secrets from .env (the rendered paths are .gitignore'd).
+      - ./config/emqx/emqx.conf:/opt/emqx/etc/emqx.conf:ro
+      - ./config/emqx/acl.conf:/opt/emqx/etc/acl.conf:ro
+      - ./config/emqx/auth-built-in-db-bootstrap.csv:/opt/emqx/etc/auth-built-in-db-bootstrap.csv:ro
+    # Network minimisation: devices reach EMQX via its PUBLISHED ports (8883/
+    # 8884/8084), not via a Docker network, and neither nginx nor APISIX
+    # proxies to tesa-emqx (no upstream references in config/nginx or
+    # config/apisix). Everything EMQX itself calls (API webhooks, Vault CRL)
+    # lives on tesa-internal - so it is NOT attached to tesa-external.
+    networks:
+      tesa-internal:
+        aliases: [emqx, tesa-emqx]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # MQTT telemetry bridge - EMQX -> API -> TimescaleDB/MongoDB
+  # ---------------------------------------------------------------------------
+  mqtt-bridge:
+    image: tesa-mqtt-bridge:${BUILD_TAG:-latest}
+    build:
+      context: ./services/mqtt-bridge
+      dockerfile: Dockerfile
+    container_name: tesa-mqtt-bridge
+    restart: unless-stopped
+    logging: *default-logging
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+      - /var/tmp
+    environment:
+      MQTT_HOST: tesa-emqx
+      MQTT_BROKER_HOST: tesa-emqx
+      # Verified TLS to the broker's serverTLS listener, validated against the
+      # Vault-agent-rendered CA chain on the shared emqx-certs volume. The
+      # plaintext 1883 listener stays local/dev-only (loopback publish).
+      MQTT_PORT: "8884"
+      MQTT_USE_TLS: "true"
+      MQTT_CA_FILE: /vault/certs/vault-ca-bundle.pem
+      # Full hostname verification: 'tesa-emqx' is in the EMQX cert SANs
+      # (EMQX_CERT_ALT_NAMES default). Override to "false" only if you issue the
+      # broker cert without the internal DNS name in its SAN list.
+      MQTT_TLS_VERIFY_HOSTNAME: ${MQTT_TLS_VERIFY_HOSTNAME:-true}
+      MQTT_USERNAME: mqtt-bridge
+      MQTT_BRIDGE_PASSWORD: ${MQTT_BRIDGE_PASSWORD}
+      MQTT_CERT_DIR: /vault/certs
+      API_URL: http://tesa-api:5566
+      API_BASE_URL: http://tesa-api:5566
+      BRIDGE_API_USER: ${BRIDGE_API_USER}
+      BRIDGE_API_PASSWORD: ${BRIDGE_API_PASSWORD}
+      PYTHONUNBUFFERED: "1"
+      TZ: ${TZ:-Asia/Bangkok}
+    volumes:
+      - emqx-certs:/vault/certs:ro
+    networks:
+      - tesa-internal
+    depends_on:
+      emqx:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    healthcheck:
+      # Liveness contract with the bridge code: it touches
+      # /tmp/mqtt-bridge-healthy every <=30s while its MQTT loop is alive
+      # (/tmp is a tmpfs above, so this works despite read_only). Fail when
+      # the marker is missing or older than 120s - a wedged/disconnected
+      # bridge stops refreshing it and goes unhealthy.
+      test: ["CMD", "python", "-c", "import os,sys,time; st=os.stat('/tmp/mqtt-bridge-healthy'); sys.exit(0 if time.time()-st.st_mtime < 120 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # nginx - serverTLS/mTLS termination + reverse proxy (80/443/9444)
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27.5-alpine3.21
+    container_name: tesa-nginx
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    environment:
+      TZ: ${TZ:-Asia/Bangkok}
+    volumes:
+      # conf.d contains the RENDERED 30-iot-mtls.conf (generate-secrets.sh
+      # renders it from 30-iot-mtls.conf.tpl with the mTLS gateway marker;
+      # nginx only globs *.conf, so the committed .tpl is never loaded).
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./config/tls:/etc/nginx/certs:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:9444:9444"
+    networks:
+      - tesa-internal
+      - tesa-external
+    depends_on:
+      api:
+        condition: service_healthy
+      admin-ui:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "1.0"
+        reservations:
+          memory: 64M
+          cpus: "0.25"
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # APISIX - API gateway (standalone YAML mode, no etcd)
+  # ---------------------------------------------------------------------------
+  apisix:
+    image: apache/apisix:3.11.0-debian
+    container_name: tesa-apisix
+    restart: unless-stopped
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      APISIX_STAND_ALONE: "true"
+    volumes:
+      # Both files are RENDERED by generate-secrets.sh from the committed
+      # config/apisix/*.tpl templates (admin key, sample consumer key, TLS
+      # material baked in from .env; rendered paths are .gitignore'd).
+      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+    ports:
+      # Loopback-only: plaintext gateway + admin API must not face the LAN.
+      - "127.0.0.1:9080:9080"   # http (plaintext)
+      - "127.0.0.1:9180:9180"   # admin API (management)
+      # Device-facing TLS transport stays public.
+      - "0.0.0.0:9443:9443"     # https / serverTLS / mTLS
+    networks:
+      tesa-internal:
+        aliases: [apisix, tesa-apisix]
+      tesa-external:
+        aliases: [tesa-apisix]
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      # Real TCP probe of the gateway listener (the image ships no curl/wget;
+      # bash /dev/tcp fails with non-zero when nothing accepts on 9080, so
+      # this actually reports unhealthy when APISIX is dead).
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9080"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+# =============================================================================
+volumes:
+  vault-data:
+  vault-credentials:
+  mongodb-data:
+  timescale-data:
+  redis-data:
+  emqx-data:
+  emqx-certs:        # shared: vault-agent renders certs -> emqx + api + bridge
+
+networks:
+  # LAN-edge network. Only the TLS terminators (nginx, apisix) sit here; the
+  # api and emqx are reached via tesa-internal / their published ports only.
+  tesa-external:
+    driver: bridge
+    name: tesa-ext0
+  # Backend-only data/services traffic.
+  tesa-internal:
+    driver: bridge
+    name: tesa-int0

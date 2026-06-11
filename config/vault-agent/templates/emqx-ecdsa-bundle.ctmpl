@@ -1,0 +1,17 @@
+{{- /* TESAIoT Community Edition - EMQX ECDSA Certificate Bundle (single issuance) */ -}}
+{{- /* Issues an ECDSA (P-256) certificate for dual-cert support alongside RSA */ -}}
+{{- /* Used by: SSL listeners (serverTLS 8884, mTLS 8883) for ECDHE-ECDSA suites */ -}}
+
+{{- with pkiCert "pki-int/issue/emqx-server-ecdsa" (printf "common_name=%s" (env "EMQX_CERT_CN")) (printf "alt_names=%s" (env "EMQX_CERT_ALT_NAMES")) (printf "ip_sans=%s" (env "EMQX_CERT_IP_SANS")) "ttl=2160h" -}}
+##### BEGIN ECDSA CERTIFICATE #####
+{{ .Cert }}
+##### END ECDSA CERTIFICATE #####
+
+##### BEGIN ECDSA PRIVATE KEY #####
+{{ .Key }}
+##### END ECDSA PRIVATE KEY #####
+
+##### BEGIN ISSUING CA #####
+{{ .CA }}
+##### END ISSUING CA #####
+{{ end }}

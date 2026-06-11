@@ -1,0 +1,2 @@
+{{- /* Signal file to trigger certificate reload */ -}}
+{{ timestamp }}

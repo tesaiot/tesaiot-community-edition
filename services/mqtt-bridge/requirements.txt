@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+#
+# TESAIoT Community Edition - MQTT Telemetry Bridge requirements.
+# Only the libraries actually imported by mqtt_telemetry_bridge.py.
+
+# MQTT client (EMQX subscription)
+paho-mqtt==2.1.0
+
+# HTTP client (forwards telemetry/status/heartbeat to the API)
+requests==2.33.0
+
+# Optional .env loading convenience (not imported directly, safe to keep)
+python-dotenv==1.0.1

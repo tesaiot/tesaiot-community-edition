@@ -1,0 +1,4 @@
+{{- /* TESAIoT Community Edition - MQTT Bridge client private key */ -}}
+{{- with secret "pki-int/issue/platform-service" "common_name=mqtt-bridge.service.tesa.local" "alt_names=tesa-mqtt-bridge,localhost" "ip_sans=127.0.0.1,::1" "ttl=2160h" -}}
+{{ .Data.private_key }}
+{{- end -}}

@@ -1,0 +1,4 @@
+# Real AppRole credentials are generated at deploy time; never commit them.
+role-id
+secret-id
+!.gitignore

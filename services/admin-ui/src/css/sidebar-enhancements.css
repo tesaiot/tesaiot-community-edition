@@ -1,0 +1,151 @@
+/* TESA IoT Platform - Sidebar Enhancements
+ * Metronic-style sidebar animations and transitions
+ */
+
+/* Smooth sidebar transitions */
+.aside {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* Icon centering when collapsed on desktop */
+@media (min-width: 768px) {
+  .aside.w-\[70px\] .menu-link {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+  }
+
+  .aside.w-\[70px\] .menu-icon {
+    margin: 0;
+  }
+}
+
+/* Menu item transitions */
+.menu-link {
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Active menu item indicator */
+.menu-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background-color: var(--primary, #3b82f6);
+  transition: height 0.3s ease-in-out;
+}
+
+.menu-link.active::before,
+.menu-link:hover::before {
+  height: 100%;
+}
+
+/* Toggle button animation */
+.sidebar-toggle {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* Logo and text animations */
+.aside-logo img {
+  transition: all 0.3s ease-in-out;
+}
+
+.aside-logo h1,
+.aside-logo .badge {
+  animation: fadeInRight 0.3s ease-in-out;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Menu text fade animation */
+.menu-link span:not(.menu-icon) {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Collapsed sidebar icon centering */
+.sidebar-collapsed .menu-icon {
+  margin: 0 auto;
+}
+
+/* Smooth content area adjustment */
+.wrapper {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Ensure sidebar content is always visible */
+.aside * {
+  opacity: 1;
+}
+
+/* Ensure body and html have proper dimensions */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  /* Mobile overlay is handled via React */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+}
+
+/* Dark mode enhancements */
+.dark .aside {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.dark .aside:not(.sidebar-expanded):hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 
+              0 10px 10px -5px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Icon rotation for toggle button */
+.sidebar-toggle-icon {
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-expanded .sidebar-toggle-icon {
+  transform: rotate(180deg);
+}

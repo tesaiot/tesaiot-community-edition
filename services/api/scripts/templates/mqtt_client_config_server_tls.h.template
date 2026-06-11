@@ -1,0 +1,35 @@
+/*
+ * TESAIoT Community Edition - MQTT client configuration (server TLS)
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ *
+ * Auto-generated for device : {{DEVICE_ID}}
+ * Generated (UTC)           : {{GENERATION_DATE}}
+ * Key algorithm             : {{ALGORITHM_LABEL}}
+ *
+ * Server-TLS profile: the broker certificate is verified against the TESAIoT
+ * CA, and the device authenticates with username/password (no client
+ * certificate). The broker host/port come from the deployment configuration
+ * (TESA_MQTT_DOMAIN / TESA_PUBLIC_MQTT_TLS_PORT) - never hardcoded.
+ */
+
+#ifndef MQTT_CLIENT_CONFIG_H
+#define MQTT_CLIENT_CONFIG_H
+
+/* ----- Broker endpoint ----- */
+#define MQTT_BROKER_HOST       "{{MQTT_BROKER_HOST}}"
+#define MQTT_BROKER_PORT       {{MQTT_BROKER_PORT}}
+#define MQTT_USE_TLS           1
+#define MQTT_USE_MUTUAL_TLS    0
+
+/* ----- Device identity ----- */
+#define MQTT_CLIENT_IDENTIFIER "{{DEVICE_ID}}"
+#define MQTT_USERNAME          "{{MQTT_USERNAME}}"
+/* Set the device password from the credential delivered with this bundle. */
+#define MQTT_PASSWORD          ""
+
+/* ----- Trust anchor: TESAIoT issuing CA chain ----- */
+#define ROOT_CA_CERTIFICATE \
+{{CA_CERTIFICATE}}
+
+#endif /* MQTT_CLIENT_CONFIG_H */

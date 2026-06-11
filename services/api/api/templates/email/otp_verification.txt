@@ -1,0 +1,45 @@
+================================================================================
+                            TESA IoT Platform
+                        Industrial IoT Solutions
+                         Account Verification
+================================================================================
+
+Hello {{ user_name or 'User' }},
+
+We received a request to verify your account. To complete the verification 
+process, please use the One-Time Password (OTP) code below:
+
+--------------------------------------------------------------------------------
+                        YOUR VERIFICATION CODE
+                             {{ otp_code }}
+                    
+                       ✅ Enter this code on the verification page
+--------------------------------------------------------------------------------
+
+HOW TO USE THIS CODE:
+1. Go to: {{ verification_url or 'https://admin.localhost/auth/verify' }}
+2. Enter the 6-digit code exactly as shown above
+3. Click "Verify" to complete the process
+4. Set up your account password when prompted
+
+IMPORTANT SECURITY NOTICE:
+🔒 NEVER share this code with anyone. TESA IoT Platform staff will never ask 
+   for your verification code.
+
+⚠️  If you didn't request this verification, please ignore this email and 
+   consider changing your account password.
+
+📍 This verification attempt was made from: {{ request_ip or 'Unknown IP' }}
+
+If you have any questions or need assistance, please contact our support team 
+at {{ support_email or 'admin@localhost' }}.
+
+================================================================================
+
+TESA IoT Platform
+Secure • Scalable • Reliable Industrial IoT Solutions
+
+This is an automated message. Please do not reply to this email.
+© {{ current_year or 2024 }} TESA IoT Platform. All rights reserved.
+
+================================================================================

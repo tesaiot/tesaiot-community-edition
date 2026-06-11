@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESA IoT Platform - Service Worker Cleanup Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin: 0 0 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .status-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .status-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            font-size: 12px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #1e293b;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
+        }
+        
+        .button.secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+        
+        .button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .log-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            height: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 50px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid;
+        }
+        
+        .alert.info {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #dbeafe;
+        }
+        
+        .alert.success {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #dcfce7;
+        }
+        
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #fef3c7;
+        }
+        
+        .alert.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fee2e2;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ TESA IoT Platform Service Worker Cleanup Tool</h1>
+        
+        <div class="status-section">
+            <h3>📊 Current Status</h3>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-number" id="sw-count">-</div>
+                    <div class="status-label">Service Workers</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" id="cache-count">-</div>
+                    <div class="status-label">Caches</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" id="storage-size">-</div>
+                    <div class="status-label">Storage Items</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-number" id="cleanup-status">❓</div>
+                    <div class="status-label">Needs Cleanup</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-grid">
+            <button class="button" onclick="refreshStatus()">
+                📊 Refresh Status
+            </button>
+            <button class="button secondary" onclick="performDiagnostic()">
+                🔍 Run Diagnostic
+            </button>
+            <button class="button danger" onclick="performCompleteCleanup()">
+                🧹 Complete Cleanup
+            </button>
+            <button class="button" onclick="goToApp()">
+                🚀 Go to App
+            </button>
+        </div>
+        
+        <div class="progress-bar hidden" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <div id="alerts"></div>
+        
+        <div class="log-section" id="log">
+            <div>🔄 Service Worker Cleanup Tool initialized</div>
+            <div>📡 Click "Refresh Status" to check current state</div>
+        </div>
+        
+        <div class="alert info">
+            <strong>🛡️ Safe Cleanup Process:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Preserves user preferences (theme, language)</li>
+                <li>Only removes TESA-related caches and service workers</li>
+                <li>Provides detailed logging of all actions</li>
+                <li>Can be safely repeated multiple times</li>
+            </ul>
+        </div>
+        
+        <div class="alert warning">
+            <strong>⚠️ Emergency Commands:</strong>
+            <p>Open browser console (F12) and run:</p>
+            <code>window.emergencyServiceWorkerCleanup()</code>
+        </div>
+    </div>
+
+    <script>
+        let isCleanupInProgress = false;
+        
+        // Logging utility
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '🔄';
+            
+            const entry = document.createElement('div');
+            entry.innerHTML = `[${timestamp}] ${prefix} ${message}`;
+            entry.style.color = type === 'error' ? '#fecaca' : type === 'success' ? '#bbf7d0' : type === 'warning' ? '#fed7aa' : '#e0e7ff';
+            
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertsDiv = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.innerHTML = message;
+            alertsDiv.appendChild(alert);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 10000);
+        }
+        
+        // Update progress bar
+        function updateProgress(percent) {
+            const progressBar = document.getElementById('progress-bar');
+            const progressFill = document.getElementById('progress-fill');
+            
+            if (percent > 0) {
+                progressBar.classList.remove('hidden');
+                progressFill.style.width = percent + '%';
+            } else {
+                progressBar.classList.add('hidden');
+            }
+        }
+        
+        // Update status display
+        function updateStatus(swCount, cacheCount, storageCount, needsCleanup) {
+            document.getElementById('sw-count').textContent = swCount;
+            document.getElementById('cache-count').textContent = cacheCount;
+            document.getElementById('storage-size').textContent = storageCount;
+            document.getElementById('cleanup-status').textContent = needsCleanup ? '⚠️' : '✅';
+        }
+        
+        // Refresh current status
+        async function refreshStatus() {
+            try {
+                log('Refreshing status...');
+                
+                let swCount = 0;
+                let cacheCount = 0;
+                let storageCount = 0;
+                let needsCleanup = false;
+                
+                // Count service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    swCount = registrations.length;
+                    needsCleanup = swCount > 0;
+                    
+                    registrations.forEach(reg => {
+                        log(`Found service worker: ${reg.scope}`);
+                    });
+                }
+                
+                // Count caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    cacheCount = cacheNames.length;
+                    
+                    if (cacheNames.some(name => name.includes('tesa'))) {
+                        needsCleanup = true;
+                    }
+                    
+                    cacheNames.forEach(name => {
+                        log(`Found cache: ${name}`);
+                    });
+                }
+                
+                // Count storage items
+                storageCount = localStorage.length + sessionStorage.length;
+                
+                updateStatus(swCount, cacheCount, storageCount, needsCleanup);
+                
+                if (needsCleanup) {
+                    showAlert('⚠️ Cleanup recommended: Found service workers or TESA caches', 'warning');
+                } else {
+                    showAlert('✅ System clean: No service workers or problematic caches found', 'success');
+                }
+                
+                log('Status refresh completed', 'success');
+                
+            } catch (error) {
+                log(`Status refresh failed: ${error.message}`, 'error');
+                showAlert(`❌ Failed to refresh status: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run diagnostic
+        async function performDiagnostic() {
+            try {
+                log('Running comprehensive diagnostic...');
+                updateProgress(0);
+                
+                const diagnostic = {
+                    serviceWorkers: [],
+                    caches: [],
+                    storage: {},
+                    recommendations: []
+                };
+                
+                updateProgress(25);
+                
+                // Analyze service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    for (const registration of registrations) {
+                        const info = {
+                            scope: registration.scope,
+                            state: registration.active ? registration.active.state : 'inactive',
+                            updatefound: registration.installing ? true : false
+                        };
+                        
+                        diagnostic.serviceWorkers.push(info);
+                        log(`SW Analysis: ${info.scope} (${info.state})`);
+                    }
+                    
+                    if (registrations.length > 0) {
+                        diagnostic.recommendations.push('Unregister all service workers to prevent caching issues');
+                    }
+                }
+                
+                updateProgress(50);
+                
+                // Analyze caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    
+                    for (const cacheName of cacheNames) {
+                        const cache = await caches.open(cacheName);
+                        const requests = await cache.keys();
+                        
+                        diagnostic.caches.push({
+                            name: cacheName,
+                            entries: requests.length,
+                            isTesaCache: cacheName.includes('tesa') || cacheName.includes('admin-ui')
+                        });
+                        
+                        log(`Cache Analysis: ${cacheName} (${requests.length} entries)`);
+                    }
+                    
+                    const tesaCaches = diagnostic.caches.filter(c => c.isTesaCache);
+                    if (tesaCaches.length > 0) {
+                        diagnostic.recommendations.push(`Clear ${tesaCaches.length} TESA-related caches`);
+                    }
+                }
+                
+                updateProgress(75);
+                
+                // Analyze storage
+                diagnostic.storage = {
+                    localStorage: localStorage.length,
+                    sessionStorage: sessionStorage.length,
+                    hasOldData: false
+                };
+                
+                // Check for old TESA data
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('tesa') || key.includes('service-worker'))) {
+                        diagnostic.storage.hasOldData = true;
+                        break;
+                    }
+                }
+                
+                updateProgress(100);
+                
+                // Show recommendations
+                if (diagnostic.recommendations.length > 0) {
+                    showAlert(`🔍 Diagnostic complete: ${diagnostic.recommendations.join(', ')}`, 'warning');
+                } else {
+                    showAlert('✅ Diagnostic complete: No issues found', 'success');
+                }
+                
+                log('Diagnostic completed successfully', 'success');
+                
+                setTimeout(() => updateProgress(0), 2000);
+                
+            } catch (error) {
+                log(`Diagnostic failed: ${error.message}`, 'error');
+                showAlert(`❌ Diagnostic failed: ${error.message}`, 'error');
+                updateProgress(0);
+            }
+        }
+        
+        // Perform complete cleanup
+        async function performCompleteCleanup() {
+            if (isCleanupInProgress) {
+                showAlert('⚠️ Cleanup already in progress', 'warning');
+                return;
+            }
+            
+            isCleanupInProgress = true;
+            
+            try {
+                log('Starting complete cleanup process...');
+                updateProgress(0);
+                
+                const results = {
+                    serviceWorkersRemoved: 0,
+                    cachesCleared: 0,
+                    storageCleared: false,
+                    errors: []
+                };
+                
+                // Step 1: Unregister service workers
+                log('Step 1: Unregistering service workers...');
+                updateProgress(20);
+                
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    for (const registration of registrations) {
+                        try {
+                            // Send self-destruct message if worker is active
+                            if (registration.active) {
+                                registration.active.postMessage({ type: 'SELF_DESTRUCT' });
+                            }
+                            
+                            const success = await registration.unregister();
+                            if (success) {
+                                results.serviceWorkersRemoved++;
+                                log(`Unregistered: ${registration.scope}`, 'success');
+                            }
+                        } catch (error) {
+                            results.errors.push(`Failed to unregister ${registration.scope}: ${error.message}`);
+                            log(`Failed to unregister ${registration.scope}: ${error.message}`, 'error');
+                        }
+                    }
+                }
+                
+                updateProgress(40);
+                
+                // Step 2: Clear caches
+                log('Step 2: Clearing caches...');
+                updateProgress(50);
+                
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    
+                    for (const cacheName of cacheNames) {
+                        try {
+                            const success = await caches.delete(cacheName);
+                            if (success) {
+                                results.cachesCleared++;
+                                log(`Cleared cache: ${cacheName}`, 'success');
+                            }
+                        } catch (error) {
+                            results.errors.push(`Failed to clear cache ${cacheName}: ${error.message}`);
+                            log(`Failed to clear cache ${cacheName}: ${error.message}`, 'error');
+                        }
+                    }
+                }
+                
+                updateProgress(70);
+                
+                // Step 3: Clear storage (preserve user preferences)
+                log('Step 3: Clearing storage (preserving preferences)...');
+                updateProgress(80);
+                
+                try {
+                    // Preserve important user data
+                    const preserve = ['theme', 'language', 'user-preferences'];
+                    const backup = {};
+                    
+                    preserve.forEach(key => {
+                        const value = localStorage.getItem(key);
+                        if (value) backup[key] = value;
+                    });
+                    
+                    // Clear everything
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    // Restore preserved data
+                    Object.entries(backup).forEach(([key, value]) => {
+                        localStorage.setItem(key, value);
+                    });
+                    
+                    results.storageCleared = true;
+                    log('Storage cleared (preferences preserved)', 'success');
+                    
+                } catch (error) {
+                    results.errors.push(`Storage clear failed: ${error.message}`);
+                    log(`Storage clear failed: ${error.message}`, 'error');
+                }
+                
+                updateProgress(90);
+                
+                // Step 4: Clear IndexedDB
+                log('Step 4: Clearing IndexedDB...');
+                
+                try {
+                    if ('indexedDB' in window && indexedDB.databases) {
+                        const databases = await indexedDB.databases();
+                        
+                        for (const db of databases) {
+                            if (db.name && db.name.includes('tesa')) {
+                                indexedDB.deleteDatabase(db.name);
+                                log(`Deleted IndexedDB: ${db.name}`, 'success');
+                            }
+                        }
+                    }
+                } catch (error) {
+                    results.errors.push(`IndexedDB clear failed: ${error.message}`);
+                    log(`IndexedDB clear failed: ${error.message}`, 'error');
+                }
+                
+                updateProgress(100);
+                
+                // Show final results
+                if (results.errors.length === 0) {
+                    showAlert(`✅ Cleanup completed successfully! Removed ${results.serviceWorkersRemoved} service workers and ${results.cachesCleared} caches.`, 'success');
+                    log('Complete cleanup finished successfully', 'success');
+                } else {
+                    showAlert(`⚠️ Cleanup completed with ${results.errors.length} errors. Check log for details.`, 'warning');
+                    log(`Cleanup completed with errors: ${results.errors.join(', ')}`, 'warning');
+                }
+                
+                // Refresh status after cleanup
+                setTimeout(() => {
+                    refreshStatus();
+                    updateProgress(0);
+                }, 2000);
+                
+            } catch (error) {
+                log(`Cleanup process failed: ${error.message}`, 'error');
+                showAlert(`❌ Cleanup failed: ${error.message}`, 'error');
+                updateProgress(0);
+            } finally {
+                isCleanupInProgress = false;
+            }
+        }
+        
+        // Navigate to app
+        function goToApp() {
+            const currentUrl = new URL(window.location.href);
+            const appUrl = `${currentUrl.protocol}//${currentUrl.host}/`;
+            
+            log(`Navigating to app: ${appUrl}`);
+            window.location.href = appUrl;
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            log('Service Worker Cleanup Tool loaded');
+            refreshStatus();
+            
+            // Setup emergency cleanup function
+            window.emergencyServiceWorkerCleanup = async () => {
+                log('🚨 Emergency cleanup initiated from console');
+                await performCompleteCleanup();
+                return 'Emergency cleanup completed. Check the tool interface for details.';
+            };
+            
+            log('Emergency function available: window.emergencyServiceWorkerCleanup()');
+        });
+        
+        // Listen for service worker messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'CLEANUP_COMPLETE') {
+                    log('Service worker cleanup completed', 'success');
+                    showAlert('✅ Service worker self-cleanup completed', 'success');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

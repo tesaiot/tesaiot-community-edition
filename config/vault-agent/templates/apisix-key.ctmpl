@@ -1,0 +1,3 @@
+{{- with pkiCert "pki-int/issue/platform-service" "common_name=apisix.tesa.iot" "alt_names=apisix.tesa.iot,tesa-apisix,localhost" "ip_sans=127.0.0.1" "ttl=24h" -}}
+{{ .Key }}
+{{- end -}}

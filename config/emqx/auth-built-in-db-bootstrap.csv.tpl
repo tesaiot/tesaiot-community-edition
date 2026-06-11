@@ -1,0 +1,1 @@
+mqtt-bridge,CHANGEME_BRIDGE_MQTT_PASSWORD,,true

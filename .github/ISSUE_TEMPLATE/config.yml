@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability / ช่องโหว่ด้านความปลอดภัย
+    url: https://github.com/tesaiot/tesaiot-community-edition/security/policy
+    about: >
+      Do NOT open a public issue for security problems. Follow SECURITY.md.
+      / อย่าเปิด issue สาธารณะสำหรับปัญหาความปลอดภัย ดู SECURITY.md
+  - name: Question / Discussion — คำถาม / พูดคุย
+    url: https://github.com/tesaiot/tesaiot-community-edition/discussions
+    about: >
+      Ask usage questions or discuss ideas here.
+      / สอบถามการใช้งานหรือพูดคุยแลกเปลี่ยนความคิดเห็นที่นี่

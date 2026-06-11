@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Unregister Service Worker - TESA IoT</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Service Worker Issues</h1>
+        
+        <div id="status"></div>
+        
+        <button onclick="unregisterAll()">Unregister All Service Workers</button>
+        <button onclick="clearAllCaches()">Clear All Caches</button>
+        <button onclick="goToApp()">Go to TESA Admin UI</button>
+        
+        <div class="info" style="margin-top: 20px;">
+            <h3>🆕 New Comprehensive Cleanup Tool:</h3>
+            <p><a href="service-worker-cleanup.html" style="color: #4ade80; text-decoration: none; font-weight: bold;">🛠️ Open Advanced Cleanup Tool</a></p>
+            <p>The new tool provides detailed diagnostics, progress tracking, and safer cleanup operations.</p>
+            
+            <h3>Quick Instructions (Legacy):</h3>
+            <ol>
+                <li>Click "Unregister All Service Workers"</li>
+                <li>Click "Clear All Caches"</li>
+                <li>Click "Go to TESA Admin UI"</li>
+                <li>Use <code>http://localhost:5566</code> (not https://localhost)</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        function showStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            statusDiv.appendChild(div);
+        }
+        
+        async function unregisterAll() {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    
+                    if (registrations.length === 0) {
+                        showStatus('No service workers found.', 'info');
+                        return;
+                    }
+                    
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        showStatus(`✅ Unregistered service worker: ${registration.scope}`, 'success');
+                    }
+                    
+                    showStatus(`✅ All ${registrations.length} service workers unregistered!`, 'success');
+                } else {
+                    showStatus('Service workers not supported in this browser.', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function clearAllCaches() {
+            try {
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    
+                    if (cacheNames.length === 0) {
+                        showStatus('No caches found.', 'info');
+                        return;
+                    }
+                    
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        showStatus(`✅ Deleted cache: ${cacheName}`, 'success');
+                    }
+                    
+                    showStatus(`✅ All ${cacheNames.length} caches cleared!`, 'success');
+                } else {
+                    showStatus('Cache API not supported in this browser.', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToApp() {
+            window.location.href = 'http://localhost:5566';
+        }
+        
+        // Check current status on load
+        window.addEventListener('load', async () => {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                showStatus(`Found ${registrations.length} service worker(s) registered.`, 'info');
+                
+                registrations.forEach(reg => {
+                    showStatus(`Service Worker Scope: ${reg.scope}`, 'info');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

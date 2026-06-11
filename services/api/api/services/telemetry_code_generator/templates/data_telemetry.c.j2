@@ -1,0 +1,213 @@
+/**
+ * @file data_telemetry.c
+ * @brief Auto-generated telemetry serialization for TESAIoT Platform
+ * @device {{ device_name }}
+ * @device_id {{ device_id }}
+ * @generated {{ generated_at }}
+ *
+ * WARNING: This file is auto-generated. Do not modify manually.
+ *
+ * TESAIoT Community Edition - https://tesaiot.dev
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ */
+
+#include "data_telemetry.h"
+#include <stdio.h>
+#include <string.h>
+
+/* ============================================================
+ * Private Helper Functions
+ * ============================================================ */
+
+/**
+ * @brief Safely append string to buffer with overflow check
+ */
+static int safe_append(char *buffer, size_t buffer_size, size_t *offset,
+                       const char *str, size_t str_len)
+{
+    if (*offset + str_len >= buffer_size) {
+        return -1;  /* Buffer overflow */
+    }
+    memcpy(buffer + *offset, str, str_len);
+    *offset += str_len;
+    return 0;
+}
+
+/* ============================================================
+ * Public Functions
+ * ============================================================ */
+
+void telemetry_init(telemetry_data_t *data)
+{
+    if (data == NULL) {
+        return;
+    }
+
+    /* Zero entire structure */
+    memset(data, 0, sizeof(telemetry_data_t));
+
+    /* Set default values */
+{% for field in fields %}
+{% if field.c_type.value == 'char[]' %}
+    data->{{ field.name }}[0] = '\0';
+{% elif field.c_type.value == 'bool' %}
+    data->{{ field.name }} = false;
+{% elif field.c_type.value in ['float', 'double'] %}
+    data->{{ field.name }} = 0.0{% if field.c_type.value == 'float' %}f{% endif %};
+{% elif field.array_size is not none %}
+    data->{{ field.name }}_count = 0U;
+{% else %}
+    data->{{ field.name }} = 0;
+{% endif %}
+{% endfor %}
+}
+
+telemetry_result_t telemetry_validate(const telemetry_data_t *data)
+{
+    if (data == NULL) {
+        return TELEMETRY_ERR_NULL_POINTER;
+    }
+
+    /* Check required fields are set */
+{% for field in required_fields %}
+{% if field.c_type.value == 'char[]' %}
+    if (data->_has.{{ field.name }} == 0U || data->{{ field.name }}[0] == '\0') {
+        return TELEMETRY_ERR_REQUIRED_MISSING;  /* {{ field.name }} required */
+    }
+{% else %}
+    if (data->_has.{{ field.name }} == 0U) {
+        return TELEMETRY_ERR_REQUIRED_MISSING;  /* {{ field.name }} required */
+    }
+{% endif %}
+{% endfor %}
+
+    /* Validate numeric ranges */
+{% for field in fields %}
+{% if field.min_value is not none or field.max_value is not none %}
+    if (data->_has.{{ field.name }} != 0U) {
+{% if field.min_value is not none %}
+        if (data->{{ field.name }} < {{ field.name | upper }}_MIN) {
+            return TELEMETRY_ERR_VALUE_OUT_OF_RANGE;  /* {{ field.name }} below min */
+        }
+{% endif %}
+{% if field.max_value is not none %}
+        if (data->{{ field.name }} > {{ field.name | upper }}_MAX) {
+            return TELEMETRY_ERR_VALUE_OUT_OF_RANGE;  /* {{ field.name }} above max */
+        }
+{% endif %}
+    }
+{% endif %}
+{% endfor %}
+
+    return TELEMETRY_OK;
+}
+
+int32_t telemetry_to_json(const telemetry_data_t *data,
+                          char *buffer,
+                          size_t buffer_size)
+{
+    telemetry_result_t result;
+    size_t offset = 0U;
+    int first_field = 1;
+    char temp[64];
+    int temp_len;
+
+    /* Parameter validation */
+    if (data == NULL || buffer == NULL) {
+        return (int32_t)TELEMETRY_ERR_NULL_POINTER;
+    }
+
+    if (buffer_size < 3U) {
+        return (int32_t)TELEMETRY_ERR_BUFFER_TOO_SMALL;
+    }
+
+    /* Validate data before serialization */
+    result = telemetry_validate(data);
+    if (result != TELEMETRY_OK) {
+        return (int32_t)result;
+    }
+
+    /* Start JSON object */
+    buffer[offset++] = '{';
+
+{% for field in fields %}
+    /* Serialize {{ field.name }} */
+    if (data->_has.{{ field.name }} != 0U) {
+        if (first_field == 0) {
+            if (offset + 1U >= buffer_size) {
+                return (int32_t)TELEMETRY_ERR_BUFFER_TOO_SMALL;
+            }
+            buffer[offset++] = ',';
+        }
+        first_field = 0;
+
+{% if field.c_type.value == 'char[]' %}
+        /* String field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":\"%s\"", data->{{ field.name }});
+{% elif field.c_type.value == 'bool' %}
+        /* Boolean field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%s",
+                           data->{{ field.name }} ? "true" : "false");
+{% elif field.c_type.value == 'float' %}
+        /* Float field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%.6f",
+                           (double)data->{{ field.name }});
+{% elif field.c_type.value == 'double' %}
+        /* Double field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%.10f",
+                           data->{{ field.name }});
+{% elif 'int' in field.c_type.value %}
+{% if 'uint' in field.c_type.value %}
+        /* Unsigned integer field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%lu",
+                           (unsigned long)data->{{ field.name }});
+{% else %}
+        /* Signed integer field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%ld",
+                           (long)data->{{ field.name }});
+{% endif %}
+{% else %}
+        /* Generic field: {{ field.name }} */
+        temp_len = snprintf(temp, sizeof(temp), "\"{{ field.name }}\":%d",
+                           (int)data->{{ field.name }});
+{% endif %}
+
+        if (temp_len < 0 || (size_t)temp_len >= sizeof(temp)) {
+            return (int32_t)TELEMETRY_ERR_BUFFER_TOO_SMALL;
+        }
+        if (safe_append(buffer, buffer_size, &offset, temp, (size_t)temp_len) != 0) {
+            return (int32_t)TELEMETRY_ERR_BUFFER_TOO_SMALL;
+        }
+    }
+
+{% endfor %}
+    /* End JSON object */
+    if (offset + 2U >= buffer_size) {
+        return (int32_t)TELEMETRY_ERR_BUFFER_TOO_SMALL;
+    }
+    buffer[offset++] = '}';
+    buffer[offset] = '\0';
+
+    return (int32_t)offset;
+}
+
+const char* telemetry_error_string(telemetry_result_t result)
+{
+    switch (result) {
+        case TELEMETRY_OK:
+            return "Success";
+        case TELEMETRY_ERR_NULL_POINTER:
+            return "NULL pointer argument";
+        case TELEMETRY_ERR_REQUIRED_MISSING:
+            return "Required field missing or not set";
+        case TELEMETRY_ERR_VALUE_OUT_OF_RANGE:
+            return "Value out of valid range";
+        case TELEMETRY_ERR_BUFFER_TOO_SMALL:
+            return "Output buffer too small";
+        case TELEMETRY_ERR_INVALID_FORMAT:
+            return "Invalid data format";
+        default:
+            return "Unknown error";
+    }
+}

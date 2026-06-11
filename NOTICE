@@ -1,0 +1,48 @@
+TESAIoT Community Edition
+=====================
+
+Copyright 2026 TESAIoT Platform contributors.
+
+This product is originally derived from the TESAIoT Secure IoT Platform by
+Assoc. Prof. Wiroon Sriborrirux and the Thai Embedded Systems Association
+(TESA). The extracted subset contained in this distribution has been
+relicensed under the Apache License, Version 2.0 by the copyright owner.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use the files in this distribution except in compliance with the License.
+You may obtain a copy of the License in the accompanying LICENSE file or at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+
+Bundled / Third-Party Components
+--------------------------------
+
+This distribution integrates and/or depends on the following third-party
+components. Each of these components is licensed under its own terms by its
+respective copyright holders and is NOT covered by the Apache-2.0 license of
+TESAIoT Community Edition. Refer to each project for its full license text.
+
+  - FastAPI            (MIT License)              https://fastapi.tiangolo.com
+  - React              (MIT License)              https://react.dev
+  - HashiCorp Vault    (BUSL-1.1 / MPL-2.0)       https://www.vaultproject.io
+  - EMQX               (Apache-2.0 / BSL)         https://www.emqx.io
+  - Apache APISIX      (Apache-2.0)               https://apisix.apache.org
+  - MongoDB            (SSPL-1.0)                 https://www.mongodb.com
+  - TimescaleDB        (Apache-2.0 / TSL)         https://www.timescale.com
+  - nginx              (BSD-2-Clause)             https://nginx.org
+
+Frontend Assets
+---------------
+
+  - lucide-react       (ISC)                      https://lucide.dev
+    The admin UI uses the openly licensed lucide-react icon set throughout.
+
+Users of this distribution are responsible for complying with the license
+terms of each bundled third-party component as obtained from its source.

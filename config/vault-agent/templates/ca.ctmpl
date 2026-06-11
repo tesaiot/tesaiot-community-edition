@@ -1,0 +1,4 @@
+{{- /* TESAIoT Community Edition - Intermediate CA certificate (trust anchor) */ -}}
+{{- with secret "pki-int/cert/ca" -}}
+{{ .Data.certificate }}
+{{- end -}}

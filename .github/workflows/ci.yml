@@ -1,0 +1,189 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+#
+# CI for TESAIoT Community Edition.
+# Runs on every push and pull request to validate that the stack is coherent:
+#   - shell scripts lint cleanly (shellcheck)
+#   - Python services import-check / lint (ruff)
+#   - admin-ui (TypeScript + Vite) type-checks, lints and builds
+#   - docker-compose.yml is syntactically valid (compose config)
+#
+# Everything here works on a single-organization, self-hosted checkout with no
+# secrets: a throwaway .env is generated from .env.example for compose validation.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: Lint shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: |
+          shopt -s nullglob
+          files=(scripts/*.sh)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No shell scripts found — skipping."
+            exit 0
+          fi
+          # -x lets shellcheck follow `source ./lib.sh`; warnings are non-fatal.
+          shellcheck -x -S warning "${files[@]}"
+
+  python:
+    name: Lint Python services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+      - name: Lint (ruff)
+        run: |
+          # Lint the two Python services. Style nits don't fail the build;
+          # only real errors (syntax, undefined names, unused imports) do.
+          ruff check --select E9,F63,F7,F82,F401,F811 services/api services/mqtt-bridge
+      - name: Byte-compile check
+        run: python -m compileall -q services/api services/mqtt-bridge
+
+  admin-ui:
+    name: Build admin UI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/admin-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: services/admin-ui/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        # eslint without --fix so CI fails instead of silently rewriting.
+        run: npx eslint src
+      - name: Type-check & build
+        run: npm run build
+
+  compose-validate:
+    name: Validate docker-compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create throwaway .env
+        # docker compose config needs the referenced variables to exist.
+        # No real secrets — placeholder values are enough for static validation.
+        run: cp .env.example .env
+      - name: Validate compose file
+        run: docker compose config --quiet
+
+  # ---------------------------------------------------------------------------
+  # Supply-chain / dependency vulnerability scanning.
+  # Fails the build on HIGH or CRITICAL findings so vulnerable deps can't merge.
+  # ---------------------------------------------------------------------------
+  python-audit:
+    name: Audit Python dependencies (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pip-audit
+        run: python -m pip install --upgrade pip pip-audit
+      - name: Audit api + mqtt-bridge requirements
+        # pip-audit exits non-zero on any known vulnerability -> CI fails.
+        run: |
+          pip-audit --strict --requirement services/api/requirements.txt
+          pip-audit --strict --requirement services/mqtt-bridge/requirements.txt
+
+  npm-audit:
+    name: Audit admin-ui dependencies (npm audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/admin-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: services/admin-ui/package-lock.json
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: npm audit (fail on high/critical)
+        # Audit only production dependencies: the admin UI ships as a static
+        # Vite build served by nginx, so devDependencies (vitest, eslint, the
+        # test/coverage tooling) never reach the runtime artifact and must not
+        # gate the release. Build-time deps (vite, ws) are kept current.
+        run: npm audit --omit=dev --audit-level=high
+
+  trivy-fs:
+    name: Trivy filesystem + config scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy scan (deps + IaC/Dockerfile misconfig)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          # Fail only on HIGH/CRITICAL with a known fix; surface secrets too.
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          scanners: vuln,misconfig,secret
+
+  trivy-image:
+    name: Build + Trivy-scan admin-ui image, generate SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build admin-ui image
+        run: docker build -t tesa-admin-ui:ci ./services/admin-ui
+      - name: Trivy image scan (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: tesa-admin-ui:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Generate SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: image
+          image-ref: tesa-admin-ui:ci
+          format: cyclonedx
+          output: sbom-admin-ui.cdx.json
+          # SBOM generation must not fail the build on findings.
+          exit-code: "0"
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-admin-ui
+          path: sbom-admin-ui.cdx.json
+          if-no-files-found: error

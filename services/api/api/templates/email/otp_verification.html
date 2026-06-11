@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Verify Your Account - TESA IoT Platform</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+        }
+        
+        /* Container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        /* Content */
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #555555;
+        }
+        
+        /* OTP Code */
+        .otp-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            border: 2px dashed #007bff;
+        }
+        
+        .otp-label {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .otp-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+            letter-spacing: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .otp-expiry {
+            font-size: 14px;
+            color: #dc3545;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .instructions h3 {
+            color: #28a745;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            color: #555555;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        /* Security notice */
+        .security-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        
+        .security-notice h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .security-notice h3::before {
+            content: "⚠️";
+            margin-right: 8px;
+        }
+        
+        .security-notice p {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .footer p {
+            color: #666666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive design */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header, .content, .footer {
+                padding: 30px 20px;
+            }
+            
+            .otp-container {
+                padding: 20px;
+            }
+            
+            .otp-code {
+                font-size: 28px;
+                letter-spacing: 4px;
+            }
+            
+            .logo {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TESA IoT Platform</div>
+            <div class="subtitle">Industrial IoT Solutions</div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">Hello {{ user_name or 'User' }},</div>
+            
+            <div class="message">
+                We received a request to verify your account. To complete the verification process, please use the One-Time Password (OTP) code below:
+            </div>
+            
+            <!-- OTP Code -->
+            <div class="otp-container">
+                <div class="otp-label">Your Verification Code</div>
+                <div class="otp-code">{{ otp_code }}</div>
+                <div class="otp-expiry">✅ Enter this code on the verification page</div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>How to use this code:</h3>
+                <ol>
+                    <li><a href="{{ verification_url or 'https://admin.localhost/auth/verify' }}" target="_blank">Go to the TESA IoT Platform verification page</a></li>
+                    <li>Enter the 6-digit code exactly as shown above</li>
+                    <li>Click "Verify" to complete the process</li>
+                    <li>Set up your account password when prompted</li>
+                </ol>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="security-notice">
+                <h3>Security Notice</h3>
+                <p><strong>Never share this code with anyone.</strong> TESA IoT Platform staff will never ask for your verification code.</p>
+                <p>If you didn't request this verification, please ignore this email and consider changing your account password.</p>
+                <p>This verification attempt was made from: <strong>{{ request_ip or 'Unknown IP' }}</strong></p>
+            </div>
+            
+            <div class="message">
+                If you have any questions or need assistance, please contact our support team at <a href="mailto:{{ support_email or 'admin@localhost' }}">{{ support_email or 'admin@localhost' }}</a>.
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>TESA IoT Platform</strong></p>
+            <p>Secure • Scalable • Reliable Industrial IoT Solutions</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>© {{ current_year or 2024 }} TESA IoT Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

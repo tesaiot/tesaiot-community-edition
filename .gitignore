@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build / dist artifacts
+dist/
+build/
+**/dist/
+**/build/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+**/secrets/
+
+# TLS / PKI material
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+*.jks
+
+# Data volumes / runtime state
+data/
+**/data/
+volumes/
+**/volumes/
+*.log
+logs/
+
+# Vault runtime + generated AppRole creds
+config/vault/data/
+config/vault-agent/token-*/
+config/vault-agent/secrets-unified/role-id
+config/vault-agent/secrets-unified/secret-id
+
+# Generated MongoDB keyfile (secret)
+config/mongodb/mongodb-keyfile
+
+# Rendered config files (generate-secrets.sh renders the committed *.tpl
+# templates with live secrets at these paths; docker-compose mounts the
+# rendered files). NEVER commit them - only the .tpl placeholders are tracked.
+config/emqx/emqx.conf
+config/emqx/auth-built-in-db-bootstrap.csv
+config/apisix/config.yaml
+config/apisix/apisix.yaml
+config/nginx/conf.d/30-iot-mtls.conf
+
+# Backups (contain secrets + DB dumps) and runtime logs
+backups/*
+!backups/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

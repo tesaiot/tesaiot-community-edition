@@ -1,0 +1,5 @@
+{{- /* TESAIoT Community Edition - Device Private Key Template */ -}}
+
+{{- with secret "pki-int/issue/iot-device-ecc" (printf "common_name=%s.device.tesa.local" (env "DEVICE_ID")) "ttl=8760h" -}}
+{{ .Data.private_key }}
+{{- end -}}

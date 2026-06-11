@@ -1,0 +1,48 @@
+/*
+ * TESAIoT Community Edition - MQTT client configuration (Infineon OPTIGA Trust M)
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ *
+ * Auto-generated for device : {{DEVICE_ID}}
+ * OPTIGA Trust M UID         : {{TRUSTM_UID}}
+ * Generated (UTC)           : {{GENERATION_DATE}}
+ *
+ * Hardware-anchored mTLS: the private key never leaves the OPTIGA Trust M
+ * secure element. The firmware binds the key via the PSA / cy_tls APIs
+ * (cy_tls_set_optiga_key_id() + cy_tls_set_client_cert()), so no private key
+ * is emitted into this header. Broker host/port come from the deployment
+ * configuration - never hardcoded.
+ */
+
+#ifndef MQTT_CLIENT_CONFIG_H
+#define MQTT_CLIENT_CONFIG_H
+
+/* ----- Broker endpoint ----- */
+#define MQTT_BROKER_HOST       "{{MQTT_BROKER_HOST}}"
+#define MQTT_BROKER_PORT       {{MQTT_BROKER_PORT}}
+#define MQTT_USE_TLS           1
+#define MQTT_USE_MUTUAL_TLS    1
+#define MQTT_USE_SECURE_ELEMENT 1
+
+/* ----- Device identity ----- */
+#define MQTT_CLIENT_IDENTIFIER "{{DEVICE_ID}}"
+#define MQTT_USERNAME          "{{MQTT_USERNAME}}"
+#define OPTIGA_TRUSTM_UID      "{{TRUSTM_UID}}"
+
+/* ----- Trust anchor: TESAIoT issuing CA chain ----- */
+#define ROOT_CA_CERTIFICATE \
+{{CA_CERTIFICATE}}
+
+/* ----- Factory trust anchor: Infineon OPTIGA Trust M CA ----- */
+#define FACTORY_CA_CERTIFICATE \
+{{FACTORY_CA_CERTIFICATE}}
+
+/* TESAIoT-issued client certificate (public; the matching key stays in the SE) */
+#define CLIENT_CERTIFICATE \
+{{CLIENT_CERTIFICATE}}
+
+/* TESAIoT-issued client private key (held in OPTIGA Trust M secure element) */
+#define CLIENT_PRIVATE_KEY \
+{{CLIENT_PRIVATE_KEY}}
+
+#endif /* MQTT_CLIENT_CONFIG_H */

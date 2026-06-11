@@ -1,0 +1,22 @@
+/*
+ * TESAIoT Community Edition - HTTPS telemetry-ingest client configuration
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ *
+ * Auto-generated for device : {{DEVICE_ID}}
+ * Generated (UTC)           : {{GENERATION_DATE}}
+ *
+ * For devices that POST telemetry over HTTPS instead of MQTT. The ingest base
+ * URL comes from the deployment configuration (TESA_PUBLIC_INGEST_BASE_URL) -
+ * never hardcoded. The device presents its client certificate (mTLS) to the
+ * ingest listener; the same TESAIoT CA chain in mqtt_client_config.h applies.
+ */
+
+#ifndef HTTPS_CLIENT_CONFIG_H
+#define HTTPS_CLIENT_CONFIG_H
+
+#define HTTPS_INGEST_BASE_URL   "{{INGEST_BASE_URL}}"
+#define HTTPS_TELEMETRY_PATH    "/api/v1/telemetry"
+#define HTTPS_DEVICE_IDENTIFIER "{{DEVICE_ID}}"
+
+#endif /* HTTPS_CLIENT_CONFIG_H */

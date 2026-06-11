@@ -1,0 +1,540 @@
+/**
+ * TESA IoT Platform - Schema Form Styling
+ * Professional styling for React JSON Schema Form
+ */
+
+/* Base form styling */
+.rjsf > * + * {
+  margin-top: 1rem;
+}
+
+.rjsf fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.rjsf fieldset > * + * {
+  margin-top: 1rem;
+}
+
+.rjsf legend {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+.dark .rjsf legend {
+  color: #fff;
+}
+
+/* Field wrapper */
+.rjsf .form-group {
+  margin-bottom: 0.5rem;
+}
+
+.rjsf .form-group > * + * {
+  margin-top: 0.5rem;
+}
+
+/* Labels */
+.rjsf label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.dark .rjsf label {
+  color: #d1d5db;
+}
+
+.rjsf label.control-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.dark .rjsf label.control-label {
+  color: #d1d5db;
+}
+
+/* Required field indicator */
+.rjsf .required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+/* Input fields */
+.rjsf input[type="text"],
+.rjsf input[type="number"],
+.rjsf input[type="email"],
+.rjsf input[type="url"],
+.rjsf input[type="password"],
+.rjsf input[type="date"],
+.rjsf input[type="datetime-local"],
+.rjsf input[type="time"],
+.rjsf input[type="month"],
+.rjsf input[type="week"],
+.rjsf textarea,
+.rjsf select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: all 0.2s;
+}
+
+.dark .rjsf input[type="text"],
+.dark .rjsf input[type="number"],
+.dark .rjsf input[type="email"],
+.dark .rjsf input[type="url"],
+.dark .rjsf input[type="password"],
+.dark .rjsf input[type="date"],
+.dark .rjsf input[type="datetime-local"],
+.dark .rjsf input[type="time"],
+.dark .rjsf input[type="month"],
+.dark .rjsf input[type="week"],
+.dark .rjsf textarea,
+.dark .rjsf select {
+  border-color: #4b5563;
+  background-color: #1f2937;
+  color: #fff;
+}
+
+.rjsf input[type="number"] {
+  padding-right: 2rem;
+}
+
+/* Textarea specific */
+.rjsf textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Select dropdown */
+.rjsf select {
+  appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236B7280' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-size: 16px;
+}
+
+.dark .rjsf select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239CA3AF' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+}
+
+/* Checkbox and Radio */
+.rjsf input[type="checkbox"],
+.rjsf input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  color: #3b82f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.dark .rjsf input[type="checkbox"],
+.dark .rjsf input[type="radio"] {
+  border-color: #4b5563;
+}
+
+.rjsf input[type="radio"] {
+  border-radius: 50%;
+}
+
+/* Checkbox/Radio labels */
+.rjsf .checkbox label,
+.rjsf .radio label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.rjsf .checkbox input,
+.rjsf .radio input {
+  margin-top: 0.125rem;
+}
+
+/* Field descriptions */
+.rjsf .field-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.dark .rjsf .field-description {
+  color: #9ca3af;
+}
+
+/* Error messages */
+.rjsf .text-danger,
+.rjsf .has-error .help-block {
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+.dark .rjsf .text-danger,
+.dark .rjsf .has-error .help-block {
+  color: #f87171;
+}
+
+.rjsf .has-error input,
+.rjsf .has-error textarea,
+.rjsf .has-error select {
+  border-color: #ef4444;
+}
+
+.dark .rjsf .has-error input,
+.dark .rjsf .has-error textarea,
+.dark .rjsf .has-error select {
+  border-color: #f87171;
+}
+
+/* Button styling */
+.rjsf button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.rjsf button[type="submit"] {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+}
+
+.rjsf button[type="submit"]:hover {
+  background-color: #2563eb;
+}
+
+.rjsf button[type="submit"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.rjsf button.btn-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: none;
+}
+
+.rjsf button.btn-info:hover {
+  background-color: #bfdbfe;
+}
+
+.dark .rjsf button.btn-info {
+  background-color: #1e3a8a;
+  color: #93bbfc;
+}
+
+.rjsf button.btn-add {
+  background-color: #d1fae5;
+  color: #065f46;
+  border: none;
+}
+
+.rjsf button.btn-add:hover {
+  background-color: #a7f3d0;
+}
+
+.dark .rjsf button.btn-add {
+  background-color: #064e3b;
+  color: #6ee7b7;
+}
+
+.rjsf button.btn-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: none;
+}
+
+.rjsf button.btn-danger:hover {
+  background-color: #fecaca;
+}
+
+.dark .rjsf button.btn-danger {
+  background-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* Array field styling */
+.rjsf .array-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background-color: #f9fafb;
+}
+
+.dark .rjsf .array-item {
+  border-color: #374151;
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.rjsf .array-item-toolbox {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Object field styling */
+.rjsf .object-property-expand {
+  margin-bottom: 1rem;
+}
+
+/* Nested fieldsets */
+.rjsf fieldset fieldset {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+}
+
+.dark .rjsf fieldset fieldset {
+  border-color: #374151;
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.rjsf fieldset fieldset legend {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0 0.5rem;
+  margin-left: -0.5rem;
+}
+
+/* Range input */
+.rjsf input[type="range"] {
+  width: 100%;
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 0.5rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+.dark .rjsf input[type="range"] {
+  background-color: #374151;
+}
+
+.rjsf input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rjsf input[type="range"]::-webkit-slider-thumb:hover {
+  background-color: #2563eb;
+}
+
+.rjsf input[type="range"]::-moz-range-thumb {
+  width: 1rem;
+  height: 1rem;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 0;
+  transition: all 0.2s;
+}
+
+.rjsf input[type="range"]::-moz-range-thumb:hover {
+  background-color: #2563eb;
+}
+
+/* File input */
+.rjsf input[type="file"] {
+  width: 100%;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.dark .rjsf input[type="file"] {
+  color: #9ca3af;
+}
+
+.rjsf input[type="file"]::file-selector-button {
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #dbeafe;
+  color: #1e40af;
+  cursor: pointer;
+}
+
+.rjsf input[type="file"]::file-selector-button:hover {
+  background-color: #bfdbfe;
+}
+
+.dark .rjsf input[type="file"]::file-selector-button {
+  background-color: #1e3a8a;
+  color: #93bbfc;
+}
+
+/* Disabled state */
+.rjsf input:disabled,
+.rjsf textarea:disabled,
+.rjsf select:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.dark .rjsf input:disabled,
+.dark .rjsf textarea:disabled,
+.dark .rjsf select:disabled {
+  background-color: #111827;
+  color: #6b7280;
+}
+
+/* Focus states */
+.rjsf input:focus,
+.rjsf textarea:focus,
+.rjsf select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Grid layout for inline fields */
+.rjsf .form-inline {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .rjsf .form-inline {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rjsf .form-inline {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Help text */
+.rjsf .help-block {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+}
+
+.dark .rjsf .help-block {
+  color: #9ca3af;
+}
+
+/* Loading state */
+.rjsf.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Animations */
+.rjsf .array-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.rjsf .array-item.removing {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Custom widget overrides */
+.rjsf .widget-datetime input {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Boolean switch styling */
+.rjsf .widget-checkbox.widget-boolean {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rjsf .widget-checkbox.widget-boolean input {
+  position: absolute;
+  left: -9999px;
+}
+
+.rjsf .widget-checkbox.widget-boolean label {
+  margin-left: 0.5rem;
+}
+
+/* Tab content specific adjustments */
+[role="tabpanel"] .rjsf {
+  margin-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .rjsf .array-item-toolbox {
+    flex-direction: column;
+  }
+  
+  .rjsf button {
+    width: 100%;
+  }
+}
+
+/* Schema form preview specific */
+.schema-form-preview {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.schema-form-preview .rjsf {
+  min-width: 0;
+}
+
+/* Professional form container styling */
+.schema-form-preview .rjsf fieldset {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.dark .schema-form-preview .rjsf fieldset {
+  background-color: rgba(31, 41, 55, 0.3);
+  border-color: #374151;
+}
+
+.schema-form-preview .rjsf fieldset legend {
+  background-color: white;
+  padding: 0 0.75rem;
+  margin-left: -0.25rem;
+  font-weight: 600;
+}
+
+.dark .schema-form-preview .rjsf fieldset legend {
+  background-color: #1f2937;
+}

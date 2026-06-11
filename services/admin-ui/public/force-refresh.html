@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESA IoT Platform - Force Cache Clear</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            margin: 0 0 20px;
+            font-size: 28px;
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .progress {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            height: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            background: #4ade80;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .button {
+            background: #4ade80;
+            color: #1e293b;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .error {
+            background: #ef4444;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #22c55e;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 TESA IoT Platform Cache Cleaner</h1>
+        
+        <div class="status" id="status">
+            <p><strong>Current Issue Detected:</strong></p>
+            <p>Browser cached old file: <code>index.clIneevB.js</code></p>
+            <p>Server has new file: <code>index.B03mebu1.js</code></p>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div id="message">
+            <p>Click the button below to force clear all caches and reload with fresh content.</p>
+        </div>
+
+        <button class="button" onclick="forceClearCache()">
+            🧹 Force Clear Cache & Reload
+        </button>
+
+        <button class="button" onclick="manualInstructions()">
+            📋 Show Manual Instructions
+        </button>
+
+        <div id="instructions" style="display: none; text-align: left; margin-top: 20px;">
+            <h3>Manual Cache Clear Instructions:</h3>
+            <p><strong>Firefox (Incognito):</strong></p>
+            <ol>
+                <li>Press <code>Ctrl + Shift + Delete</code></li>
+                <li>Select "Everything" for time range</li>
+                <li>Check "Cache" and "Cookies and Site Data"</li>
+                <li>Click "Clear Now"</li>
+                <li>Close ALL Firefox windows (including incognito)</li>
+                <li>Open new incognito window</li>
+                <li>Navigate to <code>https://localhost</code></li>
+            </ol>
+            <p><strong>Alternative Method:</strong></p>
+            <ol>
+                <li>Open Firefox Developer Tools (F12)</li>
+                <li>Go to Network tab</li>
+                <li>Check "Disable cache"</li>
+                <li>Hard refresh: <code>Ctrl + F5</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        async function forceClearCache() {
+            const progress = document.getElementById('progress');
+            const message = document.getElementById('message');
+            
+            try {
+                // Step 1: Clear sessionStorage and localStorage
+                progress.style.width = '20%';
+                message.innerHTML = '<p>Clearing local storage...</p>';
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Step 2: Unregister service workers
+                progress.style.width = '40%';
+                message.innerHTML = '<p>Unregistering service workers...</p>';
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for(let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                
+                // Step 3: Clear caches
+                progress.style.width = '60%';
+                message.innerHTML = '<p>Clearing application caches...</p>';
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }
+                
+                // Step 4: Add timestamp to force bypass cache
+                progress.style.width = '80%';
+                message.innerHTML = '<p>Preparing fresh reload...</p>';
+                const timestamp = Date.now();
+                const randomId = Math.random().toString(36).substring(2, 15);
+                
+                // Step 5: Redirect with cache-busting parameters
+                progress.style.width = '100%';
+                message.innerHTML = '<div class="success">✅ Cache cleared! Redirecting to fresh app...</div>';
+                
+                setTimeout(() => {
+                    // Force reload with cache-busting parameters
+                    window.location.href = `/?_t=${timestamp}&_cache=bust&_v=${randomId}`;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Cache clear error:', error);
+                message.innerHTML = `<div class="error">❌ Error clearing cache: ${error.message}<br>Please use manual instructions below.</div>`;
+                document.getElementById('instructions').style.display = 'block';
+            }
+        }
+
+        function manualInstructions() {
+            const instructions = document.getElementById('instructions');
+            instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Auto-detect if we're in the wrong state
+        window.addEventListener('load', () => {
+            // Check if old assets are being requested
+            const scripts = document.querySelectorAll('script[src*="index."]');
+            scripts.forEach(script => {
+                if (script.src.includes('clIneevB')) {
+                    document.getElementById('status').innerHTML += 
+                        '<div class="error">⚠️ Old cache detected in this page! Click button to fix.</div>';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+{{- with pkiCert "pki-int/issue/platform-service" "common_name=nginx.tesa.iot" "alt_names=nginx.tesa.iot,tesa-nginx,localhost" "ip_sans=127.0.0.1" "ttl=24h" -}}
+{{ .Key }}
+{{- end -}}

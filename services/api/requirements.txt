@@ -1,0 +1,59 @@
+# TESAIoT Community Edition - API service dependencies
+# SPDX-License-Identifier: Apache-2.0
+
+# Web framework (Flask monolith + thin FastAPI mount for device-management)
+Flask==2.3.2
+# Werkzeug pinned explicitly: Flask 2.3.x effectively requires Werkzeug>=2.3,<3
+# (Werkzeug 3.x removed APIs Flask 2.3 relies on); the pin stops the float.
+Werkzeug==2.3.8
+Flask-Cors==4.0.2
+Flask-JWT-Extended==4.5.3
+Flask-Limiter==3.5.0
+simple-websocket==1.0.0
+gunicorn==23.0.0
+
+# FastAPI sub-application (telemetry/dashboard module) mounted via a2wsgi
+fastapi==0.100.1
+a2wsgi==1.10.4
+
+# Datastores
+pymongo==4.6.3
+motor==3.4.0
+psycopg2-binary==2.9.7
+redis==4.6.0
+
+# HashiCorp Vault PKI client (certificate lifecycle)
+hvac==1.1.1
+
+# Auth + crypto (JWT, bcrypt, x509)
+PyJWT==2.8.0
+python-jose==3.4.0
+bcrypt==4.0.1
+# cryptography 42.0.8 (CVE fixes); pyOpenSSL bumped in lockstep because
+# pyOpenSSL 23.2.0 caps cryptography at <42.
+cryptography==42.0.8
+pyOpenSSL==24.1.0
+authlib==1.3.2
+
+# MQTT (EMQX auth/webhook integration)
+paho-mqtt==2.1.0
+
+# HTTP clients (APISIX admin calls, internal HTTP, email-over-HTTP)
+requests==2.33.0
+aiohttp==3.10.11
+
+# Validation / serialization
+pydantic==1.10.13
+marshmallow==3.20.1
+jsonschema==4.17.3
+
+# Utilities
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+pyyaml>=6.0.1
+aiofiles>=23.0.0
+python-magic==0.4.27
+qrcode[pil]==7.4.2
+msgpack==1.0.5
+structlog>=23.2.0
+orjson>=3.9.0
