@@ -5,6 +5,23 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-06-21
+
+### Fixed
+
+- A hard refresh of, or a deep link to, the **API Keys** page (and any client
+  route that merely starts with `api`) no longer returns a backend 404 — the
+  edge `/api/` reverse proxy is now scoped to the API namespace so such routes
+  fall through to the single-page app.
+- The **Cmd+K global search** palette no longer lists Enterprise-only pages
+  that are not part of the Community Edition (Organizations, Platform Admin,
+  Analytics, System Health, Activity Logs, 3D Model Store, ACME, etc.).
+
+### Changed
+
+- README now includes a "Screens" tour with a screenshot and highlights for
+  each admin-UI page.
+
 ## [1.1.0] - 2026-06-21
 
 ### Added
