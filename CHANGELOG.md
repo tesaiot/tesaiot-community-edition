@@ -5,6 +5,20 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Pre-built container images.** The three TESAIoT-authored images (`api`,
+  `admin-ui`, `mqtt-bridge`) are published to `ghcr.io/tesaiot/…` as public,
+  multi-arch (linux/amd64 + linux/arm64) images on every release, via a new
+  `release-images` GitHub Actions workflow. `make install PREBUILT=1` (or
+  `make pull`) pulls them instead of building from source and falls back to a
+  source build if they are unavailable; `make install` still builds from source.
+  `docker-compose.yml` image references are registry-qualified through
+  `TESAIOT_REGISTRY` (default `ghcr.io/tesaiot`), with `BUILD_TAG` still
+  selecting the tag.
+
 ## [1.1.3] - 2026-06-21
 
 ### Fixed

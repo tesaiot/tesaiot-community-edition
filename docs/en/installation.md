@@ -174,12 +174,23 @@ All commands below are run from the `tesaiot-community-edition/` directory.
 ## 4. Path A — Automated install (recommended)
 
 ```bash
-# Bind to localhost (default — good for evaluation):
+# Fast path — pull the pre-built, multi-arch (amd64/arm64) images from GHCR:
+make install PREBUILT=1
+
+# OR build everything from source (contributors, customizing, or air-gapped):
 make install
 
-# OR bind to a real domain on first run (recommended for production):
-make install DOMAIN=iot.example.com
+# Bind to a real domain on first run (recommended for production; either path):
+make install PREBUILT=1 DOMAIN=iot.example.com
 ```
+
+> **Pre-built vs. from source.** Only three images are TESAIoT-authored
+> (`api`, `admin-ui`, `mqtt-bridge`); they are published to
+> `ghcr.io/tesaiot/…` on every release as public, multi-arch images. The other
+> services are upstream images pulled from their own registries. `PREBUILT=1`
+> pulls the three pre-built images instead of building them, and falls back to a
+> source build automatically if they cannot be pulled — so either command always
+> produces an identical stack. Set `TESAIOT_REGISTRY` to use a mirror.
 
 `make install` runs `scripts/install.sh`, which executes these steps in order
 (it is **safe to re-run** at any time):
@@ -187,7 +198,8 @@ make install DOMAIN=iot.example.com
 1. **Preflight** — checks Docker, ports, disk, `.env`.
 2. **Secrets + first-run TLS** — creates `.env` with strong random secrets, the
    MongoDB keyfile, and a self-signed CA + server cert in `config/tls/`.
-3. **Build images** — `docker compose build`.
+3. **Application images** — `docker compose build` (or, with `PREBUILT=1`,
+   `docker compose pull` the pre-built images, falling back to a build).
 4. **Bring up infrastructure** — `vault`, `mongodb`, `timescaledb`, `redis`,
    then waits for them to report healthy.
 5. **Initialise Vault PKI** — `vault operator init` (3 key shares, threshold 2),
@@ -255,7 +267,7 @@ You may edit `.env` now to set SMTP, change the domain, etc. (see
 ### 5.3 Build images
 
 ```bash
-make build            # docker compose build
+make build            # docker compose build  (or: make pull — pre-built GHCR images)
 ```
 
 ### 5.4 Start Vault and initialise its PKI

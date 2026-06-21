@@ -83,16 +83,26 @@ nginx ใช้ `server_name _` จึงตอบทุกโฮสต์อย
 ## ติดตั้งด้วยคำสั่งเดียว (แนะนำ)
 
 ```bash
+# ทางหลัก (เร็ว) — ดึงอิมเมจ pre-built แบบ multi-arch (amd64/arm64) จาก GHCR:
+make install PREBUILT=1
+
+# …หรือ build จาก source เอง (contributor / แก้โค้ด / ออฟไลน์):
 make install
 ```
+
+> **pre-built กับ build เอง:** มีเพียง 3 อิมเมจที่ TESAIoT สร้างเอง (`api`,
+> `admin-ui`, `mqtt-bridge`) ซึ่งเผยแพร่ขึ้น `ghcr.io/tesaiot/…` ทุกครั้งที่ release
+> เป็น public + multi-arch ส่วนที่เหลือเป็นอิมเมจจากต้นทาง `PREBUILT=1` จะดึง 3 อิมเมจ
+> นี้แทนการ build และ **fallback ไป build เองอัตโนมัติ**ถ้าดึงไม่ได้ ทั้งสองทางได้ stack
+> เหมือนกันเป๊ะ (ตั้ง `TESAIOT_REGISTRY` เพื่อใช้ mirror ได้)
 
 (ไม่ต้อง `cp .env.example .env` เอง — สคริปต์จะสร้าง `.env` พร้อม secret สุ่มให้
 การ copy ไฟล์ตัวอย่างที่ยังเป็น CHANGEME ไว้ก่อนจะทำให้ preflight ล้มเหลว)
 
-หรือระบุโดเมนสาธารณะตั้งแต่ครั้งแรก:
+หรือระบุโดเมนสาธารณะตั้งแต่ครั้งแรก (ทั้งสองทาง):
 
 ```bash
-make install DOMAIN=example.com
+make install PREBUILT=1 DOMAIN=example.com
 ```
 
 `make install` จะเรียก `scripts/install.sh` ซึ่งทำตามลำดับดังนี้:
@@ -120,7 +130,7 @@ make install DOMAIN=example.com
 ```bash
 make preflight              # ตรวจสอบ prerequisite ของ host
 make secrets                # สร้าง .env, mongo keyfile, TLS certs + render config templates
-make build                  # build อิมเมจของทุก service
+make build                  # build อิมเมจจาก source  (หรือ: make pull — ดึงอิมเมจ pre-built จาก GHCR)
 docker compose up -d vault  # ยก Vault ขึ้นก่อน
 make init-pki               # initialise/unseal Vault และสร้าง PKI
 make up                     # ยก stack ที่เหลือขึ้นทั้งหมด
