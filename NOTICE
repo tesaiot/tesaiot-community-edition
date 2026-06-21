@@ -46,3 +46,15 @@ Frontend Assets
 
 Users of this distribution are responsible for complying with the license
 terms of each bundled third-party component as obtained from its source.
+
+
+Trademarks
+----------
+
+The Apache-2.0 license covers the source code only; it does not grant rights to
+use the name, logo, or marks of TESAIoT or the Thai Embedded Systems Association
+(TESA). "TESAIoT" and the TESAIoT logo are marks of TESA. You may make honest,
+factual reference to TESAIoT (for example, "built on TESAIoT"); please see
+TRADEMARK.md for simple guidelines and PRINCIPLES.md for the spirit behind them.
+A courtesy attribution such as "Built on TESAIoT by TESA" is appreciated but not
+required beyond preserving this NOTICE.

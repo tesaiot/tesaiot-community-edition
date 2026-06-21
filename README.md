@@ -267,6 +267,9 @@ Full English docs live in [`docs/en/`](docs/en/):
 - **Security:** **do not** open a public issue — follow [SECURITY.md](SECURITY.md).
 - **Contributing:** read [CONTRIBUTING.md](CONTRIBUTING.md) and the
   [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+- **Our open-source stance:** read [PRINCIPLES.md](PRINCIPLES.md) — what is free,
+  what we protect and why, and where any revenue goes. Using TESAIoT? You are
+  welcome to add your organization to [ADOPTERS.md](ADOPTERS.md).
 
 ---
 
@@ -278,3 +281,8 @@ platform's owner. See [`LICENSE`](LICENSE) for the full Apache License 2.0 text
 and [`NOTICE`](NOTICE) for attribution and origin. Changes are tracked in
 [`CHANGELOG.md`](CHANGELOG.md) following [Keep a Changelog](https://keepachangelog.com)
 and [Semantic Versioning](https://semver.org).
+
+The code is Apache-2.0; the **TESAIoT name and marks** are stewarded by TESA for
+everyone who relies on them — see [`PRINCIPLES.md`](PRINCIPLES.md) for our stance
+and [`TRADEMARK.md`](TRADEMARK.md) for simple, friendly brand guidelines (the
+answer to "may we use the name?" is almost always yes).
