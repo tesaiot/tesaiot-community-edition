@@ -636,9 +636,13 @@ def get_realtime_system_health_detail() -> Tuple[Response, int]:
         asyncio.set_event_loop(loop)
 
         try:
+            # Use the fast variant: it computes each service's status from the
+            # API's own probes (DB clients, Vault, self) with a healthy fallback,
+            # so the dashboard is accurate even when no Docker socket is
+            # available (Community Edition runs the API without one).
             detailed_data = loop.run_until_complete(
                 asyncio.wait_for(
-                    realtime_analytics_service.get_system_health_metrics(),
+                    realtime_analytics_service.get_system_health_metrics_fast(),
                     timeout=12.0,
                 )
             )
@@ -649,6 +653,9 @@ def get_realtime_system_health_detail() -> Tuple[Response, int]:
             detailed_data = {}
 
         containers = detailed_data.get('containers') or []
+        # When there are no containers to read (no Docker socket), fall back to
+        # these per-service statuses the API already probed.
+        probe_services = detailed_data.get('services') or {}
         services_map: Dict[str, Dict[str, Any]] = {}
 
         for container in containers:
@@ -689,17 +696,30 @@ def get_realtime_system_health_detail() -> Tuple[Response, int]:
 
         services_payload: List[Dict[str, Any]] = []
         for service_key in SERVICE_DISPLAY_ORDER:
+            # Community Edition ships no Prometheus, so don't report a phantom
+            # "Monitoring" service (it would otherwise always read healthy).
+            if service_key == 'monitoring':
+                continue
             service_entry = services_map.get(service_key)
             if not service_entry:
                 info = SERVICE_KEY_INFO.get(service_key)
                 if not info:
                     continue
+                # No container entry -> use the API's own probe of this service.
+                probe = probe_services.get(service_key)
+                probe_status = (
+                    normalize_service_status(probe.get('status'))
+                    if isinstance(probe, dict) else 'unknown'
+                )
+                probe_uptime = (
+                    (probe.get('uptime') if isinstance(probe, dict) else None) or 'Unknown'
+                )
                 services_payload.append(
                     {
                         'key': service_key,
                         'display_name': info['display_name'],
-                        'status': 'unknown',
-                        'uptime': 'Unknown',
+                        'status': probe_status,
+                        'uptime': probe_uptime,
                         'metrics': {
                             'cpu': None,
                             'memory': None,
@@ -727,14 +747,33 @@ def get_realtime_system_health_detail() -> Tuple[Response, int]:
                 }
             )
 
+        # Compute a real platform health score from the resolved service
+        # statuses. Community Edition has no metrics aggregator, so CPU/MEM are
+        # reported as null and the UI hides them rather than showing a 0%.
+        healthy_count = sum(1 for s in services_payload if s.get('status') == 'healthy')
+        total_count = len(services_payload)
+        health_score = round(healthy_count / total_count * 100) if total_count else None
+
+        base_metrics = dict(detailed_data.get('system_metrics') or {})
+        overall_health = base_metrics.get('overall_health') or detailed_data.get('overall_health')
+        base_metrics['platform_health_score'] = health_score
+        base_metrics['healthy_services'] = healthy_count
+        base_metrics['total_services'] = total_count
+        for _k in ('avg_cpu_usage', 'avg_memory_usage', 'cpu', 'memory'):
+            if not base_metrics.get(_k):
+                base_metrics[_k] = None
+
         detailed_response = {
             'services': services_payload,
             'databases': detailed_data.get('databases', {}),
             'containers': containers,
-            'system_metrics': detailed_data.get('system_metrics', {}),
+            'system_metrics': base_metrics,
             'legacy_services': detailed_data.get('legacy_services', {}),
-            'status': normalize_service_status(detailed_data.get('overall_health')),
-            'timestamp': detailed_data.get('last_updated', datetime.now().isoformat()),
+            'platform_health_score': health_score,
+            'status': normalize_service_status(overall_health),
+            'timestamp': detailed_data.get('generated_at')
+                or detailed_data.get('last_updated')
+                or datetime.now().isoformat(),
         }
 
         sanitized_data = sanitize_response_data(detailed_response)

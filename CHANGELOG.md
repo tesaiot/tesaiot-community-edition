@@ -5,6 +5,21 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.7] - 2026-06-21
+
+### Fixed
+
+- **Dashboard "Platform Health Score" is accurate.** The detailed system-health
+  endpoint built its per-service status only from Docker container stats, which
+  the Community Edition API cannot read (it runs without a Docker socket, by
+  design). With no containers every service fell back to `unknown`, so the
+  dashboard showed **0%**, **0/8 services healthy**, and a misleading **CPU 0% •
+  MEM 0%**. It now derives each service's status from the API's own probes
+  (MongoDB / Redis / Vault clients, plus the API itself), reports a real
+  `platform_health_score`, drops the phantom Prometheus "monitoring" service
+  that CE does not ship, and returns CPU/MEM as `null` (the UI hides them) since
+  CE has no metrics aggregator.
+
 ## [1.1.6] - 2026-06-21
 
 ### Fixed

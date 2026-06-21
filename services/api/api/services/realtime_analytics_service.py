@@ -962,8 +962,11 @@ class RealTimeAnalyticsService:
                     'overall_health': 'healthy',
                     'total_containers': len(containers),
                     'healthy_containers': len([c for c in containers if c['health'] == 'healthy']),
-                    'avg_cpu_usage': sum(c['cpu_percent'] for c in containers) / len(containers) if containers else 0,
-                    'avg_memory_usage': sum(c['memory_percent'] for c in containers) / len(containers) if containers else 0
+                    # None (not 0) when there are no container stats to read
+                    # (Community Edition runs without a Docker socket); the UI
+                    # then hides CPU/MEM instead of showing a misleading 0%.
+                    'avg_cpu_usage': sum(c['cpu_percent'] for c in containers) / len(containers) if containers else None,
+                    'avg_memory_usage': sum(c['memory_percent'] for c in containers) / len(containers) if containers else None
                 },
                 'generated_at': datetime.now().isoformat(),
                 'response_time': 'fast'
