@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright TESAIoT Platform contributors
+#
+# Build and publish the three TESAIoT-authored container images
+# (api, admin-ui, mqtt-bridge) as multi-arch (amd64 + arm64) images to the
+# GitHub Container Registry (GHCR). The other services in the stack
+# (Vault, EMQX, MongoDB, TimescaleDB, Redis, APISIX, nginx) are upstream
+# pre-built images and are NOT republished here.
+#
+# Triggers:
+#   - pushing a release tag (v*)            -> tags 1.2.3, 1.2, latest
+#   - manual run (workflow_dispatch)        -> tags <VERSION.txt>, major.minor, latest
+#
+# First-time setup (once): after the first successful run, set each package's
+# visibility to Public under the org Packages settings so anonymous
+# `docker compose pull` works. Until then `make install PREBUILT=1` simply
+# falls back to building from source.
+
+name: Release images
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: release-images-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build & push ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: tesa-api
+            context: ./services/api
+          - name: tesa-admin-ui
+            context: ./services/admin-ui
+          - name: tesa-mqtt-bridge
+            context: ./services/mqtt-bridge
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: echo "v=$(tr -d '[:space:]' < VERSION.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU (arm64 emulation)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.ver.outputs.v }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.ver.outputs.v }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.name }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.url=https://www.tesaiot.com/#community-edition
+            org.opencontainers.image.licenses=Apache-2.0
+            org.opencontainers.image.vendor=Thai Embedded Systems Association (TESA)
+
+      - name: Build & push (amd64 + arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}

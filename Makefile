@@ -15,7 +15,7 @@ s            ?=
 .DEFAULT_GOAL := help
 
 .PHONY: help install set-domain up down restart logs ps health secrets \
-        init-pki init-db init-emqx init-apisix preflight build backup restore \
+        init-pki init-db init-emqx init-apisix preflight build pull backup restore \
         clean teardown unseal
 
 help: ## Show this help
@@ -23,8 +23,8 @@ help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	  awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-install: ## One-command bootstrap (preflight->secrets->pki->db->up->health)
-	@$(SCRIPTS)/install.sh $(if $(DOMAIN),--domain=$(DOMAIN),)
+install: ## One-command bootstrap (builds from source). Add PREBUILT=1 to pull pre-built images.
+	@$(SCRIPTS)/install.sh $(if $(DOMAIN),--domain=$(DOMAIN),) $(if $(PREBUILT),--prebuilt,)
 
 set-domain: ## Set/change the public domain in one place: make set-domain DOMAIN=iot.acme.com
 	@test -n "$(DOMAIN)" || { echo "usage: make set-domain DOMAIN=iot.acme.com"; exit 1; }
@@ -40,8 +40,11 @@ preflight: ## Check host prerequisites (docker, ports, disk, .env)
 secrets: ## Generate .env, mongo keyfile, first-run TLS certs
 	@$(SCRIPTS)/generate-secrets.sh $(if $(DOMAIN),--domain=$(DOMAIN),)
 
-build: ## Build all service images
+build: ## Build all service images from source
 	@$(COMPOSE) build
+
+pull: ## Pull pre-built images from the registry (api, admin-ui, mqtt-bridge)
+	@$(COMPOSE) pull api admin-ui mqtt-bridge
 
 up: ## Start the full stack
 	@$(COMPOSE) up -d

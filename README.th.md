@@ -52,11 +52,25 @@ Linux และบน **Docker Desktop** (macOS ทั้ง Intel และ App
 
 ```bash
 cp .env.example .env
-make install
+
+# ทางหลัก (เร็ว) — ดึงอิมเมจ pre-built แบบ multi-arch จาก ghcr.io/tesaiot/…
+make install PREBUILT=1
+
+# …หรือ build จาก source เอง (สำหรับ contributor / แก้โค้ด / ออฟไลน์)
+# เป็น fallback อัตโนมัติด้วยถ้าดึงอิมเมจไม่ได้:
+#   make install
+
+# ระบุโดเมนตอนติดตั้งครั้งแรกได้ (ทั้งสองทาง):
+#   make install PREBUILT=1 DOMAIN=iot.example.com
 ```
 
-`make install` จะรันลำดับ: preflight → secrets → vault/databases → Vault PKI →
+`make install` จะรันลำดับ: preflight → secrets → **build จาก source** (หรือ
+**`PREBUILT=1`** เพื่อดึงอิมเมจ pre-built) → vault/databases → Vault PKI →
 db init → restart services ที่ต้องใช้ใบรับรอง → ยก app ขึ้น → emqx + apisix → health
+
+> มีเพียง 3 อิมเมจที่ TESAIoT สร้างเอง (`api`, `admin-ui`, `mqtt-bridge`) และเผยแพร่ขึ้น
+> GHCR ทุกครั้งที่ release ส่วนที่เหลือเป็นอิมเมจจากต้นทาง ทั้งสองทางได้ stack เหมือนกันเป๊ะ —
+> Dockerfile เปิดให้ตรวจสอบได้ อิมเมจ pre-built ก็คือ build ที่คุณไม่ต้องรอเท่านั้นเอง
 
 หลังติดตั้งเสร็จ:
 

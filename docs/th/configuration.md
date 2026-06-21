@@ -33,6 +33,7 @@ cp .env.example .env
 | `DEFAULT_ORG_ID` | `default-org` | id ขององค์กรเดียว — **ห้ามเปลี่ยนหลัง boot ครั้งแรก** เพราะถูกเขียนลงข้อมูล |
 | `TZ` | `Asia/Bangkok` | โซนเวลา |
 | `BUILD_TAG` | `latest` | tag ของอิมเมจ |
+| `TESAIOT_REGISTRY` | `ghcr.io/tesaiot` | registry/namespace ของอิมเมจ pre-built (`api`, `admin-ui`, `mqtt-bridge`) — `docker compose pull` (หรือ `make install PREBUILT=1`) จะดึง `<registry>/tesa-*:<BUILD_TAG>` ส่วน `make build` จะ build แล้ว tag ชื่อเดียวกันในเครื่อง |
 
 ### HashiCorp Vault (PKI + secrets)
 

@@ -35,6 +35,7 @@ cp .env.example .env        # then edit, OR:
 | `DEFAULT_ORG_ID` | `default-org` | The single organization id. **Do not change after first boot** — it is written into stored data. |
 | `TZ` | `Asia/Bangkok` | Container timezone. |
 | `BUILD_TAG` / `CACHEBUST` / `BUILD_DATE` / `BUILD_HASH` | `latest` / `1` / `unknown` | Image tag + build metadata. |
+| `TESAIOT_REGISTRY` | `ghcr.io/tesaiot` | Registry/namespace for the pre-built `api`, `admin-ui`, `mqtt-bridge` images. `docker compose pull` (or `make install PREBUILT=1`) fetches `<registry>/tesa-*:<BUILD_TAG>`; `make build` re-tags the same name locally. |
 
 > CE is **single-organization**. The `organization_id` columns/fields are kept
 > in the schema so existing queries keep working, but the platform always reads

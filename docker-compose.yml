@@ -254,7 +254,9 @@ services:
   # API - Flask monolith (+ FastAPI device-management mount). Port 5566.
   # ---------------------------------------------------------------------------
   api:
-    image: tesa-api:${BUILD_TAG:-latest}
+    # Default: pull the pre-built image from GHCR (`docker compose pull`).
+    # `docker compose build` still works and re-tags this same name locally.
+    image: ${TESAIOT_REGISTRY:-ghcr.io/tesaiot}/tesa-api:${BUILD_TAG:-latest}
     build:
       context: ./services/api
       dockerfile: Dockerfile
@@ -429,7 +431,7 @@ services:
   # Admin UI - React SPA served by nginx (internal port 80)
   # ---------------------------------------------------------------------------
   admin-ui:
-    image: tesa-admin-ui:${BUILD_TAG:-latest}
+    image: ${TESAIOT_REGISTRY:-ghcr.io/tesaiot}/tesa-admin-ui:${BUILD_TAG:-latest}
     build:
       context: ./services/admin-ui
       dockerfile: Dockerfile
@@ -531,7 +533,7 @@ services:
   # MQTT telemetry bridge - EMQX -> API -> TimescaleDB/MongoDB
   # ---------------------------------------------------------------------------
   mqtt-bridge:
-    image: tesa-mqtt-bridge:${BUILD_TAG:-latest}
+    image: ${TESAIOT_REGISTRY:-ghcr.io/tesaiot}/tesa-mqtt-bridge:${BUILD_TAG:-latest}
     build:
       context: ./services/mqtt-bridge
       dockerfile: Dockerfile

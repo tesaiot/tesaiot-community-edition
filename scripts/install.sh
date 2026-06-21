@@ -12,9 +12,14 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 DOMAIN_ARG=""
+# Pre-built mode: pull published images instead of building from source.
+# Enable with --prebuilt or TESAIOT_PREBUILT=1. Falls back to a source build if
+# the registry images are unavailable, so a fresh checkout always installs.
+PREBUILT="${TESAIOT_PREBUILT:-0}"
 for arg in "$@"; do
   case "$arg" in
     --domain=*) DOMAIN_ARG="$arg" ;;
+    --prebuilt) PREBUILT=1 ;;
     *) ;;
   esac
 done
@@ -55,8 +60,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-banner "STEP 3  Build images"
-compose build
+if [ "${PREBUILT}" = "1" ]; then
+  banner "STEP 3  Pull pre-built images"
+  ok "Pre-built mode: pulling published images (api, admin-ui, mqtt-bridge)."
+  if ! compose pull api admin-ui mqtt-bridge; then
+    warn "Could not pull pre-built images (not published, private, or offline)."
+    warn "Falling back to building from source."
+    compose build
+  fi
+else
+  banner "STEP 3  Build images"
+  compose build
+fi
 
 # ---------------------------------------------------------------------------
 banner "STEP 4  Bring up infrastructure (vault, dbs, redis)"

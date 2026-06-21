@@ -181,18 +181,32 @@ APISIX runs in standalone YAML mode, so **etcd is not required**.
 git clone <your-fork-url> tesaiot-community-edition
 cd tesaiot-community-edition
 
-# 2. One-command bootstrap (generates secrets, builds, brings the stack up)
-make install
-#    optionally bind a domain on first run:
-#    make install DOMAIN=iot.example.com
+# 2. One-command bootstrap (generates secrets, brings the stack up)
+
+#    Fast path — pull the pre-built, multi-arch images (ghcr.io/tesaiot/…):
+make install PREBUILT=1
+
+#    …or build everything from source instead (contributors, customizing, or
+#    air-gapped). This is also the automatic fallback when images are not
+#    available:
+#    make install
+
+#    Optionally bind a public domain on first run (either path):
+#    make install PREBUILT=1 DOMAIN=iot.example.com
 
 # 3. Watch it come up
 make health
 ```
 
-`make install` runs: preflight → generate secrets + first-run TLS → build →
+`make install` runs: preflight → generate secrets + first-run TLS →
+**build from source** (or **`PREBUILT=1`** to pull the pre-built images) →
 start infra → init Vault PKI → start vault-agent → init databases → start the
 app tier → provision EMQX + APISIX → health check.
+
+> Only three images are TESAIoT-authored (`api`, `admin-ui`, `mqtt-bridge`) and
+> published to GHCR on each release; the rest are upstream images. Either path
+> produces an identical stack — the Dockerfiles are public, so a pre-built image
+> is just a build you didn't have to wait for.
 
 When it finishes it prints the URLs and reminds you that the bootstrap admin
 login is `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your generated `.env`.
@@ -223,7 +237,7 @@ credentials that only `make init-pki` creates:
 ```bash
 make preflight                # check host prerequisites
 make secrets                  # write .env + mongo keyfile + first-run TLS + rendered configs
-make build                    # build images
+make build                    # build images from source  (or: make pull — pre-built images)
 docker compose up -d vault    # start Vault FIRST
 make init-pki                 # initialise + unseal Vault, build the PKI hierarchy
 make up                       # now start the rest of the stack
