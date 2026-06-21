@@ -106,15 +106,6 @@ export function SidebarFooter() {
             <Cloud className="h-4 w-4 text-gray-400" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Storage</span>
           </div>
-          {isSuperAdmin && (
-            <Link
-              to="/organizations"
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-              title="View All Organizations"
-            >
-              <ExternalLink className="h-3 w-3 text-gray-400" />
-            </Link>
-          )}
         </div>
         <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden mb-1.5">
           <div className="h-full w-[5%] bg-blue-500 rounded-full" />
@@ -137,13 +128,6 @@ export function SidebarFooter() {
           <Cloud className="h-4 w-4 text-gray-400" />
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Storage</span>
         </div>
-        <Link
-          to={`/organizations/dashboard?org=${user?.organization_id}`}
-          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-          title="View Details"
-        >
-          <ExternalLink className="h-3 w-3 text-gray-400" />
-        </Link>
       </div>
 
       {/* Progress bar */}
