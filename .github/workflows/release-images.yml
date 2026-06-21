@@ -43,10 +43,13 @@ jobs:
         include:
           - name: tesa-api
             context: ./services/api
+            desc: "TESAIoT Community Edition — REST API (device/identity management, Vault PKI, telemetry, gateway). Apache-2.0."
           - name: tesa-admin-ui
             context: ./services/admin-ui
+            desc: "TESAIoT Community Edition — admin & telemetry dashboard (single-organization React UI). Apache-2.0."
           - name: tesa-mqtt-bridge
             context: ./services/mqtt-bridge
+            desc: "TESAIoT Community Edition — MQTT telemetry bridge (EMQX -> API, least-privilege service). Apache-2.0."
     steps:
       - uses: actions/checkout@v4
 
@@ -78,6 +81,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.ver.outputs.v }}
           labels: |
             org.opencontainers.image.title=${{ matrix.name }}
+            org.opencontainers.image.description=${{ matrix.desc }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://www.tesaiot.com/#community-edition
             org.opencontainers.image.licenses=Apache-2.0

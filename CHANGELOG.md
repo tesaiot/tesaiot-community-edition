@@ -5,6 +5,29 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2026-06-21
+
+### Fixed
+
+- **Clean device-details console.** Viewing a device no longer floods the browser
+  console:
+  - Verbose `console.log` debug traces (security-tab/algorithm/CSR-detection) are
+    stripped from the production bundle; `console.error`/`console.warn` are kept.
+  - The Enterprise-only `platform-admin/organizations/<org>/configuration`
+    endpoint now has a Community-tier compatibility stub, so it returns sensible
+    defaults instead of `404`.
+  - The native telemetry WebSocket at `/ws` is now reverse-proxied to the API
+    (it was reaching the SPA and failing to upgrade).
+  - The **Console** tab's live device-log streaming requires a `/ws/device-logs`
+    backend that the Community Edition does not ship; it now shows a clear notice
+    instead of opening a WebSocket that always failed. An Enterprise build can
+    re-enable it with `VITE_DEVICE_LOG_STREAMING=true`.
+
+### Changed
+
+- Published images now carry an `org.opencontainers.image.description` label so
+  the GHCR package pages show what each image is.
+
 ## [1.1.4] - 2026-06-21
 
 ### Added

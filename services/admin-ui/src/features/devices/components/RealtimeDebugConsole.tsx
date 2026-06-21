@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DEVICE_LOG_STREAMING_ENABLED } from '@/config/features.config';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,6 +113,10 @@ export const RealtimeDebugConsole: React.FC<RealtimeDebugConsoleProps> = ({
 
   // Connect to WebSocket
   const connect = useCallback(() => {
+    if (!DEVICE_LOG_STREAMING_ENABLED) {
+      addSystemEvent('info', 'Live device-log streaming is not available in the Community Edition.');
+      return;
+    }
     const token = AuthTokenManager.getToken();
     if (!token) {
       addSystemEvent('error', 'No authentication token found - please log in');

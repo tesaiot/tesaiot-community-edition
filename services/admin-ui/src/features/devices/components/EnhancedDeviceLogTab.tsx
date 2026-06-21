@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DEVICE_LOG_STREAMING_ENABLED } from '@/config/features.config';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,7 +161,8 @@ export const EnhancedDeviceLogTab: React.FC<EnhancedDeviceLogTabProps> = ({
 
   // WebSocket connection for real-time logs
   useEffect(() => {
-    if (!isLive) return;
+    // CE ships no device log-stream backend; never open the socket.
+    if (!isLive || !DEVICE_LOG_STREAMING_ENABLED) return;
 
     const token = localStorage.getItem('token');
     if (!token) return;

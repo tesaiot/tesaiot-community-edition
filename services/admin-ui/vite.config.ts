@@ -105,7 +105,10 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: false,   // keep console logs for debugging
+        // Strip noisy debug logging from production while keeping real error
+        // reporting (console.error / console.warn) intact.
+        drop_console: false,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
         drop_debugger: true,
         // CRITICAL: Disable ALL hoisting to prevent TDZ errors
         hoist_vars: false,

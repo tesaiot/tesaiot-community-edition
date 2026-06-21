@@ -53,6 +53,28 @@ def get_ui_configuration(org_id):
     }), 200
 
 
+@ce_compat_bp.route(
+    '/api/v1/platform-admin/organizations/<org_id>/configuration',
+    methods=['GET'])
+def platform_admin_org_configuration(org_id):
+    """The 'platform-admin' service-configuration surface is Enterprise-only.
+
+    CE runs a single organization on the community tier with no per-org feature
+    toggles, so return that as a valid configuration (matching the UI's
+    OrganizationServiceConfig shape) instead of a 404."""
+    return jsonify({
+        'id': f'config-{org_id}',
+        'organizationId': org_id,
+        'organizationName': 'Community',
+        'tier': 'community',
+        'enabledFeatures': [],
+        'customSettings': {},
+        'appliedToChildren': False,
+        'lastModified': '2026-01-01T00:00:00Z',
+        'lastModifiedBy': 'system',
+    }), 200
+
+
 @ce_compat_bp.route('/api/v1/dashboard/compliance/summary', methods=['GET'])
 def compliance_summary():
     """Baseline compliance posture for the Community Edition.

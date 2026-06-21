@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DEVICE_LOG_STREAMING_ENABLED } from '@/config/features.config';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -188,6 +189,8 @@ export const CSRWorkflowWidget: React.FC<CSRWorkflowWidgetProps> = ({
 
   // WebSocket connection for real-time updates
   useEffect(() => {
+    // CE ships no /ws/device-logs backend; skip the connection entirely.
+    if (!DEVICE_LOG_STREAMING_ENABLED) return;
     const token = AuthTokenManager.getToken();
     if (!token) {
       console.error('CSRWorkflowWidget: No auth token found for WebSocket');

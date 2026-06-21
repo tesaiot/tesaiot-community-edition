@@ -189,3 +189,12 @@ export function getFeaturesForVersion(version: string): string[] {
   
   return features;
 }
+
+/**
+ * Live device-log streaming requires a `/ws/device-logs/<id>` WebSocket backend
+ * that the single-organization Community Edition does not ship. It is therefore
+ * OFF by default — the Console tab shows a notice instead of opening a doomed
+ * WebSocket. An Enterprise build can enable it with VITE_DEVICE_LOG_STREAMING=true.
+ */
+export const DEVICE_LOG_STREAMING_ENABLED =
+  import.meta.env.VITE_DEVICE_LOG_STREAMING === 'true';
