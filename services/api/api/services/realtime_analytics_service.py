@@ -195,7 +195,24 @@ class RealTimeAnalyticsService:
 
                 # Calculate metrics
                 total_messages = telemetry_stats[0] if telemetry_stats and telemetry_stats[0] else 0
-                active_devices = telemetry_stats[1] if telemetry_stats and telemetry_stats[1] else 0
+
+                # "Active devices" = REGISTERED devices that reported telemetry in
+                # the window (a subset of the fleet). Counting raw distinct
+                # device_ids from the time-series store would also include ids
+                # whose device record no longer exists (decommissioned/test
+                # devices whose telemetry has not yet aged out), which made the
+                # dashboard report more "active" devices than the total enrolled.
+                cur.execute(
+                    """
+                    SELECT DISTINCT device_id
+                    FROM device_telemetry dt
+                    WHERE dt.time >= NOW() - INTERVAL %s
+                    AND dt.organization_id = %s
+                    """,
+                    (interval, organization_id),
+                )
+                telemetry_ids = {row[0] for row in cur.fetchall() if row and row[0]}
+                active_devices = self._count_registered_devices(telemetry_ids)
 
                 # Calculate throughput (messages per minute) based on time range
                 time_range_minutes = {
@@ -412,6 +429,27 @@ class RealTimeAnalyticsService:
             self.logger.error(f"Mongo fallback for IoT metrics failed: {exc}")
             return None
 
+    def _count_registered_devices(self, device_ids) -> int:
+        """Count how many of ``device_ids`` are registered devices.
+
+        Telemetry can outlive a device (decommissioned / test ids whose data has
+        not yet aged out), so a raw ``COUNT(DISTINCT device_id)`` over the
+        time-series store can exceed the enrolled fleet. Intersecting with the
+        device registry keeps "active"/"reporting" device counts a subset of the
+        total. If the registry is unreachable, fall back to the raw count rather
+        than reporting zero.
+        """
+        if not device_ids:
+            return 0
+        try:
+            db = self.mongodb_client if self.mongodb_client is not None else get_db()
+            if db is None:
+                return len(device_ids)
+            return db.devices.count_documents({'device_id': {'$in': list(device_ids)}})
+        except Exception as exc:
+            self.logger.debug(f"Registered-device intersection skipped: {exc}")
+            return len(device_ids)
+
     async def get_telemetry_daily_stats(self, organization_id: str) -> Dict[str, Any]:
         """
         Get telemetry statistics for the last 24 hours with hourly breakdown.
@@ -442,7 +480,7 @@ class RealTimeAnalyticsService:
                 cur.execute("""
                     SELECT
                         COUNT(*) as total_messages,
-                        COUNT(DISTINCT device_id) as total_devices
+                        array_agg(DISTINCT device_id) as device_ids
                     FROM device_telemetry dt
                     WHERE dt.time >= NOW() - INTERVAL '24 hours'
                     AND dt.organization_id = %s
@@ -466,7 +504,7 @@ class RealTimeAnalyticsService:
                 cur.execute("""
                     SELECT
                         COUNT(*) as messages,
-                        COUNT(DISTINCT device_id) as active_devices
+                        array_agg(DISTINCT device_id) as device_ids
                     FROM device_telemetry dt
                     WHERE dt.time >= NOW() - INTERVAL '15 minutes'
                     AND dt.organization_id = %s
@@ -509,7 +547,10 @@ class RealTimeAnalyticsService:
 
             # Process results
             total_messages_24h = daily_totals[0] if daily_totals and daily_totals[0] else 0
-            total_devices_24h = daily_totals[1] if daily_totals and daily_totals[1] else 0
+            # Registered devices that reported in the last 24h (subset of fleet).
+            total_devices_24h = self._count_registered_devices(
+                set(daily_totals[1]) if daily_totals and daily_totals[1] else set()
+            )
 
             # Process hourly breakdown for sparkline
             hourly_breakdown = []
@@ -536,7 +577,10 @@ class RealTimeAnalyticsService:
 
             # Process rolling 15-min
             messages_15min = rolling_15min[0] if rolling_15min and rolling_15min[0] else 0
-            active_devices_now = rolling_15min[1] if rolling_15min and rolling_15min[1] else 0
+            # Registered devices reporting in the live 15-minute window.
+            active_devices_now = self._count_registered_devices(
+                set(rolling_15min[1]) if rolling_15min and rolling_15min[1] else set()
+            )
             msg_per_min_live = round(messages_15min / 15, 1) if messages_15min else 0
 
             # Process protocol mix

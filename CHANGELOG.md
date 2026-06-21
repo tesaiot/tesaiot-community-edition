@@ -5,6 +5,20 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.8] - 2026-06-21
+
+### Fixed
+
+- **Dashboard device counts no longer exceed the enrolled fleet.** The
+  telemetry-derived counts ("active devices (1h)", "devices enrolled (24h)" and
+  "active now") counted every distinct `device_id` seen in the time-series
+  store, including ids whose device record no longer exists (decommissioned or
+  test devices whose telemetry has not yet aged out) — so the dashboard could
+  show e.g. *12/3 active* or 14 "enrolled" with only 3 registered devices. All
+  three now count only **registered** devices that reported telemetry in the
+  window (a shared `_count_registered_devices` intersection), so the figures are
+  always a subset of the enrolled fleet.
+
 ## [1.1.7] - 2026-06-21
 
 ### Fixed
