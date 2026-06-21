@@ -541,6 +541,44 @@ def _validate_api_key_request(api_key, db):
             'code': 'API_KEY_INVALID'
         }), 401)
 
+    # Organization API key (format: tesaiot_org_*) - validated against the
+    # org_api_keys store and bound to the key's organization + scopes.
+    if api_key.startswith('tesaiot_org_'):
+        from ..services import org_api_key_service
+        org_key = org_api_key_service.validate_api_key(api_key)
+        if org_key:
+            scopes = org_key.get('scopes') or []
+            org_id = org_key.get('organization_id')
+            g.organization_id = org_id
+            g.api_key_permissions = scopes
+            # Bind the request to a synthetic, read-only organization principal so
+            # the existing org-scoping (get_devices_for_user) and RBAC permission
+            # checks apply unchanged. Role 'user' is read-only (DEVICE_VIEW /
+            # TELEMETRY_VIEW), so an org API key can read but not mutate.
+            g.current_user = {
+                '_id': f"org_api_key:{org_key.get('id', '')}",
+                'email': f"org-api-key@{org_id}",
+                'role': 'user',
+                'organization_id': org_id,
+                'organization': org_id,
+                'is_api_key': True,
+                'api_key_scopes': scopes,
+            }
+            api_key_record = {
+                'key_type': 'org_api_key',
+                'organization_id': org_id,
+                'scopes': scopes,
+                'permissions': scopes,
+                'name': org_key.get('name'),
+            }
+            logger.debug(f"Organization API key validated for org {org_id}")
+            return api_key_record, None
+        logger.warning(f"Invalid or expired org API key (prefix {api_key[:18]}...)")
+        return None, (jsonify({
+            'error': 'Invalid or expired API key',
+            'code': 'API_KEY_INVALID'
+        }), 401)
+
     # Standard API key (hashed-first lookup with plaintext migrate-on-use)
     api_key_record = _lookup_standard_api_key(db, api_key)
     if not api_key_record:
@@ -550,6 +588,38 @@ def _validate_api_key_request(api_key, db):
             'code': 'API_KEY_INVALID'
         }), 401)
     return api_key_record, None
+
+
+def require_auth_or_api_key(f):
+    """Accept either a JWT bearer token or an API key (X-API-KEY / ?api_key).
+
+    Lets browser sessions (JWT) and programmatic / API-gateway integrations
+    (organization API key) call the same endpoint. When an API key is present it
+    is validated and the request is bound to the key's organization (read-only
+    for org keys); otherwise the JWT path is required. Pair with
+    @require_permission so the synthetic principal's role is still enforced.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = extract_api_key_from_request()
+        if api_key:
+            db = get_db()
+            if db is None:
+                # No credential store -> cannot validate. Fail closed.
+                logger.error("API key validation unavailable: database down (fail-closed)")
+                return jsonify({
+                    'error': 'Authentication unavailable',
+                    'code': 'AUTH_UNAVAILABLE'
+                }), 503
+            api_key_record, error_response = _validate_api_key_request(api_key, db)
+            if error_response:
+                return error_response
+            g.api_key_record = api_key_record
+            g.auth_method = 'api_key'
+            return f(*args, **kwargs)
+        # No API key presented -> require a valid JWT.
+        return require_auth(f)(*args, **kwargs)
+    return decorated_function
 
 
 def require_api_key(f):

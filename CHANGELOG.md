@@ -5,6 +5,31 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-06-21
+
+### Fixed
+
+- **mTLS device certificates can be issued again.** Direct Vault PKI issuance
+  was hard-coded to the `device-cert` role, whose `key_type=any` Vault permits
+  only for `/sign/` (a device-supplied CSR), never `/issue/` (a Vault-generated
+  key) — so generating a certificate for an mTLS device failed with *"role key
+  type 'any' not allowed for issuing certificates"*. Issuance now uses the
+  dedicated EC P-256 `iot-device-ecc` role, and that role allows the device's
+  URN identity SAN (`urn:tesa:iot:device:<id>`). A device created with
+  `auth_mode: mtls` now receives a working client certificate, connects to the
+  EMQX mutual-TLS listener (`:8883`), and its telemetry is stored and readable.
+- **Organization API keys now authenticate requests.** Keys minted by the API
+  Keys screen were stored and listed but never checked on the request path, so
+  they could not actually be used. They are now validated (against the
+  `org_api_keys` store) and bind the request to the key's organization as a
+  read-only principal. The device telemetry read endpoints
+  (`GET /api/v1/devices/<id>/telemetry` and `/telemetry/last`) accept either a
+  browser JWT or an `X-API-Key` / `?api_key=` organization key, so telemetry can
+  be read straight through the APISIX gateway with a key.
+- **Device certificate status endpoint no longer 500s** once a certificate
+  exists: it referenced an audit action that was missing from the enum, so every
+  status read after issuance raised. The audit action was added.
+
 ## [1.1.2] - 2026-06-21
 
 ### Fixed

@@ -1027,10 +1027,16 @@ def issue_device_certificate(device_id, user):
         vault_retries = 2
         for vault_attempt in range(vault_retries):
             try:
-                # Use the single available PKI role - device-cert
-                # This role supports both RSA and ECC certificates
-                role_name = 'device-cert'
-                
+                # Select an /issue/-capable PKI role. The generic 'device-cert'
+                # and 'csr-signing' roles are key_type=any, which Vault permits
+                # only for /sign/ (CSR-supplied key), never /issue/ (Vault-
+                # generated key) -- issuing against them fails with "role key
+                # type 'any' not allowed for issuing certificates". Community
+                # Edition issues EC P-256 client certificates for devices, which
+                # the dedicated 'iot-device-ecc' role provides.
+                role_name = 'iot-device-ecc'
+                key_type, key_bits = 'ec', 256
+
                 # Log the device type and algorithm for debugging
                 logger.info(f"Device type: {device_type}, Algorithm: {key_type}, Bits: {key_bits}, Using role: {role_name}")
             

@@ -20,7 +20,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, g
 from bson import ObjectId
 
-from ..core.auth import require_auth, require_role
+from ..core.auth import require_auth, require_role, require_auth_or_api_key
 from ..core.database import get_db, get_redis
 from ..core.rbac import RBAC, Permission, require_permission
 from ..utils.validation import (
@@ -144,7 +144,7 @@ def get_devices():
 
 # Internal verification: last telemetry (cache-first, DB fallback)
 @devices_bp.route('/<device_id>/telemetry/last', methods=['GET'])
-@require_auth
+@require_auth_or_api_key
 @require_permission(Permission.TELEMETRY_VIEW)
 def get_last_telemetry(device_id: str):
     try:
@@ -694,7 +694,7 @@ def update_device_status(device_id):
 # Estimated Size: 200 lines
 # Priority: HIGH
 @devices_bp.route('/<device_id>/telemetry', methods=['GET'])
-@require_auth
+@require_auth_or_api_key
 @require_permission(Permission.TELEMETRY_VIEW)
 def get_device_telemetry(device_id):
     """

@@ -104,3 +104,42 @@ MongoDB and validated by the API tier (APISIX runs in standalone YAML mode, so
 there are no per-consumer gateway keys). Each key is shown in full exactly once,
 at creation/rotation time; only a hash and a short prefix are stored. See
 [api-gateway-apisix.md](api-gateway-apisix.md).
+
+An organization key (prefix `tesaiot_org_…`) authenticates the read API, so you
+can pull device telemetry straight through the APISIX gateway — no browser
+session required. Pass it as the `X-API-Key` header (or `?api_key=`):
+
+```bash
+# Read the latest telemetry for a device through the gateway (:9443)
+curl -k https://localhost:9443/api/v1/devices/<device_id>/telemetry/last \
+  -H "X-API-Key: tesaiot_org_xxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+The key is read-only and scoped to its organization; an invalid or revoked key
+returns `401`.
+
+## 6. Device telemetry over MQTT (serverTLS and mTLS)
+
+Both device authentication modes publish to the same broker and land in the
+time-series store. Create a device in the UI (or via the API), then:
+
+- **serverTLS (`:8884`)** — the device authenticates with its **device id as the
+  MQTT username** and the generated MQTT password, over a TLS connection that
+  verifies the broker certificate. Publish JSON to
+  `device/<device_id>/telemetry`.
+- **mTLS (`:8883`)** — create the device with `auth_mode: mtls`, generate its
+  certificate (Device → Certificate → *Generate/Renew*, or
+  `POST /api/v1/devices/<id>/certificate/renew`), and download the
+  client certificate + key (Vault PKI issues an EC P-256 client cert). The
+  device presents that certificate; the broker verifies it at the TLS handshake
+  and the API webhook authorizes it by certificate CN. Present the **device id
+  as the MQTT username** as well (it must equal the certificate CN).
+
+After publishing, the sample is queryable from the time-series tier:
+
+```bash
+docker exec tesa-timescaledb psql -U postgres -d tesa_telemetry -tAc \
+  "SELECT count(*) FROM telemetry_generic WHERE device_id='<device_id>';"
+```
+
+and through the read API / gateway as in §5.

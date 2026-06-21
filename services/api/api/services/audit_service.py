@@ -82,7 +82,8 @@ class AuditAction(Enum):
     CERTIFICATE_VIEW = "certificate.view"
     CERTIFICATE_CSR_VALIDATED = "certificate.csr_validated"
     CERTIFICATE_CSR_SIGNED = "certificate.csr_signed"
-    
+    DEVICE_CERTIFICATE_STATUS_CHECK = "certificate.device_status_check"
+
     # Key provisioning actions
     KEY_GENERATE = "key.generate"
     KEY_DISTRIBUTE = "key.distribute"

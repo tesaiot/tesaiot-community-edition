@@ -146,9 +146,12 @@ step "3/7  PKI roles"
 DEV_DOMAINS="${DEV_DOMAIN},*.${DEV_DOMAIN},${DOMAIN_VAL},localhost"
 
 # Device certs (mTLS) - ECC, client auth.
+# allow_ip_sans + allowed_uri_sans so the API can request the device's URN
+# identity SAN (urn:tesa:iot:device:<id>) on direct /issue/ of device certs.
 vault_x "${TOK}" write pki-int/roles/iot-device-ecc \
   allowed_domains="${DEV_DOMAINS}" allow_subdomains=true allow_any_name=true \
-  enforce_hostnames=false key_type=ec key_bits=256 \
+  enforce_hostnames=false key_type=ec key_bits=256 allow_ip_sans=true \
+  allowed_uri_sans="urn:tesa:iot:device:*" \
   client_flag=true server_flag=false max_ttl=8760h ttl=8760h >/dev/null
 # Generic device-cert sign role.
 vault_x "${TOK}" write pki-int/roles/device-cert \

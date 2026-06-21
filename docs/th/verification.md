@@ -101,3 +101,39 @@ gateway ใน Community Edition key เหล่านี้เก็บใน 
 (APISIX ทำงานโหมด standalone YAML จึงไม่มี per-consumer key ที่ตัว gateway)
 key จะแสดงเต็มครั้งเดียวตอนสร้าง/หมุน โดยเก็บเฉพาะ hash + prefix เท่านั้น ดู
 [api-gateway-apisix.md](api-gateway-apisix.md)
+
+key ระดับองค์กร (prefix `tesaiot_org_…`) ใช้ยืนยันตัวตนกับ API อ่านข้อมูลได้ จึงดึง
+telemetry ของอุปกรณ์ผ่าน APISIX gateway ได้โดยตรง ไม่ต้องล็อกอินผ่านเบราว์เซอร์ ส่งเป็น
+header `X-API-Key` (หรือ `?api_key=`):
+
+```bash
+# อ่าน telemetry ล่าสุดของอุปกรณ์ผ่าน gateway (:9443)
+curl -k https://localhost:9443/api/v1/devices/<device_id>/telemetry/last \
+  -H "X-API-Key: tesaiot_org_xxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+key เป็นสิทธิ์อ่านอย่างเดียวและจำกัดขอบเขตตามองค์กรของ key นั้น ถ้า key ผิดหรือถูกเพิกถอน
+จะได้ `401`
+
+## 6. ส่ง telemetry ผ่าน MQTT (serverTLS และ mTLS)
+
+โหมดยืนยันตัวตนของอุปกรณ์ทั้งสองแบบ publish ไปที่ broker เดียวกันและลงที่ time-series store
+สร้างอุปกรณ์ใน UI (หรือผ่าน API) แล้ว:
+
+- **serverTLS (`:8884`)** — อุปกรณ์ยืนยันตัวตนด้วย **device id เป็น MQTT username** และ
+  MQTT password ที่ระบบสร้างให้ ผ่านการเชื่อมต่อ TLS ที่ตรวจสอบใบรับรองของ broker
+  publish JSON ไปที่ `device/<device_id>/telemetry`
+- **mTLS (`:8883`)** — สร้างอุปกรณ์ด้วย `auth_mode: mtls` ออกใบรับรอง (Device →
+  Certificate → *Generate/Renew* หรือ `POST /api/v1/devices/<id>/certificate/renew`)
+  แล้วดาวน์โหลด client certificate + key (Vault PKI ออกใบรับรอง client แบบ EC P-256)
+  อุปกรณ์ส่งใบรับรองนั้น broker ตรวจสอบตอน TLS handshake และ webhook ของ API อนุญาตจาก
+  CN ของใบรับรอง โดยส่ง **device id เป็น MQTT username** ด้วย (ต้องตรงกับ CN ของใบรับรอง)
+
+หลัง publish ตรวจได้จาก time-series tier:
+
+```bash
+docker exec tesa-timescaledb psql -U postgres -d tesa_telemetry -tAc \
+  "SELECT count(*) FROM telemetry_generic WHERE device_id='<device_id>';"
+```
+
+และผ่าน read API / gateway ตามข้อ 5

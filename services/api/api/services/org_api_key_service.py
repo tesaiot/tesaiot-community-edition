@@ -152,4 +152,8 @@ def validate_api_key(api_key: str):
     db[COLLECTION].update_one({'id': doc['id']},
                               {'$set': {'last_used': datetime.now()},
                                '$inc': {'usage_count': 1}})
-    return _public(doc)
+    # Include organization_id (omitted from the UI-facing _public shape) so the
+    # auth layer can bind the request to the key's organization.
+    result = _public(doc)
+    result['organization_id'] = doc.get('organization_id')
+    return result
