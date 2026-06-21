@@ -15,7 +15,7 @@ HTTPS, and watch it live — all running on one Docker host.
 
 <!-- Badge placeholders — wire these up when the repo goes public -->
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.0-informational)
+![Version](https://img.shields.io/badge/version-1.1.6-informational)
 <!-- ![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/<org>/<repo>/badge) -->
 <!-- ![OpenSSF Best Practices](https://www.bestpractices.dev/projects/<id>/badge) -->
 <!-- ![CI](https://github.com/<org>/<repo>/actions/workflows/ci.yml/badge.svg) -->
@@ -47,6 +47,12 @@ sites, analytics module, and the Grafana/Prometheus monitoring stack. See the
 ## Screens
 
 A quick tour of the admin UI (single-organization Community Edition).
+
+### Sign in
+Email + password authentication (bcrypt) for the single organization; the
+first-run admin is seeded from `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+
+![Sign in](docs/images/screenshots/screen-login.png)
 
 ### Dashboard — Operational Overview
 Real-time snapshot of telemetry throughput, platform reliability and security
