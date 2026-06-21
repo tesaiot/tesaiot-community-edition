@@ -542,7 +542,19 @@ export function GlobalSearchCommand({
     },
   ], [navigate]);
 
-  // Filter search items based on RBAC and feature flags
+  // Community Edition: only surface destinations that actually exist in this
+  // build, so the palette never offers Enterprise-only pages that would
+  // dead-end on the catch-all redirect (Organizations, Platform Admin,
+  // Analytics, System Health, Activity Logs, 3D Model Store, etc.).
+  const CE_ROUTES = new Set([
+    '/dashboard', '/devices', '/users', '/certificates', '/api-keys',
+    '/security/compliance', '/account/home/user-profile',
+    '/account/home/settings-sidebar',
+  ]);
+  // Enterprise-only sub-features hosted under an otherwise-valid CE page.
+  const CE_DENY = ['tab=acme'];
+
+  // Filter search items based on RBAC, feature flags and CE route availability
   const filteredSearchItems = useMemo(() => {
     return allSearchItems.filter(item => {
       // Check RBAC permissions
@@ -553,6 +565,13 @@ export function GlobalSearchCommand({
       // Check feature flags
       if (item.requiredFeature && !featureFlags[item.requiredFeature as keyof typeof featureFlags]) {
         return false;
+      }
+
+      // Drop navigation entries that point to pages not shipped in CE.
+      if (item.href) {
+        const base = item.href.split('?')[0];
+        if (!CE_ROUTES.has(base)) return false;
+        if (CE_DENY.some(d => item.href!.includes(d))) return false;
       }
 
       return true;
