@@ -21,12 +21,8 @@ ENV NODE_ENV=production
 # These layers stay cached as long as package.json/package-lock.json are unchanged.
 COPY package.json package-lock.json ./
 
-# Install dependencies with `npm ci` for reproducible, lockfile-pinned builds.
-# The repo ships package-lock.json (not yarn.lock); npm ci installs EXACTLY what
-# the lockfile pins and fails if they drift. --include=dev is REQUIRED because
-# NODE_ENV=production (above) would otherwise make npm omit the devDependencies
-# (typescript, vite, @vitejs/plugin-react) this build stage needs.
-RUN npm ci --include=dev --no-audit --no-fund
+RUN npm install -g npm@11.17.0
+RUN npm install --include=dev --no-audit --no-fund
 
 # ============================================================================
 # CACHE BOUNDARY: ARG declarations AFTER yarn install

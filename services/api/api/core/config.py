@@ -558,7 +558,15 @@ class Config:
     def get_config(cls, config_name='default'):
         """Get configuration by name."""
         return cls.configs.get(config_name, cls.configs['default'])
-    
+
+    @staticmethod
+    def get_security_config() -> 'SecurityConfig':
+        """Return the validated runtime SecurityConfig (bcrypt rounds, lockout, etc.)."""
+        return _get_safe_security_config()
+
+    DEFAULT_ORG_ID = os.getenv('DEFAULT_ORG_ID', 'default')
+    DEFAULT_ORG_NAME = os.getenv('DEFAULT_ORG_NAME', 'Default Organization')
+
     # Secrets that must be present and strong when running in production.
     # SECRET_KEY / JWT_SECRET_KEY accept JWT_SECRET as an alias (see ProductionConfig).
     PRODUCTION_REQUIRED_SECRETS = (

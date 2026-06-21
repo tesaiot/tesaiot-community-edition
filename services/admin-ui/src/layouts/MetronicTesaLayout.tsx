@@ -108,9 +108,10 @@ export const MetronicTesaLayout: React.FC = () => {
   const { notifications, unreadCount } = useNotifications();
   const { currentTheme } = useTheme();
   
-  // Get service configuration for current user's organization
   const organizationId = user?.organization_id || user?.organization || 'default';
-  const { config: serviceConfig, loading: configLoading } = useServiceConfiguration(organizationId);
+  const { config: serviceConfig, loading: configLoading } = useServiceConfiguration(
+    hasFeature('multiOrganization') ? organizationId : null
+  );
   
   // Get app version
   const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
@@ -233,14 +234,14 @@ export const MetronicTesaLayout: React.FC = () => {
       tooltipText: 'Multi-tenant management for enterprise deployments.\n\n• Organization isolation\n• Department management\n• Data segregation\n• Custom settings per org'
     }] : []),
 
-    // API Keys - conditional based on service config AND role check
-    ...(serviceConfig?.features?.menu_api_keys !== false && ['admin', 'organization_admin', 'super_admin'].includes(user?.role || '') ? [{
+    // API Keys - organization API keys for the REST API / APISIX gateway.
+    ...(['admin', 'organization_admin', 'super_admin'].includes(user?.role || '') ? [{
       title: 'API Keys',
       href: '/api-keys',
       icon: <Key className="h-5 w-5" />,
-      tooltipText: 'Integration credentials for external system connections.\n\n• API access tokens\n• Developer credentials\n• Rate limit controls\n• Usage monitoring'
+      tooltipText: 'Organization API keys for REST API / gateway access (scopes, rotation, expiry).'
     }] : []),
-    
+
     // Platform Admin - SINGLE MENU ITEM ONLY
     ...(user?.role === 'platform_admin' ? [
       {
@@ -257,47 +258,8 @@ export const MetronicTesaLayout: React.FC = () => {
       }
     ] : []),
     
-    // Extensions - Enterprise Add-ons only
-    {
-      title: 'Extensions',
-      href: '#',
-      icon: <Puzzle className="h-5 w-5" />,
-      badge: 'Soon',
-      children: [
-        // Enterprise extensions - keep disabled
-        {
-          title: 'ETL Data Analytics',
-          href: '/extensions/etl-data-analytics',
-          icon: <TrendingUp className="h-5 w-5" />,
-          badge: 'Soon',
-          disabled: true,
-          tooltip: 'ETL Data Analytics Extensions - Coming with Extension Store'
-        },
-        {
-          title: 'Security Assessment',
-          href: '/extensions/security-assessment',
-          icon: <ShieldCheck className="h-5 w-5" />,
-          badge: 'Soon',
-          disabled: true,
-          tooltip: 'Security Assessment Extensions - Coming with Extension Store'
-        },
-        {
-          title: 'divider',
-          href: '#',
-          icon: null,
-          divider: true
-        },
-        {
-          title: '3D Model Store',
-          href: '/product-models/',
-          icon: <Box className="h-5 w-5" />,
-          badge: 'New',
-          disabled: false,
-          tooltip: 'Browse and download 3D models for IoT devices and industrial equipment',
-          external: true
-        }
-      ]
-    }
+    // Extensions menu (commercial "Coming soon" add-ons + 3D Model Store)
+    // removed for the Community Edition.
   ];
 
 
@@ -372,24 +334,26 @@ export const MetronicTesaLayout: React.FC = () => {
                 <h1 className="font-semibold text-gray-900 dark:text-white whitespace-nowrap" style={{ fontSize: '1.1rem' }}>
                   TES<span style={{ fontSize: '1.4rem', verticalAlign: 'super', position: 'relative', top: '0.3em' }}>⩓</span>IoT Platform
                 </h1>
-                <div className="flex items-center gap-0 mt-1 -ml-0.5">
-                  <Badge 
-                    variant="outline" 
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Badge
+                    variant="outline"
                     className={cn(
-                      'text-[10px] px-1 py-0 h-5 font-medium',
-                      displayEdition === 'enterprise' && 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800',
-                      displayEdition === 'business' && 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800',
-                      displayEdition === 'startup' && 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
-                      displayEdition === 'community' && 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800'
+                      'inline-flex items-center h-5 px-2 py-0 rounded-md border-transparent text-[10px] font-semibold tracking-wider uppercase shadow-sm',
+                      displayEdition === 'enterprise' && 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white',
+                      displayEdition === 'business' && 'bg-gradient-to-r from-blue-600 to-sky-600 text-white',
+                      displayEdition === 'startup' && 'bg-gradient-to-r from-emerald-600 to-green-600 text-white',
+                      // Elegant, understated slate for the free Community edition
+                      // (white on a deep slate gradient; inverts cleanly in dark mode).
+                      displayEdition === 'community' && 'bg-gradient-to-r from-slate-700 to-slate-900 text-white dark:from-slate-200 dark:to-white dark:text-slate-900'
                     )}
                   >
                     {displayEdition.toUpperCase()}
                   </Badge>
-                  <Badge 
+                  <Badge
                     variant="secondary"
-                    className="inline-flex items-center justify-center border focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 [&_svg]:-ms-px [&_svg]:shrink-0 rounded-md min-w-6 gap-1.5 [&_svg]:size-3.5 text-[8px] px-1 py-0 h-4 font-medium bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+                    className="inline-flex items-center justify-center h-5 px-1.5 py-0 rounded-md text-[10px] font-medium tracking-tight tabular-nums bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
                   >
-                    {appVersion.replace('v', '')}
+                    v{appVersion.replace(/^v/, '')}
                   </Badge>
                 </div>
               </div>
@@ -838,18 +802,9 @@ export const MetronicTesaLayout: React.FC = () => {
             {/* Compliance Status */}
             <ETSIComplianceBadge score={hasFeature('etsiFull') ? 13 : 5} total={13} />
 
-            {/* Upgrade Button for non-enterprise */}
-            {displayEdition !== 'enterprise' && (
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => window.open(getUpgradeUrl(), '_blank')}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              >
-                <Crown className="h-4 w-4 mr-1" />
-                Upgrade
-              </Button>
-            )}
+            {/* Upgrade CTA removed for the Community Edition (self-host, Apache-2.0):
+                it opened a commercial pricing/upgrade page, which is not appropriate
+                for the free CE. */}
           </div>
         </header>
 

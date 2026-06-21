@@ -125,10 +125,11 @@ APISIX runs in standalone YAML mode, so **etcd is not required**.
 
 ## Quickstart
 
-> Requires a Linux host with Docker Engine + the Docker Compose v2 plugin,
-> `openssl`, `python3`, and `curl`. See
-> [docs/en/installation.md](docs/en/installation.md) for full prerequisites
-> and server sizing.
+> Requires a 64-bit host with Docker Engine + the Docker Compose v2 plugin,
+> `openssl`, `python3`, and `curl`. Runs on Linux and on **Docker Desktop**
+> (macOS — Intel and Apple Silicon — and Windows/WSL 2); all images are
+> multi-arch. See [docs/en/installation.md](docs/en/installation.md) for full
+> prerequisites and server sizing.
 
 ```bash
 # 1. Clone
@@ -198,6 +199,7 @@ Full English docs live in [`docs/en/`](docs/en/):
 | Guide | Covers |
 |-------|--------|
 | [installation.md](docs/en/installation.md) | Prerequisites, sizing, install Docker, configure, first login, verify. |
+| [verification.md](docs/en/verification.md) | First login, health check, `make smoke` end-to-end test, per-service checks. |
 | [configuration.md](docs/en/configuration.md) | Every `.env` variable, config files, domain wiring. |
 | [architecture.md](docs/en/architecture.md) | Components, networks, data flow, ports. |
 | [security-tls-mtls.md](docs/en/security-tls-mtls.md) | serverTLS vs mTLS, the device cert flow. |

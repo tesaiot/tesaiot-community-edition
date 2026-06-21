@@ -61,9 +61,16 @@ class DatabaseInitService:
         logger.info("Starting database initialization...")
         
         try:
-            # 1. Ensure indexes exist
-            self._ensure_indexes()
-            
+            # 1. Ensure indexes exist. Index tuning must never block the rest of
+            #    initialization (esp. admin seeding): a pre-existing index with a
+            #    differing spec (e.g. organizations.organization_id created
+            #    unique by init-mongo.js vs sparse here) raises IndexKeySpecsConflict.
+            #    Treat index errors as non-fatal so default-data seeding still runs.
+            try:
+                self._ensure_indexes()
+            except Exception as idx_err:  # noqa: BLE001
+                logger.warning(f"Index creation reported a non-fatal error: {idx_err}")
+
             # 2. Run data migrations
             self._run_migrations()
             

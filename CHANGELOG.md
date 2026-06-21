@@ -5,6 +5,44 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Organization API keys.** A new **API Keys** screen in the admin UI issues,
+  rotates, and revokes organization-scoped API keys for the REST API / gateway,
+  backed by new `GET/POST/DELETE /api/v1/organizations/<org>/api-keys` (+`/rotate`,
+  `/metrics`) endpoints. Keys are stored only as a SHA-256 hash plus a short
+  prefix and shown in full exactly once; they are validated at the API tier
+  (APISIX standalone YAML mode has no per-consumer gateway keys).
+- **`make smoke`** — an end-to-end smoke test (`scripts/smoke-test.py`, stdlib
+  only) that verifies all 11 containers and the login → device → telemetry →
+  MQTT → gateway flows. New [docs/en/verification.md](docs/en/verification.md).
+
+### Fixed
+
+- **First-boot admin is now seeded** from `ADMIN_EMAIL`/`ADMIN_USERNAME`/
+  `ADMIN_PASSWORD` (mapped through to the organization admin), and login no
+  longer rejects single-label hosts such as the default `admin@localhost`.
+- **Admin UI builds on Apple Silicon / musl** (npm/`lightningcss` native-module
+  resolution); the header now shows the correct **Community** edition badge and
+  version.
+- **Vault PKI bootstrap** initialises reliably: storage-path permissions, JSON
+  parsing of `vault operator init`, stdin forwarding for intermediate-CA signing,
+  the agent's server-certificate issuance policy, and persisting the AppRole
+  credentials the API needs to start.
+- **APISIX** starts and serves correctly (writable runtime config; valid
+  `radixtree_sni` SSL router); the health probe no longer depends on `ps`.
+- **MongoDB replica set** advertises the in-cluster host so the API can reach
+  the primary; database initialization no longer aborts on a non-fatal index
+  conflict.
+- **TimescaleDB** connection limit raised so the API does not exhaust it on
+  start.
+- Removed commercial-only surfaces from the Community build (Extensions menu,
+  Upgrade call-to-action, DigitalOcean/Prometheus-bound dashboard panels) and
+  added compatibility stubs so the UI no longer logs 404s for features the
+  edition does not ship.
+
 ## [1.0.0] - 2026-06-12
 
 Initial public release of **TESAIoT Community Edition** — a free, self-hostable,

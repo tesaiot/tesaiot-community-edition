@@ -1585,33 +1585,6 @@ const OperationalDashboard: React.FC = () => {
             </Card>
           </div>
 
-          <Card className="border-border/70">
-            <CardHeader>
-              <div>
-                <CardTitle>System Health</CardTitle>
-                <CardDescription>Core services monitored via Prometheus health endpoints</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {serviceCards.map((card) => (
-                  <SystemHealthCard key={card.name} {...card} />
-                ))}
-              </div>
-              {!serviceCards.length && (
-                <div className="rounded-md border border-dashed border-muted-foreground/30 p-6 text-center text-sm text-muted-foreground">
-                  Service telemetry unavailable – check Prometheus bridge or API permissions.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* DigitalOcean Infrastructure Metrics */}
-          <InfrastructureMetrics
-            refreshInterval={60000}
-            showCharts={true}
-            compact={false}
-          />
         </div>
 
         <div className="space-y-6 xl:col-span-4">

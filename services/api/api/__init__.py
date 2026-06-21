@@ -286,6 +286,8 @@ def create_app(config_name='production'):
     # User management + auth
     # ------------------------------------------------------------------
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
+    from .controllers.ce_compat import ce_compat_bp
+    app.register_blueprint(ce_compat_bp)
     app.register_blueprint(auth_profile_bp)
     app.register_blueprint(otp_auth_bp, url_prefix='/api/v1/auth/otp')
     app.register_blueprint(users_bp, url_prefix='/api/v1/users')

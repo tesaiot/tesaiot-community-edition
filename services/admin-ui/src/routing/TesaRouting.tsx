@@ -16,6 +16,8 @@ import DeviceManagementWithCerts from '@/features/devices/DeviceManagementWithCe
 import { DeviceDataDashboard } from '@/features/device-data-dashboard/DeviceDataDashboard';
 import FullUserManagement from '@/features/users/FullUserManagement';
 import CertificateManagementPage from '@/pages/certificates/CertificateManagementPage';
+import { ApiKeyManagement } from '@/features/api-keys/ApiKeyManagement';
+import CompliancePage from '@/pages/compliance/CompliancePage';
 
 // Account pages for user profile and settings
 import { SimpleUserProfile } from '@/pages/account/SimpleUserProfile';
@@ -32,6 +34,8 @@ export function TesaRouting() {
           <Route path="/users" element={<FullUserManagement />} />
           <Route path="/identity" element={<Navigate to="/devices" replace />} />
           <Route path="/certificates" element={<CertificateManagementPage />} />
+          <Route path="/api-keys" element={<ApiKeyManagement />} />
+          <Route path="/security/compliance" element={<CompliancePage />} />
 
           {/* Account Routes */}
           <Route path="/account/home/user-profile" element={<SimpleUserProfile />} />

@@ -25,12 +25,13 @@ API-key lifecycle.
 
 import logging
 
-from flask import Blueprint, jsonify, g
+from flask import Blueprint, jsonify, g, request
 
 from ..core.config import Config
 from ..core.exceptions import NotFoundError
 from ..core.auth import require_auth
 from ..services import organization_service
+from ..services import org_api_key_service
 
 logger = logging.getLogger(__name__)
 
@@ -172,4 +173,95 @@ def get_organization(org_id):
 
     except Exception as e:
         logger.error(f"Error fetching organization: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+# ---------------------------------------------------------------------------
+# Organization API keys (Community Edition)
+#
+# CE runs APISIX in standalone YAML mode (no etcd), so per-consumer gateway keys
+# are not available. These keys are stored in MongoDB and validated at the API
+# tier by org_api_key_service. The single-org CE ignores the URL <org_id> and
+# always operates on the caller's own organization.
+# ---------------------------------------------------------------------------
+
+def _caller_org_id():
+    user = getattr(g, 'current_user', None) or {}
+    return user.get('organization_id') or Config.DEFAULT_ORG_ID
+
+
+@organizations_bp.route('/<org_id>/api-keys', methods=['GET'])
+@require_auth
+def list_org_api_keys(org_id):
+    try:
+        keys = org_api_key_service.list_api_keys(_caller_org_id())
+        return jsonify({'api_keys': keys, 'total': len(keys)}), 200
+    except Exception as e:
+        logger.error(f"Error listing API keys: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@organizations_bp.route('/<org_id>/api-keys', methods=['POST'])
+@require_auth
+def create_org_api_key(org_id):
+    try:
+        data = request.get_json(silent=True) or {}
+        if not data.get('name'):
+            return jsonify({'error': 'name is required', 'field': 'name'}), 400
+        user = getattr(g, 'current_user', None) or {}
+        key = org_api_key_service.create_api_key(
+            _caller_org_id(),
+            name=data['name'],
+            description=data.get('description', ''),
+            scopes=data.get('scopes'),
+            rate_limit=data.get('rate_limit', 100),
+            expires_in_days=data.get('expires_in_days', 90),
+            created_by=user.get('email'),
+        )
+        # The frontend reads data.api_key for the one-time plaintext value.
+        return jsonify({'success': True, 'api_key': key.pop('api_key'), 'key': key}), 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Error creating API key: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@organizations_bp.route('/<org_id>/api-keys/<key_id>', methods=['DELETE'])
+@require_auth
+def revoke_org_api_key(org_id, key_id):
+    try:
+        ok = org_api_key_service.revoke_api_key(_caller_org_id(), key_id)
+        if not ok:
+            return jsonify({'error': 'API key not found'}), 404
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logger.error(f"Error revoking API key: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@organizations_bp.route('/<org_id>/api-keys/<key_id>/rotate', methods=['POST'])
+@require_auth
+def rotate_org_api_key(org_id, key_id):
+    try:
+        key = org_api_key_service.rotate_api_key(_caller_org_id(), key_id)
+        if not key:
+            return jsonify({'error': 'API key not found'}), 404
+        return jsonify({'success': True, 'api_key': key.pop('api_key'), 'key': key}), 200
+    except Exception as e:
+        logger.error(f"Error rotating API key: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@organizations_bp.route('/<org_id>/api-keys/<key_id>/metrics', methods=['GET'])
+@organizations_bp.route('/<org_id>/api-keys/<key_id>/usage', methods=['GET'])
+@require_auth
+def org_api_key_metrics(org_id, key_id):
+    try:
+        metrics = org_api_key_service.get_api_key_metrics(_caller_org_id(), key_id)
+        if metrics is None:
+            return jsonify({'error': 'API key not found'}), 404
+        return jsonify(metrics), 200
+    except Exception as e:
+        logger.error(f"Error fetching API key metrics: {e}")
         return jsonify({'error': 'Internal server error'}), 500

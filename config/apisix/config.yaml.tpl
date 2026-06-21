@@ -41,7 +41,7 @@ apisix:
     enable: true
   proxy_mode: http
   router:
-    ssl: radixtree_uri
+    ssl: radixtree_sni
     http: radixtree_uri
   # Optional MQTT TCP stream proxy in front of EMQX.
   # In the default CE topology devices connect to EMQX directly, so this is

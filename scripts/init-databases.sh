@@ -44,9 +44,9 @@ else
   log "Initiating replica set rs0"
   docker exec "${MONGO_C}" mongosh --quiet \
     -u "${MROOT_USER}" -p "${MROOT_PASS}" --authenticationDatabase admin \
-    --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})' >/dev/null 2>&1 \
+    --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"tesa-mongodb:27017"}]})' >/dev/null 2>&1 \
     || docker exec "${MONGO_C}" mongosh --quiet \
-         --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})' >/dev/null 2>&1 || true
+         --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"tesa-mongodb:27017"}]})' >/dev/null 2>&1 || true
   # Wait until PRIMARY.
   for _ in $(seq 1 30); do
     STATE="$(docker exec "${MONGO_C}" mongosh --quiet \

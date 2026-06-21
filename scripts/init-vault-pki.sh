@@ -16,10 +16,9 @@ VAULT_C=tesa-vault                       # container name
 DOMAIN_VAL="$(domain)"
 DEV_DOMAIN="${VAULT_PKI_DEVICE_DOMAIN:-device.tesa.local}"
 
-# Run a vault CLI command inside the vault container with a given token.
 vault_x() {  # token  args...
   local tok="$1"; shift
-  docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN="${tok}" "${VAULT_C}" vault "$@"
+  docker exec -i -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN="${tok}" "${VAULT_C}" vault "$@"
 }
 
 # Persist a key=value into .env (replace or append).
@@ -68,14 +67,10 @@ else
   log "Running vault operator init (3 key shares, threshold 2)"
   INIT_JSON="$(docker exec -e VAULT_ADDR=http://127.0.0.1:8200 "${VAULT_C}" \
     vault operator init -key-shares=3 -key-threshold=2 -format=json)"
-  ROOT_TOKEN="$(echo "${INIT_JSON}" | grep -o '"root_token":"[^"]*"' | cut -d'"' -f4)"
-  # Robustly pull the three unseal keys (unseal_keys_b64 array).
-  # while-read instead of `mapfile` (bash 4+) so this also runs on macOS bash 3.2.
-  KEYS=()
-  while IFS= read -r _k; do
-    [ -n "${_k}" ] && KEYS+=("${_k}")
-  done < <(echo "${INIT_JSON}" | tr ',' '\n' | grep -A4 'unseal_keys_b64' | grep -oE '"[A-Za-z0-9+/=]{40,}"' | tr -d '"')
-  K1="${KEYS[0]:-}"; K2="${KEYS[1]:-}"; K3="${KEYS[2]:-}"
+  ROOT_TOKEN="$(printf '%s' "${INIT_JSON}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["root_token"])')"
+  K1="$(printf '%s' "${INIT_JSON}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["unseal_keys_b64"][0])')"
+  K2="$(printf '%s' "${INIT_JSON}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["unseal_keys_b64"][1])')"
+  K3="$(printf '%s' "${INIT_JSON}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["unseal_keys_b64"][2])')"
   env_set VAULT_ROOT_TOKEN "${ROOT_TOKEN}"
   env_set VAULT_UNSEAL_KEY_1 "${K1}"
   env_set VAULT_UNSEAL_KEY_2 "${K2}"
@@ -214,7 +209,13 @@ printf "%s" "${ROLE_ID}"   > "${ROOT_DIR}/config/vault-agent/secrets-unified/rol
 printf "%s" "${SECRET_ID}" > "${ROOT_DIR}/config/vault-agent/secrets-unified/secret-id"
 chmod 600 "${ROOT_DIR}/config/vault-agent/secrets-unified/role-id" \
           "${ROOT_DIR}/config/vault-agent/secrets-unified/secret-id"
-ok "AppRole 'api-service' created; role-id/secret-id written for vault-agent"
+# Also persist the AppRole credentials to .env so docker-compose can inject them
+# into the api as API_ROLE_ID / API_SECRET_ID. The api validates these at boot
+# (Config.PRODUCTION_REQUIRED_SECRETS); without them the api worker refuses to
+# start. The Vault Agent still reads the role-id/secret-id files above.
+env_set API_ROLE_ID   "${ROLE_ID}"
+env_set API_SECRET_ID "${SECRET_ID}"
+ok "AppRole 'api-service' created; role-id/secret-id written for vault-agent + .env"
 
 # ---------------------------------------------------------------------------
 step "7/7  Client-CA bundle for the nginx mTLS terminator"

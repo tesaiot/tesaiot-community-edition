@@ -37,6 +37,18 @@ path "pki-int/issue/iot-device-ecc" {
   capabilities = ["create", "update"]
 }
 
+path "pki-int/issue/emqx-server" {
+  capabilities = ["create", "update"]
+}
+
+path "pki-int/issue/emqx-server-ecdsa" {
+  capabilities = ["create", "update"]
+}
+
+path "pki-int/issue/platform-service" {
+  capabilities = ["create", "update"]
+}
+
 # Revocation + CRL
 path "pki-int/revoke" {
   capabilities = ["create", "update"]

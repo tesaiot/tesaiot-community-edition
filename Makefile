@@ -61,6 +61,9 @@ ps: ## Show container status
 health: ## Probe all services and print a status table
 	@$(SCRIPTS)/healthcheck.sh
 
+smoke: ## End-to-end smoke test (login, device, telemetry, MQTT, gateways)
+	@python3 $(SCRIPTS)/smoke-test.py
+
 init-pki: ## Initialise / unseal Vault and build the PKI hierarchy
 	@$(SCRIPTS)/init-vault-pki.sh
 

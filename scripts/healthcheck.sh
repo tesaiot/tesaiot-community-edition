@@ -64,7 +64,7 @@ fi
 
 chk_exec "emqx"   tesa-emqx emqx ctl status
 chk_exec "nginx"  tesa-nginx nginx -t
-if docker exec tesa-apisix sh -c 'ps aux | grep -q "[o]penresty"'; then
+if docker exec tesa-apisix sh -c 'grep -qsl . /proc/[0-9]*/comm 2>/dev/null; for c in /proc/[0-9]*/comm; do cat "$c" 2>/dev/null; done | grep -qE "openresty|nginx"'; then
   row "apisix" ok "gateway running"
 else
   row "apisix" fail "openresty not running"

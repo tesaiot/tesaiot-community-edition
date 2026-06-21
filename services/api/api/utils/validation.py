@@ -38,7 +38,10 @@ MAX_LOGIN_ATTEMPTS = 5
 LOGIN_ATTEMPT_WINDOW = 900  # 15 minutes
 MIN_PASSWORD_LENGTH = 8
 MAX_FIELD_LENGTH = 1000
-EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+# The host part may be a dotted domain (user@example.com) OR a single-label
+# host such as the self-host default `admin@localhost`. The TLD is therefore
+# optional; the host must still start and end with an alphanumeric character.
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$')
 DEVICE_ID_REGEX = re.compile(r'^[a-zA-Z0-9_-]{3,64}$')
 
 # ---------------------------------------------------------------------------

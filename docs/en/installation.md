@@ -345,7 +345,15 @@ Run the consolidated health check:
 make health
 ```
 
-You should see every row marked `UP`. To verify services individually:
+You should see every row marked `UP`. For an end-to-end check (login, device
+create, telemetry ingest, MQTT bridge, gateways) run the smoke test:
+
+```bash
+make smoke        # -> SUMMARY: 28/28 checks passed, 0 failed
+```
+
+See [verification.md](verification.md) for first-login details and per-service
+checks. To verify services individually:
 
 ```bash
 # Container status

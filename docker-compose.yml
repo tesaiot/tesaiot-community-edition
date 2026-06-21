@@ -36,6 +36,7 @@ services:
       - ./config/vault/vault-auto-unseal.hcl:/vault/config/vault.hcl:ro
       - vault-data:/vault/data
       - vault-credentials:/vault/credentials
+    entrypoint: ["/bin/sh", "-c", "chown -R 100:1000 /vault/data /vault/credentials || true; exec /usr/local/bin/docker-entrypoint.sh \"$@\"", "--"]
     command: ["vault", "server", "-config=/vault/config/vault.hcl"]
     ports:
       # SECURITY: Vault is bound to loopback only. The host publish exists for
@@ -172,6 +173,7 @@ services:
     logging: *default-logging
     security_opt:
       - no-new-privileges:true
+    command: ["postgres", "-c", "max_connections=200"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -285,6 +287,9 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_BYPASS_RATE_LIMIT: ${ADMIN_BYPASS_RATE_LIMIT:-true}
+      BDH_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      BDH_ADMIN_USERNAME: ${ADMIN_USERNAME}
+      BDH_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
       # --- mTLS gateway marker (defence-in-depth anti-spoofing) ---
       # Shared non-guessable secret injected by the mTLS terminator
@@ -298,6 +303,8 @@ services:
       VAULT_ADDR: http://tesa-vault:8200
       VAULT_PKI_PATH: ${VAULT_PKI_PATH:-pki-int}
       VAULT_TOKEN_FILE: /vault/token/api-token
+      API_ROLE_ID: ${API_ROLE_ID}
+      API_SECRET_ID: ${API_SECRET_ID}
       USE_LOCAL_CERTIFICATE_GENERATOR: "false"
 
       # --- MongoDB ---
@@ -486,7 +493,7 @@ services:
       TZ: ${TZ:-Asia/Bangkok}
     ports:
       # Loopback-only: plaintext + management transports must not face the LAN.
-      - "127.0.0.1:1883:1883"   # plain MQTT (local/dev only, no TLS)
+      - "127.0.0.1:11883:1883"  # plain MQTT (local/dev only) - remapped 1883->11883 to avoid host conflict with pre-existing ThingsBoard (bdh-mytb-1)
       - "127.0.0.1:8083:8083"   # MQTT-over-WS (no TLS)
       - "127.0.0.1:18083:18083" # dashboard (management UI)
       # Device-facing TLS transports stay public.
@@ -646,10 +653,7 @@ services:
     environment:
       APISIX_STAND_ALONE: "true"
     volumes:
-      # Both files are RENDERED by generate-secrets.sh from the committed
-      # config/apisix/*.tpl templates (admin key, sample consumer key, TLS
-      # material baked in from .env; rendered paths are .gitignore'd).
-      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml
       - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
     ports:
       # Loopback-only: plaintext gateway + admin API must not face the LAN.

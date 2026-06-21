@@ -79,3 +79,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Local test/triage reports (not part of the distribution)
+TESAIoT_PLAN/
