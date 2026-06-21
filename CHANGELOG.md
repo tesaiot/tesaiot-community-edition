@@ -5,10 +5,15 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.4] - 2026-06-21
 
 ### Added
 
+- **Open-source governance.** Added [`PRINCIPLES.md`](PRINCIPLES.md) (what is
+  free, what is stewarded and why, where revenue goes),
+  [`TRADEMARK.md`](TRADEMARK.md) (friendly brand guidelines), and
+  [`ADOPTERS.md`](ADOPTERS.md) — all bilingual (EN/TH) — plus a trademark note in
+  `NOTICE`.
 - **Pre-built container images.** The three TESAIoT-authored images (`api`,
   `admin-ui`, `mqtt-bridge`) are published to `ghcr.io/tesaiot/…` as public,
   multi-arch (linux/amd64 + linux/arm64) images on every release, via a new

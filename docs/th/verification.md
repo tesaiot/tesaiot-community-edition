@@ -147,14 +147,14 @@ source นี้จริง และไม่ถูกแก้ไขระห
 
 ```bash
 # ตรวจสอบลายเซ็น (identity = release workflow ของรีโปนี้)
-cosign verify ghcr.io/tesaiot/tesa-api:1.1.3 \
+cosign verify ghcr.io/tesaiot/tesa-api:1.1.4 \
   --certificate-identity-regexp '^https://github.com/tesaiot/tesaiot-community-edition/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
 # ดู SBOM และ provenance ที่แนบมา
-docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.3 \
+docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.4 \
   --format '{{ json .Provenance }}'
-cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.3
+cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.4
 ```
 
 ทำซ้ำกับ `tesa-admin-ui` และ `tesa-mqtt-bridge` ถ้า `cosign verify` ล้มเหลว แปลว่า

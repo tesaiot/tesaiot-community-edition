@@ -153,14 +153,14 @@ this repository's CI from this source — not tampered with.
 
 ```bash
 # Verify the signature (identity = this repo's release workflow)
-cosign verify ghcr.io/tesaiot/tesa-api:1.1.3 \
+cosign verify ghcr.io/tesaiot/tesa-api:1.1.4 \
   --certificate-identity-regexp '^https://github.com/tesaiot/tesaiot-community-edition/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
 # Inspect the attached SBOM and provenance attestations
-docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.3 \
+docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.4 \
   --format '{{ json .Provenance }}'
-cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.3
+cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.4
 ```
 
 Repeat for `tesa-admin-ui` and `tesa-mqtt-bridge`. A failed `cosign verify`
