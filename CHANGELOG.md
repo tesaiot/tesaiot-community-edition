@@ -5,6 +5,33 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2026-06-21
+
+### Fixed
+
+- **Clean application logs.** Several non-fatal conditions that spammed the API
+  log are resolved:
+  - The time-series telemetry poller ran `MAX(location)` on a JSONB column
+    (`function max(jsonb) does not exist`) every few seconds; it now takes one
+    value from each `(device_id, time)` group via `array_agg`.
+  - The `api_metrics` and `system_logs` observability tables are now created by
+    the TimescaleDB init (and on existing installs), so per-request metrics and
+    structured logs land instead of logging `relation ... does not exist`.
+  - The device-side certificate blueprint was registered twice; the duplicate
+    registration (which aborted the certificate-monitoring route setup) is
+    removed.
+  - PKI role verification at startup now logs an expected, quiet note instead of
+    an error when the least-privilege API token cannot list `pki-int/roles`
+    (those roles are owned by the bootstrap PKI init).
+- **Device certificate status** now reports correctly for issued certificates:
+  the status reader reads the stored `expires_at` / `validTo` fields (it
+  previously looked only for keys that were never written, so a valid cert
+  showed as `unknown`).
+- **`ADMIN_BYPASS_RATE_LIMIT` is now actually enforced.** It was documented but
+  not implemented; the configured bootstrap admin (`ADMIN_EMAIL`) now bypasses
+  both per-IP login throttling and the account-lockout gate, while every other
+  account is still rate-limited.
+
 ## [1.1.5] - 2026-06-21
 
 ### Fixed

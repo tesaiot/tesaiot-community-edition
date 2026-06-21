@@ -144,6 +144,71 @@ SELECT add_retention_policy('activity_logs', INTERVAL '90 days', if_not_exists =
 SELECT add_retention_policy('security_logs', INTERVAL '180 days', if_not_exists => TRUE);
 
 -- ============================================================================
+-- OBSERVABILITY (optional)
+-- API request metrics + structured application logs. The API writes here best
+-- effort (a missing table is non-fatal); these tables keep that path working
+-- and silence the "relation ... does not exist" log noise.
+-- ============================================================================
+
+-- Per-request API metrics
+CREATE TABLE IF NOT EXISTS api_metrics (
+    id BIGSERIAL,
+    time TIMESTAMPTZ NOT NULL,
+    endpoint TEXT,
+    method VARCHAR(10),
+    status_code INTEGER,
+    response_time_ms DOUBLE PRECISION,
+    request_size_bytes BIGINT,
+    response_size_bytes BIGINT,
+    user_id VARCHAR(50),
+    organization_id VARCHAR(50),
+    trace_id VARCHAR(64),
+    error_message TEXT,
+    PRIMARY KEY (time, id)
+);
+
+SELECT create_hypertable('api_metrics', 'time',
+    chunk_time_interval => INTERVAL '7 days',
+    if_not_exists => TRUE
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_metrics_endpoint_time ON api_metrics (endpoint, time DESC);
+CREATE INDEX IF NOT EXISTS idx_api_metrics_status_time ON api_metrics (status_code, time DESC);
+
+-- Structured application / system logs
+CREATE TABLE IF NOT EXISTS system_logs (
+    id BIGSERIAL,
+    time TIMESTAMPTZ NOT NULL,
+    log_type VARCHAR(50),
+    level VARCHAR(20),
+    source TEXT,
+    container_name VARCHAR(100),
+    organization_id VARCHAR(50),
+    user_id VARCHAR(50),
+    device_id VARCHAR(255),
+    message TEXT,
+    metadata JSONB,
+    trace_id VARCHAR(64),
+    span_id VARCHAR(64),
+    request_id VARCHAR(64),
+    client_ip INET,
+    user_agent TEXT,
+    PRIMARY KEY (time, id)
+);
+
+SELECT create_hypertable('system_logs', 'time',
+    chunk_time_interval => INTERVAL '7 days',
+    if_not_exists => TRUE
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_logs_level_time ON system_logs (level, time DESC);
+CREATE INDEX IF NOT EXISTS idx_system_logs_type_time ON system_logs (log_type, time DESC);
+CREATE INDEX IF NOT EXISTS idx_system_logs_device_time ON system_logs (device_id, time DESC) WHERE device_id IS NOT NULL;
+
+SELECT add_retention_policy('api_metrics', INTERVAL '30 days', if_not_exists => TRUE);
+SELECT add_retention_policy('system_logs', INTERVAL '30 days', if_not_exists => TRUE);
+
+-- ============================================================================
 -- Grant permissions to the application user
 -- ============================================================================
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;

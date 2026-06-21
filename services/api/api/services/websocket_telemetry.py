@@ -748,7 +748,10 @@ class WebSocketTelemetryService:
                         device_id,
                         time as timestamp,
                         jsonb_object_agg(metric_name, metric_value) as data,
-                        MAX(location) as location
+                        -- location is JSONB and there is no max(jsonb); it is
+                        -- constant within a (device_id, time) group, so just
+                        -- take one value from the group instead of aggregating.
+                        (array_agg(location))[1] as location
                     FROM device_telemetry
                     WHERE time > %s
                     GROUP BY device_id, time

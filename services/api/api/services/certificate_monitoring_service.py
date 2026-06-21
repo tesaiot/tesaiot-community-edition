@@ -143,19 +143,35 @@ class CertificateMonitoringService:
             # Get certificate info from device record
             cert_info = device.get('certificate_info', {})
             
-            # Extract expiry date
+            # Extract expiry date. Accept the several shapes the issuer has
+            # stored over time (expires_at / validTo / valid_until / expiry_date);
+            # otherwise derive it from an issue date + validity window.
             expiry_date = None
-            if cert_info.get('expiry_date'):
-                expiry_date = datetime.fromisoformat(cert_info['expiry_date'].replace('Z', '+00:00'))
-            elif cert_info.get('validity_period'):
-                # Calculate from creation date
-                created_at = device.get('created_at')
-                if created_at:
-                    if isinstance(created_at, str):
-                        created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                    validity_days = cert_info['validity_period'].get('days', 365)
-                    expiry_date = created_at + timedelta(days=validity_days)
-            
+            raw_expiry = (cert_info.get('expires_at') or cert_info.get('validTo')
+                          or cert_info.get('valid_until') or cert_info.get('expiry_date'))
+            if raw_expiry:
+                try:
+                    expiry_date = (raw_expiry if isinstance(raw_expiry, datetime)
+                                   else datetime.fromisoformat(str(raw_expiry).replace('Z', '+00:00')))
+                except (ValueError, TypeError):
+                    expiry_date = None
+            if expiry_date is None:
+                issued = cert_info.get('issued_at') or device.get('created_at')
+                days = cert_info.get('validity_days')
+                if isinstance(cert_info.get('validity_period'), dict):
+                    days = cert_info['validity_period'].get('days', days)
+                if issued and days:
+                    try:
+                        if isinstance(issued, str):
+                            issued = datetime.fromisoformat(issued.replace('Z', '+00:00'))
+                        expiry_date = issued + timedelta(days=int(days))
+                    except (ValueError, TypeError):
+                        expiry_date = None
+            # The comparison below uses a naive datetime.now(); drop any tz so the
+            # subtraction never raises offset-naive/aware errors.
+            if expiry_date is not None and expiry_date.tzinfo is not None:
+                expiry_date = expiry_date.replace(tzinfo=None)
+
             # Calculate days until expiry
             days_until_expiry = None
             if expiry_date:

@@ -22,25 +22,24 @@ Compliance: ETSI EN 303 645, ISO/IEC 27402
 from flask import Flask
 from .controllers.certificate_monitoring import cert_monitoring_bp
 from .controllers.certificate_self_service import cert_self_service_bp
-from .controllers.device_certificate_api import device_cert_api_bp
 
 def register_certificate_monitoring_routes(app: Flask):
     """
     Register all certificate monitoring related routes
-    
+
     Args:
         app: Flask application instance
     """
-    
+
     # Certificate monitoring endpoints
     app.register_blueprint(cert_monitoring_bp)
-    
+
     # User self-service certificate endpoints
     app.register_blueprint(cert_self_service_bp)
-    
-    # Device-side certificate API endpoints
-    app.register_blueprint(device_cert_api_bp)
-    
+
+    # NOTE: device_cert_api_bp ('/api/v1/device/...') is registered once in
+    # api/__init__.py; do not re-register it here (Flask rejects a duplicate
+    # blueprint name, which previously aborted this whole registration).
     print("✓ Certificate monitoring routes registered successfully")
 
 def get_certificate_monitoring_endpoints():

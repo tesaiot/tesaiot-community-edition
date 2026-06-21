@@ -35,6 +35,7 @@ from ..utils.validation import (
     validate_auth_request, validate_email, validate_password,
     sanitize_string, check_rate_limit_status,
     is_rate_limited, reset_rate_limit, rate_limit_response,
+    admin_bypass_rate_limit,
     get_client_ip, validate_request_size,
     ValidationError, SecurityError
 )
@@ -175,18 +176,22 @@ def login():
         # we just peek so a successful login never throttles itself.
         security_config = Config.get_security_config()
         lockout_key = f"login_lock:{email}"
-        locked, lock_retry_after = is_rate_limited(
-            lockout_key,
-            max_attempts=security_config.max_login_attempts,
-            window_seconds=security_config.lockout_duration,
-        )
-        if locked:
-            logger.warning(f"Account lockout active for {email}")
-            return rate_limit_response(
-                'Account temporarily locked after too many failed login attempts.',
-                lock_retry_after,
-                code='ACCOUNT_LOCKED'
+        # ADMIN_BYPASS_RATE_LIMIT lets the configured bootstrap admin skip the
+        # account-lockout gate as well (mirrors the per-IP bypass in the
+        # validate_auth_request decorator) so an operator is never locked out.
+        if not admin_bypass_rate_limit(email):
+            locked, lock_retry_after = is_rate_limited(
+                lockout_key,
+                max_attempts=security_config.max_login_attempts,
+                window_seconds=security_config.lockout_duration,
             )
+            if locked:
+                logger.warning(f"Account lockout active for {email}")
+                return rate_limit_response(
+                    'Account temporarily locked after too many failed login attempts.',
+                    lock_retry_after,
+                    code='ACCOUNT_LOCKED'
+                )
 
         # Initialize database connection
         db = get_db()

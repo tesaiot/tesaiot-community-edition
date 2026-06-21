@@ -924,8 +924,16 @@ class DatabaseInitService:
                     )
                     return True
             except Exception as e:
-                logger.error(f"Failed to verify PKI roles: {e}")
-            
+                # Under least privilege the API token is not permitted to list
+                # pki-int/roles (they are created by the bootstrap PKI init, not
+                # the API). A permission error here is expected and harmless.
+                if 'permission denied' in str(e).lower():
+                    logger.info("Skipping PKI role verification: API token is not "
+                                "permitted to list pki-int/roles (managed by the "
+                                "bootstrap PKI init). This is expected.")
+                else:
+                    logger.warning(f"Could not verify PKI roles: {e}")
+
             return len(created_roles) > 0
             
         except Exception as e:

@@ -598,6 +598,19 @@ def validate_input(**field_validators):
         return decorated_function
     return decorator
 
+def admin_bypass_rate_limit(email):
+    """Whether ADMIN_BYPASS_RATE_LIMIT lets this email skip login throttling.
+
+    True only when ADMIN_BYPASS_RATE_LIMIT=true and ``email`` is the configured
+    bootstrap admin (ADMIN_EMAIL), so an operator can never lock themselves out
+    of their own single-organization instance. Everyone else is throttled.
+    """
+    if os.getenv('ADMIN_BYPASS_RATE_LIMIT', 'false').strip().lower() != 'true':
+        return False
+    admin_email = (os.getenv('ADMIN_EMAIL') or '').strip().lower()
+    return bool(admin_email) and (email or '').strip().lower() == admin_email
+
+
 def validate_auth_request():
     """
     Decorator specifically for authentication request validation.
@@ -611,13 +624,20 @@ def validate_auth_request():
                 # Get client IP (trusted-proxy aware; spoofed XFF is ignored)
                 client_ip = get_client_ip()
 
+                # Peek the email so the bootstrap admin can bypass per-IP
+                # throttling (ADMIN_BYPASS_RATE_LIMIT). silent=True does not
+                # consume the body — it is re-read and validated below.
+                _peek = request.get_json(silent=True) or {}
+                _bypass = admin_bypass_rate_limit(_peek.get('email', ''))
+
                 # Check rate limiting (per-IP)
-                allowed, retry_after = check_rate_limit_status(f"auth_ip:{client_ip}")
-                if not allowed:
-                    logger.warning(f"Rate limit exceeded for IP: {client_ip}")
-                    return rate_limit_response(
-                        'Too many login attempts.', retry_after
-                    )
+                if not _bypass:
+                    allowed, retry_after = check_rate_limit_status(f"auth_ip:{client_ip}")
+                    if not allowed:
+                        logger.warning(f"Rate limit exceeded for IP: {client_ip}")
+                        return rate_limit_response(
+                            'Too many login attempts.', retry_after
+                        )
                 
                 # Validate request size
                 if request.content_length and request.content_length > MAX_REQUEST_SIZE:
