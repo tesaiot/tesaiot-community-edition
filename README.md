@@ -44,6 +44,51 @@ sites, analytics module, and the Grafana/Prometheus monitoring stack. See the
 
 ---
 
+## Screens
+
+A quick tour of the admin UI (single-organization Community Edition).
+
+### Dashboard — Operational Overview
+Real-time snapshot of telemetry throughput, platform reliability and security
+posture: platform health score, active alerts, secure-device certificate sync,
+MQTTS / MQTT-over-WS / HTTPS ingest rates, and an aggregated security score.
+
+![Dashboard](docs/images/screenshots/screen-dashboard.png)
+
+### Devices & Identity
+Register devices and bind them to real X.509 identities; choose **serverTLS** or
+**mTLS**, track certificate status, and view each device's live telemetry.
+
+![Devices & Identity](docs/images/screenshots/screen-devices.png)
+
+### Users
+Local user accounts, roles and JWT authentication for the single organization
+(bcrypt password hashing, optional email/OTP).
+
+![Users](docs/images/screenshots/screen-users.png)
+
+### Certificates
+Issue, renew and revoke device & service certificates from the two-tier
+HashiCorp Vault PKI (root → intermediate).
+
+![Certificates](docs/images/screenshots/screen-certificates.png)
+
+### API Keys — Developer Access
+Issue, scope, rotate and revoke organization API keys for the REST API / gateway,
+with per-key rate limits and usage. Keys are stored as a hash + prefix and shown
+in full exactly once.
+
+![API Keys](docs/images/screenshots/screen-api-keys.png)
+
+### Compliance
+The deployment's standards posture — ETSI EN 303 645 and ISO/IEC 27402 — about
+the **70% baseline** the Community Edition ships at the platform layer, with the
+remaining operator/roadmap items published as openly as the strengths.
+
+![Compliance](docs/images/screenshots/screen-compliance.png)
+
+---
+
 ## Architecture
 
 ```mermaid
