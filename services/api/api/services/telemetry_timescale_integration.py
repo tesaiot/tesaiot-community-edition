@@ -190,13 +190,13 @@ class TelemetryTimescaleIntegration:
                     cursor.execute("""
                         CREATE TABLE IF NOT EXISTS telemetry_generic (
                             time TIMESTAMPTZ NOT NULL,
-                            device_id UUID NOT NULL,
+                            device_id TEXT NOT NULL,
                             device_type VARCHAR(255),
                             organization_id VARCHAR(255),
                             data JSONB,
                             metadata JSONB
                         );
-                        
+
                         SELECT create_hypertable('telemetry_generic', 'time', if_not_exists => TRUE);
                     """)
                     
@@ -212,24 +212,17 @@ class TelemetryTimescaleIntegration:
                         ON telemetry_generic(organization_id, time DESC);
                     """)
                     
-                    # Insert data - handle UUID conversion
-                    import uuid
-                    try:
-                        # Try to parse as UUID
-                        device_uuid = uuid.UUID(device_id)
-                        device_id_param = str(device_uuid)
-                    except (ValueError, AttributeError):
-                        # Not a valid UUID, use as string
-                        device_id_param = device_id
-                    
+                    # Device IDs are arbitrary strings (e.g. "test-sensor-001"),
+                    # not UUIDs, so device_id is stored as TEXT (see CREATE above)
+                    # and inserted as-is.
                     insert_sql = """
                         INSERT INTO telemetry_generic (time, device_id, device_type, organization_id, data, metadata)
-                        VALUES (%s, %s::uuid, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                     """
-                    
+
                     cursor.execute(insert_sql, (
                         timestamp,
-                        device_id_param,
+                        device_id,
                         device_type,
                         organization_id or 'default',
                         json.dumps(data),
@@ -239,7 +232,17 @@ class TelemetryTimescaleIntegration:
                     # ✅ DUAL STORAGE: Also write to device_telemetry (metric_name/metric_value format) for BDH AI
                     self._store_metrics_format(cursor, device_id, timestamp, data, metadata, organization_id)
 
-                    # Also update device metadata table
+                    # Also update device metadata table (created on demand; a
+                    # missing table here must not roll back the telemetry write).
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS device_telemetry_metadata (
+                            device_type VARCHAR(255) PRIMARY KEY,
+                            table_name VARCHAR(255),
+                            schema_definition JSONB,
+                            created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                        );
+                    """)
                     cursor.execute("""
                         INSERT INTO device_telemetry_metadata (device_type, table_name, schema_definition)
                         VALUES (%s, %s, %s)

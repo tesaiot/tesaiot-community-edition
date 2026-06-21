@@ -5,6 +5,19 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-06-21
+
+### Fixed
+
+- **Telemetry now persists to TimescaleDB.** The auto-schema writer declared
+  `telemetry_generic.device_id` as `UUID` and cast the value with `::uuid`, but
+  device ids are arbitrary strings (e.g. `test-sensor-001`), so every
+  time-series write failed and rolled back (ingest still returned 200 because
+  MongoDB is the primary store). The column is now `TEXT` and the value is
+  inserted as-is; the auxiliary `device_telemetry_metadata` table is created on
+  demand so its absence can no longer roll back the telemetry write. Telemetry
+  is again readable from the time-series tier (dashboard / telemetry API).
+
 ## [1.1.1] - 2026-06-21
 
 ### Fixed
