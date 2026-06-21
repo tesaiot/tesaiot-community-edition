@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docker-compose.yml` image references are registry-qualified through
   `TESAIOT_REGISTRY` (default `ghcr.io/tesaiot`), with `BUILD_TAG` still
   selecting the tag.
+- **Supply-chain attestations.** Published images are keyless-signed with cosign
+  and carry an SBOM and SLSA build provenance; [docs/en/verification.md](docs/en/verification.md)
+  §7 shows how to `cosign verify` them.
+- **DCO enforced in CI.** A new *DCO sign-off* check requires every pull-request
+  commit to carry a `Signed-off-by` trailer; the full DCO text is in the
+  [`DCO`](DCO) file.
 
 ## [1.1.3] - 2026-06-21
 

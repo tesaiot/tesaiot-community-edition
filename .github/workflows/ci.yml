@@ -187,3 +187,33 @@ jobs:
           name: sbom-admin-ui
           path: sbom-admin-ui.cdx.json
           if-no-files-found: error
+
+  dco:
+    name: DCO sign-off
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Every PR commit must be signed off
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          missing=0
+          while read -r sha; do
+            [ -z "$sha" ] && continue
+            if ! git log -1 --format='%B' "$sha" \
+                 | grep -qiE '^Signed-off-by: .+ <.+@.+>'; then
+              subject=$(git log -1 --format='%s' "$sha")
+              echo "::error::Commit ${sha} (\"${subject}\") is missing a Signed-off-by trailer."
+              missing=1
+            fi
+          done < <(git rev-list "${BASE_SHA}..${HEAD_SHA}")
+          if [ "$missing" -ne 0 ]; then
+            echo "Sign off your commits with 'git commit -s' (or 'git rebase --signoff ${BASE_SHA}')."
+            echo "See CONTRIBUTING.md -> Licensing & DCO and the DCO file."
+            exit 1
+          fi
+          echo "All PR commits carry a DCO Signed-off-by trailer."

@@ -143,3 +143,25 @@ docker exec tesa-timescaledb psql -U postgres -d tesa_telemetry -tAc \
 ```
 
 and through the read API / gateway as in §5.
+
+## 7. Verifying the pre-built images (signature, SBOM, provenance)
+
+The three TESAIoT-authored images published to `ghcr.io/tesaiot/…` are
+**keyless-signed with [cosign](https://docs.sigstore.dev/)** and carry an
+**SBOM** and **SLSA build provenance**, so you can prove an image was built by
+this repository's CI from this source — not tampered with.
+
+```bash
+# Verify the signature (identity = this repo's release workflow)
+cosign verify ghcr.io/tesaiot/tesa-api:1.1.3 \
+  --certificate-identity-regexp '^https://github.com/tesaiot/tesaiot-community-edition/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# Inspect the attached SBOM and provenance attestations
+docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.3 \
+  --format '{{ json .Provenance }}'
+cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.3
+```
+
+Repeat for `tesa-admin-ui` and `tesa-mqtt-bridge`. A failed `cosign verify`
+means the image is not the official build — do not run it.

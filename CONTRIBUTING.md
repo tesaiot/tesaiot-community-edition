@@ -164,14 +164,18 @@ By contributing, you agree that your contributions are licensed under the
 [Apache License 2.0](LICENSE).
 
 This project follows the
-[Developer Certificate of Origin (DCO)](https://developercertificate.org/).
-Sign off every commit to certify you have the right to submit it:
+[Developer Certificate of Origin (DCO)](https://developercertificate.org/) — the
+full text is in the [`DCO`](DCO) file at the repo root. Sign off every commit to
+certify you have the right to submit it:
 
 ```bash
 git commit -s -m "fix(api): handle missing device serial"
 ```
 
-This appends a `Signed-off-by:` trailer to your commit.
+This appends a `Signed-off-by: Your Name <you@example.com>` trailer to your
+commit. **CI enforces this**: the *DCO sign-off* check fails a pull request if
+any commit is missing the trailer. To sign off commits you already made, run
+`git rebase --signoff <base>` (e.g. `origin/main`) and force-push the branch.
 
 **File headers (REUSE / SPDX).** New source files should carry a machine-readable
 license header so the codebase stays SBOM-friendly:

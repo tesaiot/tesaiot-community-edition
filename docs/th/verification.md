@@ -137,3 +137,25 @@ docker exec tesa-timescaledb psql -U postgres -d tesa_telemetry -tAc \
 ```
 
 และผ่าน read API / gateway ตามข้อ 5
+
+## 7. ตรวจสอบอิมเมจ pre-built (ลายเซ็น, SBOM, provenance)
+
+อิมเมจทั้งสามที่ TESAIoT สร้างและเผยแพร่บน `ghcr.io/tesaiot/…` ถูก
+**เซ็นแบบ keyless ด้วย [cosign](https://docs.sigstore.dev/)** และแนบ **SBOM** กับ
+**SLSA build provenance** มาด้วย จึงพิสูจน์ได้ว่าอิมเมจถูก build โดย CI ของรีโปนี้จาก
+source นี้จริง และไม่ถูกแก้ไขระหว่างทาง
+
+```bash
+# ตรวจสอบลายเซ็น (identity = release workflow ของรีโปนี้)
+cosign verify ghcr.io/tesaiot/tesa-api:1.1.3 \
+  --certificate-identity-regexp '^https://github.com/tesaiot/tesaiot-community-edition/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# ดู SBOM และ provenance ที่แนบมา
+docker buildx imagetools inspect ghcr.io/tesaiot/tesa-api:1.1.3 \
+  --format '{{ json .Provenance }}'
+cosign download sbom ghcr.io/tesaiot/tesa-api:1.1.3
+```
+
+ทำซ้ำกับ `tesa-admin-ui` และ `tesa-mqtt-bridge` ถ้า `cosign verify` ล้มเหลว แปลว่า
+อิมเมจไม่ใช่ build อย่างเป็นทางการ — อย่ารัน
