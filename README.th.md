@@ -62,6 +62,10 @@ make install PREBUILT=1
 
 # ระบุโดเมนตอนติดตั้งครั้งแรกได้ (ทั้งสองทาง):
 #   make install PREBUILT=1 DOMAIN=iot.example.com
+
+# อยากสร้าง admin ผ่านเบราว์เซอร์? เพิ่ม WIZARD=1 แล้ว claim เครื่องที่
+# https://<domain>/setup ด้วย SETUP_TOKEN แบบใช้ครั้งเดียวที่พิมพ์ให้:
+#   make install PREBUILT=1 WIZARD=1
 ```
 
 `make install` จะรันลำดับ: preflight → secrets → **build จาก source** (หรือ
@@ -92,9 +96,24 @@ make smoke       # ทดสอบ end-to-end (login → device → telemetry �
 
 ทัวร์หน้าจอ Admin UI โดยย่อ (Community Edition แบบองค์กรเดียว)
 
+### ตัวช่วยตั้งค่าครั้งแรก (First-run Setup Wizard)
+Claim เครื่องที่ติดตั้งใหม่ผ่านเบราว์เซอร์ — **ไม่มี default credentials เด็ดขาด**
+ติดตั้งด้วย `make install WIZARD=1` แล้วตัวติดตั้งจะพิมพ์ `SETUP_TOKEN` แบบใช้ครั้งเดียว
+(พิสูจน์ว่าคุณเป็นเจ้าของเครื่องจริง) จากนั้น wizard จะพาสร้างบัญชีผู้ดูแลระบบพร้อมบังคับ
+รหัสผ่านแข็งแรง และตั้งชื่อองค์กร ใน 4 ขั้นตอนสั้นๆ — token จะใช้ไม่ได้อีกถาวรทันทีที่ตั้งค่าเสร็จ
+และการเปิด setup ใหม่ต้องมีสิทธิ์เข้าถึงเครื่อง (`make reset-setup`) เท่านั้น
+ส่วนการติดตั้งแบบ headless (`make install` ปกติ) จะข้าม wizard และ seed admin จาก `.env`
+เหมือนเดิมทุกประการ
+
+![Setup wizard — welcome](docs/images/screenshots/screen-setup-1-welcome.png)
+
+![Setup wizard — administrator](docs/images/screenshots/screen-setup-2-admin.png)
+
+![Setup wizard — ready](docs/images/screenshots/screen-setup-5-success.png)
+
 ### เข้าสู่ระบบ (Sign in)
-ยืนยันตัวตนด้วยอีเมล + รหัสผ่าน (bcrypt) สำหรับองค์กรเดียว admin ครั้งแรกถูกสร้างจาก
-`ADMIN_EMAIL` / `ADMIN_PASSWORD`
+ยืนยันตัวตนด้วยอีเมล + รหัสผ่าน (bcrypt) สำหรับองค์กรเดียว admin ถูกสร้างผ่าน setup wizard
+(หรือ seed จาก `ADMIN_EMAIL` / `ADMIN_PASSWORD` ในการติดตั้งแบบ headless)
 
 ![Sign in](docs/images/screenshots/screen-login.png)
 

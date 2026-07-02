@@ -182,7 +182,22 @@ make install
 
 # Bind to a real domain on first run (recommended for production; either path):
 make install PREBUILT=1 DOMAIN=iot.example.com
+
+# OR create the administrator in the browser (first-run setup wizard):
+make install PREBUILT=1 WIZARD=1
 ```
+
+> **First-run setup wizard (`WIZARD=1`).** No admin is seeded from `.env`;
+> instead the installer prints a one-time `SETUP_TOKEN` (also stored in `.env`)
+> and you claim the instance at `https://<domain>/setup` — the wizard verifies
+> the token, creates the administrator with an enforced strong password, and
+> names your organization. The token is honoured **only until the admin
+> exists**, then every setup endpoint permanently refuses (later probes are
+> logged as security events). To legitimately re-open setup — e.g. a lost admin
+> password — run `make reset-setup` on the host: it removes the admin accounts,
+> rotates the token, and reopens the wizard; devices, telemetry and
+> certificates are untouched. Default (non-`WIZARD`) installs behave exactly as
+> before.
 
 > **Pre-built vs. from source.** Only three images are TESAIoT-authored
 > (`api`, `admin-ui`, `mqtt-bridge`); they are published to

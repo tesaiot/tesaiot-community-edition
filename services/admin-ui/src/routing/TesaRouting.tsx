@@ -22,6 +22,9 @@ import CompliancePage from '@/pages/compliance/CompliancePage';
 // Account pages for user profile and settings
 import { SimpleUserProfile } from '@/pages/account/SimpleUserProfile';
 
+// First-run setup wizard (public route; server-side gated + one-shot)
+import SetupWizardPage from '@/setup/SetupWizardPage';
+
 export function TesaRouting() {
   return (
     <Routes>
@@ -43,6 +46,7 @@ export function TesaRouting() {
         </Route>
       </Route>
       <Route path="auth/*" element={<AuthRouting />} />
+      <Route path="/setup" element={<SetupWizardPage />} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );

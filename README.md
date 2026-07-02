@@ -48,9 +48,26 @@ sites, analytics module, and the Grafana/Prometheus monitoring stack. See the
 
 A quick tour of the admin UI (single-organization Community Edition).
 
+### First-run Setup Wizard
+Claim a fresh install from the browser — no default credentials, ever. Install
+with `make install WIZARD=1` and the installer prints a one-time `SETUP_TOKEN`
+(proof you own the host); the wizard then creates the administrator with an
+enforced strong password and names your organization in four short steps. The
+token becomes permanently inert the moment setup completes, and re-opening
+setup requires host access (`make reset-setup`). Headless installs
+(`make install`) skip the wizard entirely and seed the admin from `.env` as
+before.
+
+![Setup wizard — welcome](docs/images/screenshots/screen-setup-1-welcome.png)
+
+![Setup wizard — administrator](docs/images/screenshots/screen-setup-2-admin.png)
+
+![Setup wizard — ready](docs/images/screenshots/screen-setup-5-success.png)
+
 ### Sign in
 Email + password authentication (bcrypt) for the single organization; the
-first-run admin is seeded from `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+admin is created by the setup wizard (or seeded from `ADMIN_EMAIL` /
+`ADMIN_PASSWORD` on headless installs).
 
 ![Sign in](docs/images/screenshots/screen-login.png)
 
@@ -199,6 +216,10 @@ make install PREBUILT=1
 
 #    Optionally bind a public domain on first run (either path):
 #    make install PREBUILT=1 DOMAIN=iot.example.com
+
+#    Prefer creating the admin in the browser? Add WIZARD=1 and claim the
+#    instance at https://<domain>/setup with the printed one-time SETUP_TOKEN:
+#    make install PREBUILT=1 WIZARD=1
 
 # 3. Watch it come up
 make health

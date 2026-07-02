@@ -288,6 +288,10 @@ def create_app(config_name='production'):
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     from .controllers.ce_compat import ce_compat_bp
     app.register_blueprint(ce_compat_bp)
+    # First-run setup wizard: unauthenticated but token-gated + one-shot
+    # (permanently refuses once an administrator exists).
+    from .controllers.setup import setup_bp
+    app.register_blueprint(setup_bp)
     app.register_blueprint(auth_profile_bp)
     app.register_blueprint(otp_auth_bp, url_prefix='/api/v1/auth/otp')
     app.register_blueprint(users_bp, url_prefix='/api/v1/users')

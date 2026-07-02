@@ -34,6 +34,7 @@ cp .env.example .env
 | `TZ` | `Asia/Bangkok` | โซนเวลา |
 | `BUILD_TAG` | `latest` | tag ของอิมเมจ |
 | `TESAIOT_REGISTRY` | `ghcr.io/tesaiot` | registry/namespace ของอิมเมจ pre-built (`api`, `admin-ui`, `mqtt-bridge`) — `docker compose pull` (หรือ `make install PREBUILT=1`) จะดึง `<registry>/tesa-*:<BUILD_TAG>` ส่วน `make build` จะ build แล้ว tag ชื่อเดียวกันในเครื่อง |
+| `SETUP_TOKEN` | สร้างอัตโนมัติ | token ใช้ครั้งเดียวที่ gate ตัวช่วยตั้งค่าครั้งแรก (`/setup`) ใช้ได้เฉพาะตอนยังไม่มี admin เท่านั้น หลังตั้งค่าเสร็จจะใช้ไม่ได้ถาวร (rotate ด้วย `make reset-setup`) |
 
 ### HashiCorp Vault (PKI + secrets)
 

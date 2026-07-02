@@ -16,15 +16,18 @@ s            ?=
 
 .PHONY: help install set-domain up down restart logs ps health secrets \
         init-pki init-db init-emqx init-apisix preflight build pull backup restore \
-        clean teardown unseal
+        clean teardown unseal reset-setup
 
 help: ## Show this help
 	@echo "TESAIoT Community Edition - make targets:"
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	  awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-install: ## One-command bootstrap (builds from source). Add PREBUILT=1 to pull pre-built images.
-	@$(SCRIPTS)/install.sh $(if $(DOMAIN),--domain=$(DOMAIN),) $(if $(PREBUILT),--prebuilt,)
+install: ## One-command bootstrap (builds from source). PREBUILT=1 pulls images; WIZARD=1 creates the admin via the web setup wizard.
+	@$(SCRIPTS)/install.sh $(if $(DOMAIN),--domain=$(DOMAIN),) $(if $(PREBUILT),--prebuilt,) $(if $(WIZARD),--wizard,)
+
+reset-setup: ## DANGER: remove admin accounts + reopen the first-run setup wizard (host access only)
+	@$(SCRIPTS)/reset-setup.sh
 
 set-domain: ## Set/change the public domain in one place: make set-domain DOMAIN=iot.acme.com
 	@test -n "$(DOMAIN)" || { echo "usage: make set-domain DOMAIN=iot.acme.com"; exit 1; }

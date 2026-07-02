@@ -288,6 +288,8 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # One-time first-run wizard gate; inert once setup completes.
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
       ADMIN_BYPASS_RATE_LIMIT: ${ADMIN_BYPASS_RATE_LIMIT:-true}
       BDH_ADMIN_EMAIL: ${ADMIN_EMAIL}
       BDH_ADMIN_USERNAME: ${ADMIN_USERNAME}

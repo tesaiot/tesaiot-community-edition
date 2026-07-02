@@ -47,6 +47,18 @@ export function SignInPage() {
   // const [isAppleLoading, setIsAppleLoading] = useState(false);
   // const [isMicrosoftLoading, setIsMicrosoftLoading] = useState(false);
 
+  // First-run gate: while the instance is unclaimed (no administrator exists)
+  // send the visitor to the setup wizard. The wizard is server-side gated by
+  // the one-time SETUP_TOKEN, so this redirect is UX only, never security.
+  useEffect(() => {
+    fetch('/api/v1/setup/status')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (s?.setup_required) navigate('/setup', { replace: true });
+      })
+      .catch(() => {});
+  }, [navigate]);
+
   // Check for success message from password reset or error messages
   useEffect(() => {
     const pwdReset = searchParams.get('pwd_reset');
