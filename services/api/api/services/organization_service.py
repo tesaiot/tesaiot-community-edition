@@ -51,13 +51,7 @@ def get_all_organizations(current_user):
         db = get_db()
         user_role = current_user.get('role', 'user')
         user_email = current_user.get('email', '')
-        
-        # DEBUG: Log exact input
-        print(f"[ORG_SERVICE_DEBUG] get_all_organizations called with user: {current_user}", flush=True)
-        print(f"[ORG_SERVICE_DEBUG] User email: {user_email}, role: {user_role}, org_id: {current_user.get('organization_id')}", flush=True)
-        logger.error(f"[ORG_SERVICE_DEBUG] get_all_organizations called with user: {current_user}")
-        logger.error(f"[ORG_SERVICE_DEBUG] User email: {user_email}, role: {user_role}, org_id: {current_user.get('organization_id')}")
-        
+
         # SECURITY FIX: Platform admins can ONLY see infrastructure organizations, NOT customer data
         # Platform admins have full access to manage all organizations (they have ORGANIZATION_VIEW_ALL permission)
         # Platform Admin role is for platform management, not just infrastructure

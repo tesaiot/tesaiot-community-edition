@@ -14,6 +14,7 @@ Copyright (C) 2024-2025 Wiroon Sriborrirux, Founder, BDH Corporation.
 """
 
 import os
+import re
 import json
 import logging
 from datetime import datetime
@@ -509,11 +510,14 @@ class LoggingService:
         conn = self._get_connection()
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Parse time range
-                if time_range.endswith('h'):
-                    interval = f"{time_range[:-1]} hours"
-                elif time_range.endswith('d'):
-                    interval = f"{time_range[:-1]} days"
+                # Parse time range into a SQL INTERVAL literal. The numeric part
+                # is strictly validated to digits, so `interval` can only ever be
+                # "<int> hours" / "<int> days" — nothing caller-controlled reaches
+                # the SQL string below (defense in depth; callers also whitelist).
+                _m = re.fullmatch(r'(\d{1,5})([hd])', (time_range or '').strip())
+                if _m:
+                    _n, _unit = int(_m.group(1)), _m.group(2)
+                    interval = f"{_n} {'hours' if _unit == 'h' else 'days'}"
                 else:
                     interval = "1 hour"
                 
