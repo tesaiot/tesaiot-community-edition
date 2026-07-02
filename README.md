@@ -15,7 +15,7 @@ HTTPS, and watch it live — all running on one Docker host.
 
 <!-- Badge placeholders — wire these up when the repo goes public -->
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
-![Version](https://img.shields.io/badge/version-1.1.6-informational)
+![Version](https://img.shields.io/github/v/release/tesaiot/tesaiot-community-edition?label=version&color=informational)
 <!-- ![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/<org>/<repo>/badge) -->
 <!-- ![OpenSSF Best Practices](https://www.bestpractices.dev/projects/<id>/badge) -->
 <!-- ![CI](https://github.com/<org>/<repo>/actions/workflows/ci.yml/badge.svg) -->
