@@ -28,7 +28,7 @@ The difference between the two editions is not a weaker codebase. They run the s
 
 ## What the platform meets out of the box
 
-The claims below were verified against the source code at the v1.0.0 release.
+The claims below were first verified against the source code at the v1.0.0 release and are maintained with each release (see CHANGELOG.md).
 
 ### Level 1, the security baseline
 
@@ -76,4 +76,4 @@ The NCSA v1.0 Appendix C lists a number of ETSI EN 303 645 items that it has not
 
 ---
 
-This mapping reflects the codebase at the v1.0.0 release. Provision numbers follow the NCSA v1.0 guideline, and the ETSI references are to EN 303 645 V2.1.1 (2020-06). Corrections are welcome through the vulnerability disclosure and contribution processes.
+This mapping was established at the v1.0.0 release and is maintained with each release. Provision numbers follow the NCSA v1.0 guideline, and the ETSI references are to EN 303 645 V2.1.1 (2020-06). Corrections are welcome through the vulnerability disclosure and contribution processes.

@@ -316,7 +316,7 @@ Full English docs live in [`docs/en/`](docs/en/):
 
 ## About this distribution
 
-TESAIoT Community Edition v1.0.0 is an Apache-2.0 relicensing of an extracted,
+TESAIoT Community Edition is an Apache-2.0 relicensing of an extracted,
 single-organization subset of the TESAIoT Secure IoT Platform, released by the
 platform's owner. See [`LICENSE`](LICENSE) for the full Apache License 2.0 text
 and [`NOTICE`](NOTICE) for attribution and origin. Changes are tracked in
