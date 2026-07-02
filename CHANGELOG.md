@@ -5,6 +5,25 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-02
+
+### Security
+
+- **Hardened the log-analytics time-range against SQL injection
+  (defense-in-depth).** `get_log_analytics()` built a SQL `INTERVAL` literal by
+  string-slicing the caller-supplied `time_range` and interpolating it into four
+  queries. It was not reachable (both callers whitelist `time_range`), but the
+  function now validates the numeric part to digits and fixes the unit to
+  `hours`/`days`, so nothing caller-controlled can reach the SQL string.
+- **Stopped logging personal data.** `get_all_organizations()` dumped the full
+  authenticated-user object to stdout and `logger.error` on every call (PII in
+  logs + error-log pollution); removed.
+
+A security review of v1.2.0 otherwise found no exploitable issues: the setup
+wizard is constant-time, fail-closed and one-shot; the API has no Docker socket;
+management ports bind to localhost; CORS is fail-closed; and no secrets are
+committed.
+
 ## [1.2.0] - 2026-07-02
 
 ### Added
