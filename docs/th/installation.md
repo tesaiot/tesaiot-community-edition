@@ -105,6 +105,21 @@ make install
 make install PREBUILT=1 DOMAIN=example.com
 ```
 
+หรือสร้างบัญชีผู้ดูแลระบบผ่านเบราว์เซอร์ด้วย **first-run setup wizard**:
+
+```bash
+make install PREBUILT=1 WIZARD=1
+```
+
+> **Setup wizard (`WIZARD=1`):** จะไม่ seed admin จาก `.env` — ตัวติดตั้งพิมพ์
+> `SETUP_TOKEN` แบบใช้ครั้งเดียว (เก็บใน `.env` ด้วย) แล้วไป claim เครื่องที่
+> `https://<domain>/setup` — wizard ตรวจ token, สร้าง admin พร้อมบังคับรหัสผ่านแข็งแรง
+> และตั้งชื่อองค์กร token จะใช้ได้ **จนกว่า admin ถูกสร้างเท่านั้น** จากนั้นทุก endpoint
+> ของ setup จะปฏิเสธถาวร (การ probe ภายหลังถูกบันทึกเป็น security event)
+> ถ้าต้องเปิด setup ใหม่โดยชอบธรรม (เช่น ลืมรหัสผ่าน admin) รัน `make reset-setup`
+> บนเครื่อง host: ลบบัญชี admin, rotate token แล้วเปิด wizard ใหม่ — devices,
+> telemetry และใบรับรองไม่ถูกแตะต้อง การติดตั้งแบบปกติ (ไม่มี `WIZARD`) ทำงานเหมือนเดิมทุกอย่าง
+
 `make install` จะเรียก `scripts/install.sh` ซึ่งทำตามลำดับดังนี้:
 
 1. **Preflight** — ตรวจสอบ Docker, พอร์ต, ดิสก์ และไฟล์ `.env`

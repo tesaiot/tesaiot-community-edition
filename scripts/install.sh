@@ -16,10 +16,14 @@ DOMAIN_ARG=""
 # Enable with --prebuilt or TESAIOT_PREBUILT=1. Falls back to a source build if
 # the registry images are unavailable, so a fresh checkout always installs.
 PREBUILT="${TESAIOT_PREBUILT:-0}"
+# Wizard mode: no env-seeded admin; the operator claims the instance through
+# the first-run web wizard (/setup) with the one-time SETUP_TOKEN.
+WIZARD="${TESAIOT_WIZARD:-0}"
 for arg in "$@"; do
   case "$arg" in
     --domain=*) DOMAIN_ARG="$arg" ;;
     --prebuilt) PREBUILT=1 ;;
+    --wizard) WIZARD=1 ;;
     *) ;;
   esac
 done
@@ -45,8 +49,10 @@ fi
 # (re-derives EMQX_CERT_*/TESA_PUBLIC_*/ADMIN_EMAIL/BRIDGE_API_USER + APISIX
 # snis) without regenerating secrets, so re-running with a new --domain on an
 # existing .env actually changes the domain instead of being silently skipped.
+WIZARD_FLAG=""
+[ "${WIZARD}" = "1" ] && WIZARD_FLAG="--wizard"
 if [ ! -f "${ENV_FILE}" ]; then
-  bash "${SCRIPT_DIR}/generate-secrets.sh" "${DOMAIN_ARG}"
+  bash "${SCRIPT_DIR}/generate-secrets.sh" "${DOMAIN_ARG}" ${WIZARD_FLAG}
 else
   ok ".env already exists - keeping current secrets (delete it to regenerate)"
   if [ -n "${DOMAIN_ARG}" ]; then
@@ -56,7 +62,7 @@ else
       && warn ".env DOMAIN='${CUR_DOMAIN}' differs from --domain='${NEW_DOMAIN}'; re-applying domain wiring."
   fi
   # Re-apply domain (if any) and ensure keyfile + TLS + rendered configs exist.
-  bash "${SCRIPT_DIR}/generate-secrets.sh" "${DOMAIN_ARG}"
+  bash "${SCRIPT_DIR}/generate-secrets.sh" "${DOMAIN_ARG}" ${WIZARD_FLAG}
 fi
 
 # ---------------------------------------------------------------------------
@@ -162,7 +168,27 @@ cat <<EOF
   APISIX gateway :  http://localhost:9080  (admin :9180)
   Vault UI       :  http://localhost:8200/ui
 
+EOF
+if [ -z "$(env_get ADMIN_PASSWORD 2>/dev/null || true)" ]; then
+  SETUP_TOKEN_VAL="$(env_get SETUP_TOKEN 2>/dev/null || true)"
+  cat <<EOF
+  FIRST-RUN SETUP: no admin exists yet. Claim this instance in your browser:
+
+      https://${DOMAIN_VAL}/setup
+
+  One-time setup token (also in .env as SETUP_TOKEN):
+
+      ${SETUP_TOKEN_VAL}
+
+  The token is only honoured until the administrator account is created,
+  then it is permanently inert. Keep .env safe - it holds the Vault unseal
+  keys + root token.
+
+EOF
+else
+  cat <<EOF
   Bootstrap admin login is ADMIN_EMAIL / ADMIN_PASSWORD from .env.
   Keep .env safe - it holds the Vault unseal keys + root token.
 
 EOF
+fi

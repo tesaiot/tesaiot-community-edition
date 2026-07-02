@@ -5,6 +5,33 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-02
+
+### Added
+
+- **First-run setup wizard.** Install with `make install WIZARD=1` and claim the
+  instance from the browser at `/setup`: a four-step wizard (welcome + health →
+  administrator → organization → review) gated by a one-time, per-install
+  `SETUP_TOKEN` the installer prints — proof of host ownership, never a default
+  credential (ETSI EN 303 645 5.1-1/5.1-2; OWASP ASVS 2.5.4). The wizard
+  enforces the platform's strong-password policy on the administrator (closing
+  the gap where an env-seeded password was never validated), names the single
+  organization, and completes atomically with an audit-log entry.
+  - **One-shot, server-side.** Once an administrator exists every setup
+    endpoint permanently refuses (HTTP 410) — even with the real token — and
+    later probes are logged as security events. Completion state lives in
+    `system_config` next to the accounts it protects.
+  - **Headless installs unchanged.** Plain `make install` still seeds the admin
+    from `ADMIN_EMAIL`/`ADMIN_PASSWORD` (first boot only) and auto-skips the
+    wizard; existing deployments are backfilled as already-set-up on upgrade.
+  - **Host-only recovery.** `make reset-setup` (typed confirmation required)
+    removes the admin accounts, rotates the token and reopens the wizard —
+    devices, telemetry and certificates are untouched. There is deliberately no
+    web-reachable reset.
+  - The sign-in page redirects to `/setup` while the instance is unclaimed;
+    `scripts/smoke-test.py` now requires explicit credentials instead of
+    embedded fallbacks.
+
 ## [1.1.8] - 2026-06-21
 
 ### Fixed

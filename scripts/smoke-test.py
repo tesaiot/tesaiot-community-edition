@@ -46,9 +46,15 @@ def load_env(path):
 
 ENV = load_env(ENV_FILE)
 
-# Admin creds: env override -> .env ADMIN_* -> the values used during the test run.
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL") or ENV.get("ADMIN_EMAIL", "wiroon@tesa.or.th")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD") or ENV.get("ADMIN_PASSWORD", "wiroon123")
+# Admin creds: env override -> .env ADMIN_*. Wizard-mode installs keep
+# ADMIN_PASSWORD out of .env, so pass the wizard-created credentials:
+#   ADMIN_EMAIL=... ADMIN_PASSWORD=... python3 scripts/smoke-test.py
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL") or ENV.get("ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD") or ENV.get("ADMIN_PASSWORD", "")
+if not ADMIN_EMAIL or not ADMIN_PASSWORD:
+    print("ERROR: admin credentials not found. Set ADMIN_EMAIL/ADMIN_PASSWORD in the "
+          "environment (wizard-mode installs do not keep the password in .env).")
+    sys.exit(2)
 BASE = os.getenv("BASE_URL", "https://localhost")          # via nginx :443
 EMQX_DASH = "http://localhost:18083"
 APISIX = "http://localhost:9080"

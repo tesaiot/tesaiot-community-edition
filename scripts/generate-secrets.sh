@@ -18,12 +18,17 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 FORCE=0
 DOMAIN_ARG=""
+# Wizard mode: leave ADMIN_PASSWORD empty so no admin is env-seeded; the
+# operator claims the instance through the first-run web wizard using the
+# one-time SETUP_TOKEN instead.
+WIZARD=0
 for arg in "$@"; do
   case "$arg" in
     "") ;;  # tolerate an empty (quoted) argument from wrappers
     --force) FORCE=1 ;;
+    --wizard) WIZARD=1 ;;
     --domain=*) DOMAIN_ARG="${arg#--domain=}" ;;
-    *) die "unknown arg: $arg (use --force, --domain=example.com)" ;;
+    *) die "unknown arg: $arg (use --force, --wizard, --domain=example.com)" ;;
   esac
 done
 
@@ -135,8 +140,20 @@ else
   # Domain wiring (initial creation). Re-derives all host/origin/URL vars.
   [ -n "${DOMAIN_ARG}" ] && apply_domain "${DOMAIN_ARG}"
 
+  if [ "${WIZARD}" -eq 1 ]; then
+    # Wizard install: no env-seeded admin. The one-time SETUP_TOKEN (ensured
+    # below) gates the first-run web wizard where the admin is created.
+    replace ADMIN_PASSWORD ""
+    ok ".env created for a WIZARD install (no ADMIN_PASSWORD; claim the instance at /setup with SETUP_TOKEN)"
+  else
+    ok ".env created with generated secrets (admin password saved in .env: ADMIN_PASSWORD)"
+  fi
   chmod 600 "${ENV_FILE}"
-  ok ".env created with generated secrets (admin password saved in .env: ADMIN_PASSWORD)"
+fi
+
+if [ "${WIZARD}" -eq 1 ] && [ -f "${ENV_FILE}" ] && [ -n "$(env_get ADMIN_PASSWORD 2>/dev/null || true)" ] \
+   && [[ "$(env_get ADMIN_PASSWORD)" != CHANGEME* ]]; then
+  warn "--wizard given but .env already holds an ADMIN_PASSWORD - keeping it (wizard applies to fresh installs; use 'make reset-setup' to hand an installed system to the wizard)."
 fi
 
 # Secrets that are substituted into rendered config files and therefore must
@@ -145,6 +162,8 @@ fi
 ensure_env_secret EMQX_NODE_COOKIE 32
 ensure_env_secret APISIX_SAMPLE_DEVICE_API_KEY 32
 ensure_env_secret BRIDGE_API_PASSWORD 24
+# One-time first-run wizard gate (inert once setup completes).
+ensure_env_secret SETUP_TOKEN 48
 
 # ---------------------------------------------------------------------------
 # Idempotent domain re-wiring. Runs whenever --domain is supplied, even on an

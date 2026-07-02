@@ -602,20 +602,51 @@ class DatabaseInitService:
     def _ensure_default_data(self):
         """Ensure required default data exists."""
         logger.info("Ensuring default data exists...")
-        
+
         # Import services
-        from .user_service import ensure_admin_users
+        from .user_service import ensure_admin_users, ensure_bridge_service_account
         from .organization_service import ensure_default_organizations
-        
+        from .setup_state import setup_flag, admin_exists, mark_setup_completed
+        from ..core.config import Config
+
         # Create default organizations
         ensure_default_organizations()
-        
-        # Create default admin users
-        ensure_admin_users()
-        
+
+        # The least-privilege MQTT bridge service account is independent of the
+        # first-run gate below (it is normally created at the end of
+        # ensure_admin_users, which the gate can skip) — ensure it on every
+        # boot so wizard-mode installs still have a working telemetry bridge.
+        try:
+            ensure_bridge_service_account(self.db)
+        except Exception as bridge_err:
+            logger.error(f"Bridge service account check failed: {bridge_err}")
+
+        # First-run gate. Env seeding applies to the FIRST boot only:
+        #   flag set              -> steady state, never re-seed from env
+        #   admin already exists  -> pre-flag install; backfill flag (legacy)
+        #   ADMIN_* provided      -> headless install; seed as before + flag
+        #   neither               -> wizard install; seed nothing, /setup is live
+        flag = setup_flag(self.db)
+        if flag.get('setup_completed'):
+            logger.info("Setup already completed (mode=%s) - skipping env admin seeding",
+                        flag.get('mode', 'unknown'))
+        elif admin_exists(self.db):
+            mark_setup_completed(self.db, mode='legacy')
+            logger.info("Existing administrator found - setup flag backfilled (mode=legacy)")
+        else:
+            creds = Config.get_admin_credentials()['bdh_admin']
+            if creds['email'] and creds['password'] and creds['username']:
+                ensure_admin_users()
+                if admin_exists(self.db):
+                    mark_setup_completed(self.db, mode='env',
+                                         completed_by=creds['email'])
+            else:
+                logger.info("No admin credentials in environment - first-run setup "
+                            "wizard is live at /setup (gated by SETUP_TOKEN)")
+
         # Ensure audit log indexes exist
         self._ensure_audit_collections()
-        
+
         logger.info("Default data verification completed")
     
     def _ensure_audit_collections(self):
