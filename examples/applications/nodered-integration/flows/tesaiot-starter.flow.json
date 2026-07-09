@@ -1,0 +1,774 @@
+[
+  {
+    "id": "0f4a1e352a7b9c01",
+    "type": "tab",
+    "label": "TESAIoT Starter",
+    "disabled": false,
+    "info": "Dashboard-ready starter flow demonstrating TESAIoT Platform integration."
+  },
+  {
+    "id": "e1c3f5a7b9d2e4f6",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Refresh devices",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "tesaiot.devices.mode",
+        "v": "list",
+        "vt": "str"
+      },
+      {
+        "p": "tesaiot.devices.limit",
+        "v": "25",
+        "vt": "num"
+      }
+    ],
+    "repeat": "300",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "",
+    "x": 190,
+    "y": 80,
+    "wires": [
+      [
+        "a2b4c6d8e0f1a3b5"
+      ]
+    ]
+  },
+  {
+    "id": "a2b4c6d8e0f1a3b5",
+    "type": "tesaiot-devices",
+    "z": "0f4a1e352a7b9c01",
+    "name": "List devices",
+    "gateway": "c38e9adbb55d46f4",
+    "mode": "list",
+    "x": 430,
+    "y": 60,
+    "wires": [
+      [
+        "b3c5d7e9f1a2b4c6"
+      ]
+    ]
+  },
+  {
+    "id": "b3c5d7e9f1a2b4c6",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Format devices for table",
+    "func": "const items = Array.isArray(msg.payload?.devices) ? msg.payload.devices : msg.payload?.items || [];\nmsg.payload = items.map((device) => ({\n    id: device.device_id || device.id,\n    name: device.name || device.display_name || 'Unnamed device',\n    status: device.status || 'unknown',\n    lastSeen: device.last_seen || device.last_contact || '—',\n    profile: device.profile?.name || device.device_profile || 'default'\n}));\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 670,
+    "y": 80,
+    "wires": [
+      [
+        "dispatch_devices"
+      ]
+    ]
+  },
+  {
+    "id": "auto_device_select",
+    "type": "change",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Store first device",
+    "rules": [
+      {
+        "t": "set",
+        "p": "flow.tesaiot.deviceId",
+        "pt": "flow",
+        "to": "msg.payload[0].id",
+        "tot": "jsonata"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 1010,
+    "y": 180,
+    "wires": [
+      [
+        "telemetry_inject_link"
+      ]
+    ]
+  },
+  {
+    "id": "telemetry_inject_link",
+    "type": "link out",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Trigger telemetry refresh",
+    "mode": "link",
+    "links": [
+      "link_to_refresh_telemetry"
+    ],
+    "x": 1180,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "c4d6e8f0a2b3c5d7",
+    "type": "ui-table",
+    "z": "0f4a1e352a7b9c01",
+    "group": "ab12cd34ef56ab78",
+    "name": "Device inventory",
+    "label": "Device inventory",
+    "order": 0,
+    "width": 12,
+    "height": 6,
+    "maxrows": 0,
+    "passthru": false,
+    "autocols": false,
+    "showSearch": true,
+    "deselect": true,
+    "selectionType": "none",
+    "columns": [
+      {
+        "title": "Device ID",
+        "width": "220px",
+        "key": "id",
+        "keyType": "key"
+      },
+      {
+        "title": "Name",
+        "width": "200px",
+        "key": "name",
+        "keyType": "key"
+      },
+      {
+        "title": "Status",
+        "width": "120px",
+        "key": "status",
+        "keyType": "key"
+      },
+      {
+        "title": "Last seen",
+        "width": "200px",
+        "key": "lastSeen",
+        "keyType": "key"
+      },
+      {
+        "title": "Profile",
+        "width": "180px",
+        "key": "profile",
+        "keyType": "key"
+      }
+    ],
+    "mobileBreakpoint": "sm",
+    "mobileBreakpointType": "defaults",
+    "action": "replace",
+    "className": "shadow-lg",
+    "x": 1010,
+    "y": 120,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f1a3b5c7d9e1f3a5",
+    "type": "debug",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Devices payload",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1000,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "d4e6f8a0b2c4d6e8",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Refresh telemetry",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "tesaiot.telemetry.deviceId",
+        "v": "TESAIOT_DEFAULT_DEVICE_ID",
+        "vt": "env"
+      },
+      {
+        "p": "tesaiot.telemetry.limit",
+        "v": "50",
+        "vt": "num"
+      },
+      {
+        "p": "tesaiot.telemetry.since",
+        "v": "15m",
+        "vt": "str"
+      }
+    ],
+    "repeat": "60",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "x": 250,
+    "y": 380,
+    "wires": [
+      [
+        "e5f7a9c1d3e5f7a9"
+      ]
+    ]
+  },
+  {
+    "id": "e5f7a9c1d3e5f7a9",
+    "type": "tesaiot-telemetry",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Pull telemetry",
+    "gateway": "c38e9adbb55d46f4",
+    "limit": 50,
+    "x": 520,
+    "y": 380,
+    "wires": [
+      [
+        "f6a8c0e2f4a6c8e0"
+      ]
+    ]
+  },
+  {
+    "id": "custom_window_inject",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Fetch last hour window",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0,
+    "topic": "",
+    "x": 200,
+    "y": 520,
+    "wires": [
+      [
+        "set_last_hour_window"
+      ]
+    ]
+  },
+  {
+    "id": "set_last_hour_window",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Set start/end window",
+    "func": "const deviceId = flow.get('tesaiot.deviceId');\nif (!deviceId) {\n  node.warn('Device ID not available yet. Trigger device refresh first.');\n  return null;\n}\n\nconst telemetryOverrides = { ...(msg.tesaiot?.telemetry || {}) };\nconst windowHoursOverride = telemetryOverrides.windowHours ?? msg.windowHours;\nconst windowDaysOverride = telemetryOverrides.windowDays ?? msg.windowDays;\n\nlet durationHours = Number(windowHoursOverride);\nif (!Number.isFinite(durationHours) || durationHours <= 0) {\n  const days = Number(windowDaysOverride);\n  durationHours = Number.isFinite(days) && days > 0 ? days * 24 : undefined;\n}\nif (!Number.isFinite(durationHours) || durationHours <= 0) {\n  durationHours = 1;\n}\n\nconst durationMs = durationHours * 60 * 60 * 1000;\nconst end = new Date();\nconst start = new Date(end.getTime() - durationMs);\nconst toIso = (date) => date.toISOString();\n\nconst { windowHours, windowDays, limit, ...rest } = telemetryOverrides;\nmsg.tesaiot = msg.tesaiot || {};\nmsg.tesaiot.telemetry = {\n  ...rest,\n  deviceId,\n  start_time: toIso(start),\n  end_time: toIso(end),\n  limit: Number(limit ?? msg.limit ?? 100)\n};\n\nmsg.metadata = {\n  ...(msg.metadata || {}),\n  telemetryWindow: {\n    hours: durationHours,\n    start: msg.tesaiot.telemetry.start_time,\n    end: msg.tesaiot.telemetry.end_time\n  }\n};\n\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 500,
+    "y": 500,
+    "wires": [
+      [
+        "e5f7a9c1d3e5f7a9"
+      ]
+    ]
+  },
+  {
+    "id": "f6a8c0e2f4a6c8e0",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Build chart series",
+    "func": "const payload = msg.payload || {};\nconst itemsSource = Array.isArray(payload.items) ? payload.items : (Array.isArray(payload) ? payload : []);\nconst items = Array.isArray(itemsSource) ? itemsSource.filter(Boolean) : [];\nif (!Array.isArray(itemsSource)) {\n  node.warn('Telemetry payload did not include an items array; rendering empty chart.');\n}\nconst series = items.map((entry) => ({\n  x: entry.timestamp || entry.recorded_at || new Date().toISOString(),\n  y: entry.value ?? entry.data?.value ?? 0\n})).reverse();\nmsg.payload = [{\n  name: 'Telemetry',\n  data: series\n}];\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 730,
+    "y": 420,
+    "wires": [
+      [
+        "g7b9d1f3a5c7e9b1",
+        "a6c8e0f2a4c6e8f0"
+      ]
+    ]
+  },
+  {
+    "id": "g7b9d1f3a5c7e9b1",
+    "type": "ui-chart",
+    "z": "0f4a1e352a7b9c01",
+    "group": "bc23de45f678ab90",
+    "name": "Telemetry trend",
+    "order": 0,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "",
+    "xAxisPropertyType": "timestamp",
+    "xAxisType": "time",
+    "xAxisFormatType": "auto",
+    "yAxisLabel": "",
+    "yAxisProperty": "payload",
+    "yAxisPropertyType": "msg",
+    "action": "replace",
+    "pointShape": "circle",
+    "pointRadius": 4,
+    "showLegend": true,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "width": 12,
+    "height": 6,
+    "interpolation": "cardinal",
+    "x": 980,
+    "y": 380,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "live_stream_trigger",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Remember stream device",
+    "func": "const ids = Array.isArray(msg?.tesaiot?.stream?.deviceIds) ? msg.tesaiot.stream.deviceIds : Array.isArray(msg?.payload?.deviceIds) ? msg.payload.deviceIds : [];\nif (!Array.isArray(ids) || ids.length === 0) {\n  return null;\n}\nflow.set('tesaiot.streamDeviceIds', ids);\nnode.status({ fill: 'blue', shape: 'dot', text: `ready ${ids[0]}` });\nreturn null;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1030,
+    "y": 300,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "a6c8e0f2a4c6e8f0",
+    "type": "debug",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Telemetry payload",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 990,
+    "y": 460,
+    "wires": []
+  },
+  {
+    "id": "start_stream_inject",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Start live stream (60s)",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "duration",
+        "v": "60",
+        "vt": "num"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0,
+    "topic": "",
+    "x": 200,
+    "y": 600,
+    "wires": [
+      [
+        "prepare_stream_message"
+      ]
+    ]
+  },
+  {
+    "id": "prepare_stream_message",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Build stream request",
+    "func": "let ids = flow.get('tesaiot.streamDeviceIds');\nif (!Array.isArray(ids) || ids.length === 0) {\n  const fallback = flow.get('tesaiot.deviceId');\n  ids = fallback ? [fallback] : [];\n}\nif (!Array.isArray(ids) || ids.length === 0) {\n  node.warn('No device ID registered for streaming yet. Refresh devices first.');\n  return null;\n}\nconst duration = Number(msg.duration ?? 60);\nreturn {\n  payload: {},\n  tesaiot: {\n    stream: {\n      deviceIds: ids,\n      duration\n    }\n  }\n};\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 580,
+    "wires": [
+      [
+        "stream_node"
+      ]
+    ]
+  },
+  {
+    "id": "stream_node",
+    "type": "tesaiot-telemetry-stream",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Live telemetry stream",
+    "gateway": "c38e9adbb55d46f4",
+    "deviceIds": "",
+    "path": "/ws/telemetry",
+    "wsUrl": "",
+    "autoDisconnect": 0,
+    "x": 620,
+    "y": 660,
+    "wires": [
+      [
+        "format_stream_output",
+        "stream_debug"
+      ]
+    ]
+  },
+  {
+    "id": "format_stream_output",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Format live telemetry",
+    "func": "const payload = msg.payload || {};\nif (payload.type === 'subscribed') {\n  msg.payload = `Subscribed to ${Array.isArray(payload.deviceIds) ? payload.deviceIds.join(', ') : 'devices'}`;\n  return msg;\n}\nif (payload.type === 'ping') {\n  msg.payload = 'Keep-alive ping';\n  return msg;\n}\nconst deviceId = payload.deviceId || payload.device_id || 'unknown';\nconst timestamp = payload.timestamp || new Date().toISOString();\nconst data = payload.data || payload.values || payload;\nmsg.payload = `${timestamp} ${deviceId} ${JSON.stringify(data)}`;\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 900,
+    "y": 620,
+    "wires": [
+      [
+        "live_stream_text"
+      ]
+    ]
+  },
+  {
+    "id": "live_stream_text",
+    "type": "ui-text",
+    "z": "0f4a1e352a7b9c01",
+    "group": "bc23de45f678ab90",
+    "order": 1,
+    "width": 12,
+    "height": 1,
+    "name": "Live telemetry (WebSocket)",
+    "label": "Live telemetry",
+    "format": "{{msg.payload}}",
+    "layout": "row-left",
+    "x": 1100,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "stream_debug",
+    "type": "debug",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Stream payload",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 880,
+    "y": 700,
+    "wires": []
+  },
+  {
+    "id": "stop_stream_inject",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Stop live stream",
+    "props": [
+      {
+        "p": "action",
+        "v": "stop",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0,
+    "topic": "",
+    "x": 180,
+    "y": 660,
+    "wires": [
+      [
+        "stream_node"
+      ]
+    ]
+  },
+  {
+    "id": "h8a0c2e4f6a8c0e2",
+    "type": "inject",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Refresh dashboard stats",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "900",
+    "once": true,
+    "onceDelay": "10",
+    "topic": "",
+    "x": 210,
+    "y": 760,
+    "wires": [
+      [
+        "i9b1d3f5a7c9e1b3"
+      ]
+    ]
+  },
+  {
+    "id": "i9b1d3f5a7c9e1b3",
+    "type": "tesaiot-certificates",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Dashboard stats",
+    "gateway": "c38e9adbb55d46f4",
+    "x": 480,
+    "y": 720,
+    "wires": [
+      [
+        "j0c2e4f6a8c0e2g4"
+      ]
+    ]
+  },
+  {
+    "id": "j0c2e4f6a8c0e2g4",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Build stats summary",
+    "func": "const stats = msg.payload || {};\nconst overview = {\n  total: stats.total_devices ?? 0,\n  active: stats.active_devices ?? 0,\n  secure: stats.secure_devices ?? 0,\n  activeRate: typeof stats.active_rate === 'number' ? (stats.active_rate * 100).toFixed(2) + '%' : 'N/A'\n};\nconst details = [\n  `Secure rate: ${typeof stats.secure_rate === 'number' ? (stats.secure_rate * 100).toFixed(2) + '%' : 'N/A'}`,\n  `Messages/min: ${stats.messages_per_minute ?? 0}`,\n  `API req/min: ${stats.api_requests_per_min ?? 0}`\n];\nmsg.payload = { overview, details };\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 740,
+    "y": 760,
+    "wires": [
+      [
+        "k1d3f5a7c9e1b3d5",
+        "b2d4f6a8c0e2g4i6"
+      ]
+    ]
+  },
+  {
+    "id": "k1d3f5a7c9e1b3d5",
+    "type": "ui-template",
+    "z": "0f4a1e352a7b9c01",
+    "group": "cd34ef56ab78bc12",
+    "name": "Dashboard summary",
+    "order": 0,
+    "width": 12,
+    "height": 3,
+    "templateScope": "local",
+    "x": 1040,
+    "y": 720,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b2d4f6a8c0e2g4i6",
+    "type": "ui-markdown",
+    "z": "0f4a1e352a7b9c01",
+    "group": "cd34ef56ab78bc12",
+    "name": "Operational notes",
+    "order": 1,
+    "width": 12,
+    "height": 2,
+    "content": "### Platform snapshot\\n{{#payload.details}}\\n- {{.}}\\n{{/payload.details}}\\n{{^payload.details}}No additional metrics available.{{/payload.details}}",
+    "className": "prose prose-invert max-w-none",
+    "x": 1030,
+    "y": 800,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "link_to_refresh_telemetry",
+    "type": "link in",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Auto refresh telemetry",
+    "links": [
+      "telemetry_inject_link"
+    ],
+    "x": 85,
+    "y": 380,
+    "wires": [
+      [
+        "d4e6f8a0b2c4d6e8"
+      ]
+    ]
+  },
+  {
+    "id": "dispatch_devices",
+    "type": "function",
+    "z": "0f4a1e352a7b9c01",
+    "name": "Dispatch devices",
+    "func": "const devices = Array.isArray(msg.payload) ? msg.payload : [];\nconst outputs = [null, null, null];\noutputs[0] = msg;\nif (devices.length > 0) {\n  const first = devices[0];\n  flow.set('tesaiot.deviceId', first.id);\n  const baseTelemetry = msg.tesaiot?.telemetry ? { ...msg.tesaiot.telemetry } : {};\n  baseTelemetry.deviceId = baseTelemetry.deviceId || first.id;\n  const limit = Number(baseTelemetry.limit ?? flow.get('tesaiot.telemetryLimit') ?? 50);\n  const rememberedSince = flow.get('tesaiot.telemetrySince');\n  const hasWindow = baseTelemetry.start_time || baseTelemetry.startTime || baseTelemetry.end_time || baseTelemetry.endTime;\n  if (!baseTelemetry.since && !hasWindow) {\n    baseTelemetry.since = rememberedSince || '15m';\n  }\n  baseTelemetry.limit = limit;\n  outputs[1] = { payload: {}, tesaiot: { telemetry: baseTelemetry } };\n  flow.set('tesaiot.telemetryLimit', limit);\n  if (baseTelemetry.since) {\n    flow.set('tesaiot.telemetrySince', baseTelemetry.since);\n  }\n  outputs[2] = { payload: { deviceIds: [first.id] }, tesaiot: { stream: { deviceIds: [first.id] } } };\n}\nreturn outputs;\n",
+    "outputs": 3,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 730,
+    "y": 260,
+    "wires": [
+      [
+        "c4d6e8f0a2b3c5d7",
+        "f1a3b5c7d9e1f3a5"
+      ],
+      [
+        "e5f7a9c1d3e5f7a9"
+      ],
+      [
+        "live_stream_trigger"
+      ]
+    ]
+  },
+  {
+    "id": "c38e9adbb55d46f4",
+    "type": "tesaiot-api-gateway",
+    "name": "TESAIoT Gateway",
+    "baseUrl": "",
+    "timeout": 10000,
+    "verifyTls": true
+  },
+  {
+    "id": "ab12cd34ef56ab78",
+    "type": "ui-group",
+    "name": "Device Snapshot",
+    "page": "71e2d4a5b6c7d8e9",
+    "width": 12,
+    "height": 6,
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default"
+  },
+  {
+    "id": "bc23de45f678ab90",
+    "type": "ui-group",
+    "name": "Live Telemetry",
+    "page": "71e2d4a5b6c7d8e9",
+    "width": 12,
+    "height": 6,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default"
+  },
+  {
+    "id": "cd34ef56ab78bc12",
+    "type": "ui-group",
+    "name": "Certificates & Usage",
+    "page": "71e2d4a5b6c7d8e9",
+    "width": 12,
+    "height": 6,
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default"
+  },
+  {
+    "id": "71e2d4a5b6c7d8e9",
+    "type": "ui-page",
+    "name": "Operations",
+    "ui": "9ef8c0c1d2a34567",
+    "path": "/operations",
+    "icon": "material-dashboard",
+    "layout": "grid",
+    "theme": "default",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "order": 0,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "9ef8c0c1d2a34567",
+    "type": "ui-base",
+    "name": "TESAIoT Dashboard",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 5,
+    "showDisconnectNotification": true,
+    "allowInstall": true
+  },
+  {
+    "id": "56a0d7f18c2b4e90",
+    "type": "ui-theme",
+    "name": "TESAIoT Night",
+    "colors": {
+      "surface": "#0F172A",
+      "primary": "#38BDF8",
+      "bgPage": "#020617",
+      "groupBg": "#1E293B",
+      "groupOutline": "#334155"
+    },
+    "sizes": {
+      "density": "comfortable",
+      "pagePadding": "12px",
+      "groupGap": "12px",
+      "groupBorderRadius": "12px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "d97a62abc6f487cf",
+    "type": "global-config",
+    "env": [],
+    "modules": {
+      "@flowfuse/node-red-dashboard": "1.27.2"
+    }
+  }
+]

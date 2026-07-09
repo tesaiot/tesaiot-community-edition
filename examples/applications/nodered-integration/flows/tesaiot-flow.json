@@ -1,0 +1,395 @@
+[
+    {
+        "id": "0f4a1e352a7b9c01",
+        "type": "tab",
+        "label": "TESAIoT Console",
+        "disabled": false,
+        "info": "Red-themed TESAIoT console showcasing device inventory, profiles, telemetry windows, and API usage."
+    },
+    {
+        "id": "a1b2c3d4e5f60789",
+        "type": "inject",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Refresh device list",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "tesaiot.deviceList.limit",
+                "v": "20",
+                "vt": "num"
+            }
+        ],
+        "repeat": "300",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "x": 180,
+        "y": 120,
+        "wires": [
+            [
+                "b1c2d3e4f5a60789"
+            ]
+        ]
+    },
+    {
+        "id": "b1c2d3e4f5a60789",
+        "type": "tesaiot-device-lists",
+        "z": "0f4a1e352a7b9c01",
+        "name": "TESAIoT Device Lists",
+        "gateway": "c38e9adbb55d46f4",
+        "limit": 20,
+        "x": 410,
+        "y": 120,
+        "wires": [
+            [
+                "c1d2e3f4a5b60789"
+            ]
+        ]
+    },
+    {
+        "id": "c1d2e3f4a5b60789",
+        "type": "function",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Render device list",
+        "func": "const raw = msg.payload || {};\nconst devices = Array.isArray(raw.devices) ? raw.devices : Array.isArray(raw) ? raw : (raw.items || []);\nconst list = Array.isArray(devices) ? devices : [];\nconst simplified = list.map((device, index) => ({\n  index: index + 1,\n  id: device.device_id || device.id || device._id || '-',\n  name: device.name || device.label || device.metadata?.displayName || 'Unnamed device',\n  status: (device.status || 'unknown').toString(),\n  type: device.type || device.category || device.device_profile || 'n/a',\n  lastSeen: device.telemetry_summary?.last_update || device.last_seen || device.metadata?.lastContact || '—'\n}));\nflow.set('tesaiot.deviceList', simplified);\nlet rows = '';\nsimplified.slice(0, 25).forEach((device) => {\n  rows += `<tr><td>${device.index}</td><td>${device.name}</td><td>${device.status}</td><td>${device.type}</td><td>${device.lastSeen}</td></tr>`;\n});\nif (!rows) {\n  rows = '<tr><td colspan=5>No devices available</td></tr>';\n}\nconst html = `\n  <div class=\"tesaiot-card\">\n    <h3>TESAIoT Device Lists</h3>\n    <div class=\"tesaiot-metric\"><span>Total devices</span><span class=\"tesaiot-badge\">${simplified.length}</span></div>\n    <div style=\"overflow-x:auto; margin-top:12px;\">\n      <table style=\"width:100%; border-collapse:collapse; color:#fff;\">\n        <thead><tr style=\"text-align:left;font-weight:600;\">\n          <th>#</th><th>Name</th><th>Status</th><th>Type</th><th>Last seen</th>\n        </tr></thead>\n        <tbody>${rows}</tbody>\n      </table>\n    </div>\n  </div>`;\nconst cardMsg = {\n  payload: html,\n  metadata: {\n    ...(msg.metadata || {}),\n    source: 'device-list-card',\n    count: simplified.length,\n    fetchedAt: new Date().toISOString()\n  }\n};\nlet profileMsg = null;\nlet dataMsg = null;\nif (simplified.length > 0) {\n  const primary = simplified[0];\n  flow.set('tesaiot.selectedDeviceId', primary.id);\n  profileMsg = {\n    payload: {},\n    deviceId: primary.id,\n    tesaiot: {\n      deviceProfile: {\n        deviceId: primary.id\n      }\n    }\n  };\n  dataMsg = {\n    payload: {},\n    deviceId: primary.id,\n    windowDays: 7,\n    tesaiot: {\n      deviceData: {\n        deviceId: primary.id,\n        windowDays: 7,\n        limit: 200\n      }\n    }\n  };\n} else {\n  flow.set('tesaiot.selectedDeviceId', null);\n}\nreturn [cardMsg, profileMsg, dataMsg];",
+        "outputs": 3,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 120,
+        "wires": [
+            [
+                "d1e2f3a4b5c60789"
+            ],
+            [
+                "e1f2a3b4c5d60789"
+            ],
+            [
+                "b2c3d4e5f6a70891"
+            ]
+        ]
+    },
+    {
+        "id": "d1e2f3a4b5c60789",
+        "type": "ui-template",
+        "z": "0f4a1e352a7b9c01",
+        "group": "ab12cd34ef56ab78",
+        "name": "Device list card",
+        "order": 1,
+        "width": 12,
+        "height": 6,
+        "format": "<div v-html=\"msg.payload\"></div>",
+        "templateScope": "local",
+        "x": 920,
+        "y": 60,
+        "wires": [
+            [
+                "13b3c342f708eee9"
+            ]
+        ]
+    },
+    {
+        "id": "e1f2a3b4c5d60789",
+        "type": "tesaiot-device-profile",
+        "z": "0f4a1e352a7b9c01",
+        "name": "TESAIoT Device Profile",
+        "gateway": "c38e9adbb55d46f4",
+        "x": 920,
+        "y": 160,
+        "wires": [
+            [
+                "f1a2b3c4d5e60789",
+                "13b3c342f708eee9"
+            ]
+        ]
+    },
+    {
+        "id": "f1a2b3c4d5e60789",
+        "type": "function",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Format profile card",
+        "func": "const device = msg.payload || {};\nif (!Object.keys(device).length) {\n  msg.payload = '<div class=\"tesaiot-card\"><h3>Device profile</h3><p>No device selected.</p></div>';\n  return msg;\n}\nconst security = device.security || device.metadata?.security || device.metadata?.certificateType || 'unknown';\nconst firmware = device.firmware_version || device.metadata?.firmware || 'n/a';\nconst created = device.created_at || device.metadata?.createdAt || 'n/a';\nmsg.payload = `\n  <div class=\"tesaiot-card\">\n    <h3>TESAIoT Device Profile</h3>\n    <p style=\"margin:4px 0; font-size:1rem\"><strong>${device.name || device.label || 'Unnamed device'}</strong></p>\n    <div class=\"tesaiot-metric\"><span>Device ID</span><span class=\"tesaiot-badge\">${device.device_id || device.id || device._id}</span></div>\n    <div class=\"tesaiot-metric\"><span>Status</span><span>${device.status || 'unknown'}</span></div>\n    <div class=\"tesaiot-metric\"><span>Type</span><span>${device.type || device.category || 'n/a'}</span></div>\n    <div class=\"tesaiot-metric\"><span>Security</span><span>${security}</span></div>\n    <div class=\"tesaiot-metric\"><span>Firmware</span><span>${firmware}</span></div>\n    <div class=\"tesaiot-metric\"><span>Created</span><span>${created}</span></div>\n  </div>`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1210,
+        "y": 160,
+        "wires": [
+            [
+                "a2b3c4d5e6f70891"
+            ]
+        ]
+    },
+    {
+        "id": "a2b3c4d5e6f70891",
+        "type": "ui-template",
+        "z": "0f4a1e352a7b9c01",
+        "group": "bc23de45f678ab90",
+        "name": "Device profile card",
+        "order": 1,
+        "width": 12,
+        "height": 5,
+        "format": "<div v-html=\"msg.payload\"></div>",
+        "templateScope": "local",
+        "x": 1480,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b2c3d4e5f6a70891",
+        "type": "tesaiot-device-data",
+        "z": "0f4a1e352a7b9c01",
+        "name": "TESAIoT Device Data",
+        "gateway": "c38e9adbb55d46f4",
+        "limit": 200,
+        "x": 920,
+        "y": 260,
+        "wires": [
+            [
+                "c2d3e4f5a6b70891",
+                "13b3c342f708eee9"
+            ]
+        ]
+    },
+    {
+        "id": "c2d3e4f5a6b70891",
+        "type": "function",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Format telemetry card",
+        "func": "const source = msg.payload || {};\nconst records = Array.isArray(source.telemetry)\n  ? source.telemetry\n  : Array.isArray(source.data)\n  ? source.data\n  : Array.isArray(source)\n  ? source\n  : [];\n\nfunction toNumber(value) {\n  if (value === null || value === undefined) {\n    return undefined;\n  }\n  const num = Number(value);\n  return Number.isFinite(num) ? num : undefined;\n}\n\nfunction formatNumber(value, digits) {\n  if (!Number.isFinite(value)) {\n    return 'n/a';\n  }\n  const precision = Number.isFinite(digits) ? digits : 1;\n  return value.toFixed(precision);\n}\n\nif (!records.length) {\n  msg.payload = '<div class=\"tesaiot-card\"><h3>TESAIoT Device Data</h3><p>No telemetry records were found for the selected window.</p></div>';\n  msg.metadata = Object.assign({}, msg.metadata, {\n    source: 'tesaiot-device-data-card',\n    window: (msg.metadata && msg.metadata.window) || {}\n  });\n  return msg;\n}\n\nconst limited = records.slice(0, 20);\nlet heartSum = 0;\nlet heartCount = 0;\nlet tempSum = 0;\nlet tempCount = 0;\n\nconst rowParts = [];\nfor (let index = 0; index < limited.length; index += 1) {\n  const entry = limited[index];\n  const timestamp = entry.timestamp || entry.time || entry.recorded_at || '-';\n  const data = entry.data || entry.values || entry;\n\n  const heartValue = toNumber(\n    data && (data.data_heart_rate || data.data_heart_rate_bpm || data.heart_rate || data.heartRate || data.hr)\n  );\n  if (Number.isFinite(heartValue)) {\n    heartSum += heartValue;\n    heartCount += 1;\n  }\n\n  const tempValue = toNumber(\n    data && (data.data_temperature || data.temperature || data.temp)\n  );\n  if (Number.isFinite(tempValue)) {\n    tempSum += tempValue;\n    tempCount += 1;\n  }\n\n  const spo2Value = toNumber(\n    data && (data.data_spo2 || data.spo2)\n  );\n\n  rowParts.push('<tr>'\n    + '<td>' + (index + 1) + '</td>'\n    + '<td>' + timestamp + '</td>'\n    + '<td>' + formatNumber(heartValue, 0) + '</td>'\n    + '<td>' + formatNumber(tempValue, 1) + '</td>'\n    + '<td>' + (Number.isFinite(spo2Value) ? spo2Value.toFixed(0) : 'n/a') + '</td>'\n    + '</tr>');\n}\n\nconst rows = rowParts.join('');\nconst avgHeart = heartCount ? heartSum / heartCount : undefined;\nconst avgTemp = tempCount ? tempSum / tempCount : undefined;\nconst windowInfo = (msg.metadata && msg.metadata.window) || {};\nconst windowStart = windowInfo.start || 'n/a';\nconst windowEnd = windowInfo.end || 'n/a';\n\nmsg.payload = ''\n  + '<div class=\"tesaiot-card\">'\n  + '<h3>TESAIoT Device Data</h3>'\n  + '<div class=\"tesaiot-metric\"><span>Window</span><span class=\"tesaiot-badge\">'\n  + windowStart + ' → ' + windowEnd + '</span></div>'\n  + '<div class=\"tesaiot-metric\"><span>Records processed</span><span>' + records.length + '</span></div>'\n  + '<div class=\"tesaiot-metric\"><span>Average heart rate</span><span>' + formatNumber(avgHeart, 0) + '</span></div>'\n  + '<div class=\"tesaiot-metric\"><span>Average temperature</span><span>' + formatNumber(avgTemp, 1) + '</span></div>'\n  + '<div style=\"overflow-x:auto; margin-top:12px;\">'\n  + '<table style=\"width:100%; border-collapse:collapse; color:#fff; font-size:0.9rem;\">'\n  + '<thead><tr style=\"text-align:left;font-weight:600;\">'\n  + '<th>#</th><th>Timestamp</th><th>Heart bpm</th><th>Temp °C</th><th>SpO₂ %</th>'\n  + '</tr></thead>'\n  + '<tbody>' + rows + '</tbody>'\n  + '</table>'\n  + '</div>'\n  + '</div>';\n\nmsg.metadata = Object.assign({}, msg.metadata, {\n  source: 'tesaiot-device-data-card',\n  window: windowInfo,\n  stats: {\n    heartAvg: avgHeart,\n    heartCount: heartCount,\n    tempAvg: avgTemp,\n    tempCount: tempCount,\n    total: records.length\n  }\n});\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1190,
+        "y": 260,
+        "wires": [
+            [
+                "d2e3f4a5b6c70891"
+            ]
+        ]
+    },
+    {
+        "id": "d2e3f4a5b6c70891",
+        "type": "ui-template",
+        "z": "0f4a1e352a7b9c01",
+        "group": "cd34ef56ab78bc12",
+        "name": "Device data card",
+        "order": 1,
+        "width": 12,
+        "height": 6,
+        "format": "<div v-html=\"msg.payload\"></div>",
+        "templateScope": "local",
+        "x": 1480,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e2f3a4b5c6d70891",
+        "type": "inject",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Refresh API usage",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "tesaiot.apiUsage.window",
+                "v": "60",
+                "vt": "num"
+            }
+        ],
+        "repeat": "600",
+        "once": true,
+        "onceDelay": "5",
+        "topic": "",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "f2a3b4c5d6e70891"
+            ]
+        ]
+    },
+    {
+        "id": "f2a3b4c5d6e70891",
+        "type": "tesaiot-api-usage",
+        "z": "0f4a1e352a7b9c01",
+        "name": "TESAIoT API Usage",
+        "gateway": "c38e9adbb55d46f4",
+        "window": 60,
+        "x": 450,
+        "y": 360,
+        "wires": [
+            [
+                "a3b4c5d6e7f80912",
+                "13b3c342f708eee9"
+            ]
+        ]
+    },
+    {
+        "id": "a3b4c5d6e7f80912",
+        "type": "function",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Format API usage",
+        "func": "const stats = msg.payload || {};\nconst apiPerMin = stats.api_requests_per_min || stats.apiRequestsPerMin || stats.api_usage?.requests_per_minute || 0;\nconst telemetryPerMin = stats.messages_per_minute || stats.telemetry?.messages_per_minute || 0;\nconst totalDevices = stats.total_devices || stats.totalDevices || '-';\nconst activeDevices = stats.active_devices || stats.activeDevices || '-';\nconst secureRateRaw = stats.secure_rate || stats.secureRate || 0;\nconst secureRate = Number.isFinite(secureRateRaw) ? secureRateRaw * 100 : secureRateRaw;\nconst lastTelemetry = stats.latest_telemetry_at || stats.telemetry?.latest_timestamp || 'n/a';\nmsg.payload = `\n  <div class=\"tesaiot-card\">\n    <h3>TESAIoT API Usage</h3>\n    <div class=\"tesaiot-metric\"><span>API req / min</span><span>${apiPerMin}</span></div>\n    <div class=\"tesaiot-metric\"><span>Telemetry msg / min</span><span>${telemetryPerMin}</span></div>\n    <div class=\"tesaiot-metric\"><span>Active devices</span><span>${activeDevices} / ${totalDevices}</span></div>\n    <div class=\"tesaiot-metric\"><span>Secure fleet</span><span>${Number.isFinite(secureRate) ? secureRate.toFixed(1) : secureRate}%</span></div>\n    <div class=\"tesaiot-metric\"><span>Latest telemetry</span><span>${lastTelemetry}</span></div>\n  </div>`;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 360,
+        "wires": [
+            [
+                "b3c4d5e6f7a80912"
+            ]
+        ]
+    },
+    {
+        "id": "b3c4d5e6f7a80912",
+        "type": "ui-template",
+        "z": "0f4a1e352a7b9c01",
+        "group": "de45ef67ab89bc23",
+        "name": "API usage card",
+        "order": 1,
+        "width": 12,
+        "height": 4,
+        "format": "<div v-html=\"msg.payload\"></div>",
+        "templateScope": "local",
+        "x": 960,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "13b3c342f708eee9",
+        "type": "debug",
+        "z": "0f4a1e352a7b9c01",
+        "name": "Debugs",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "c38e9adbb55d46f4",
+        "type": "tesaiot-api-gateway",
+        "name": "TESAIoT Gateway",
+        "baseUrl": "",
+        "timeout": 10000,
+        "verifyTls": true
+    },
+    {
+        "id": "ab12cd34ef56ab78",
+        "type": "ui-group",
+        "name": "Device Snapshot",
+        "page": "71e2d4a5b6c7d8e9",
+        "width": 12,
+        "height": 6,
+        "order": 1,
+        "showTitle": true,
+        "visible": true
+    },
+    {
+        "id": "bc23de45f678ab90",
+        "type": "ui-group",
+        "name": "Device Profile",
+        "page": "71e2d4a5b6c7d8e9",
+        "width": 12,
+        "height": 5,
+        "order": 2,
+        "showTitle": true,
+        "visible": true
+    },
+    {
+        "id": "cd34ef56ab78bc12",
+        "type": "ui-group",
+        "name": "Device Telemetry",
+        "page": "71e2d4a5b6c7d8e9",
+        "width": 12,
+        "height": 6,
+        "order": 3,
+        "showTitle": true,
+        "visible": true
+    },
+    {
+        "id": "de45ef67ab89bc23",
+        "type": "ui-group",
+        "name": "API Usage",
+        "page": "71e2d4a5b6c7d8e9",
+        "width": 12,
+        "height": 4,
+        "order": 4,
+        "showTitle": true,
+        "visible": true
+    },
+    {
+        "id": "71e2d4a5b6c7d8e9",
+        "type": "ui-page",
+        "name": "TESAIoT Dashboard",
+        "ui": "9ef8c0c1d2a34567",
+        "path": "/tesaiot-console",
+        "icon": "mdi-view-dashboard",
+        "layout": "grid",
+        "theme": "theme-tesaiot-red",
+        "order": 1,
+        "className": ""
+    },
+    {
+        "id": "9ef8c0c1d2a34567",
+        "type": "ui-base",
+        "name": "TESAIoT Red Console",
+        "path": "/dashboard",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui_base"
+        ]
+    },
+    {
+        "id": "theme-tesaiot-red",
+        "type": "ui-theme",
+        "name": "TESAIoT Red",
+        "colors": {
+            "surface": "#360309",
+            "primary": "#f04d5d",
+            "bgPage": "#220205",
+            "groupBg": "#360309",
+            "groupOutline": "#4d0710"
+        },
+        "sizes": {
+            "density": "comfortable",
+            "pagePadding": "16px",
+            "groupGap": "16px",
+            "groupBorderRadius": "12px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "f57b64b1a7bcb097",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.27.2"
+        }
+    }
+]

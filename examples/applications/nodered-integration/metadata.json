@@ -1,0 +1,33 @@
+{
+  "board": {
+    "architecture": "any",
+    "bsp": "",
+    "display_name": "Any (Software)",
+    "id": "any"
+  },
+  "description": "This project demonstrates building open-source Node-RED custom nodes and a FlowFuse Dashboard styled after TESAIoT Admin UI to interact with the TESAIoT platform via APISIX API Gateway.",
+  "display_name": "TESAIoT Node-RED Integration",
+  "download": {
+    "format": "zip",
+    "url": "https://github.com/tesaiot/developer-hub/tree/main/examples/applications/visual-automation/nodered-integration"
+  },
+  "links": {
+    "readme": "https://github.com/tesaiot/developer-hub/blob/main/examples/applications/visual-automation/nodered-integration/README.md",
+    "repository": "https://github.com/tesaiot/developer-hub/tree/main/examples/applications/visual-automation/nodered-integration"
+  },
+  "quick_start_steps": [
+    "Step 1 — Clone the repository and navigate to the project folder.",
+    "Step 2 — Copy .env.example to .env and fill in your TESAIoT API key and other environment variables.",
+    "Step 3 — Run the bootstrap script (run.sh) to install dependencies and build the TypeScript custom nodes.",
+    "Step 4 — Start the Node-RED instance using Docker Compose (docker-compose up) and access the dashboard at http://localhost:1880/admin."
+  ],
+  "schema_version": "1.0.0",
+  "template_id": "nodered-integration",
+  "template_type": "application",
+  "toolchain": {
+    "build_system": "npm",
+    "compiler": "Node.js",
+    "ide": "Node-RED",
+    "ide_version": ">=4.1.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mqtt_broker": "mqtts://localhost:8884",
+  "https_api": "https://localhost/api/v1",
+  "auth_mode": "server-tls"
+}

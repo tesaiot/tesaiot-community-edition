@@ -1,0 +1,174 @@
+{
+  "name": "TESAIoT Telemetry to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://localhost/api/v1/devices",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "limit",
+                "value": "100"
+              },
+              {
+                "name": "status",
+                "value": "active"
+              }
+            ]
+          }
+        }
+      },
+      "id": "list-devices",
+      "name": "List Active Devices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "TESAIoT API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "devices",
+        "options": {}
+      },
+      "id": "split-devices",
+      "name": "Split Devices",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://localhost/api/v1/devices/{{ $json.device_id }}/telemetry/latest",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "get-telemetry",
+      "name": "Get Latest Telemetry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "TESAIoT API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "your-google-sheet-id",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Telemetry",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ new Date().toISOString() }}",
+            "device_id": "={{ $json.device_id }}",
+            "device_name": "={{ $node['Split Devices'].json.name }}",
+            "temperature": "={{ $json.data.temperature }}",
+            "humidity": "={{ $json.data.humidity }}",
+            "status": "={{ $node['Split Devices'].json.status }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "append-sheet",
+      "name": "Append to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1050, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3",
+          "name": "Google Sheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Active Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Active Devices": {
+      "main": [
+        [
+          {
+            "node": "Split Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Devices": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Telemetry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Telemetry": {
+      "main": [
+        [
+          {
+            "node": "Append to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["tesaiot", "telemetry", "google-sheets"]
+}

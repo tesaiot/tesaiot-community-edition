@@ -1,0 +1,59 @@
+version: '3.8'
+
+# ==============================================================================
+# TESAIoT React Dashboard
+# ==============================================================================
+# Edge AI Telemetry Viewer - Third Party App Example using TESAIoT API Gateway
+#
+# Usage:
+#   docker-compose up -d          # Start in background
+#   docker-compose up --build     # Rebuild and start
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop and remove
+#
+# Access:
+#   http://localhost:3000
+# ==============================================================================
+
+services:
+  react-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tesaiot-react-dashboard:latest
+    container_name: tesaiot-react-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_BASE_URL=https://admin.tesaiot.com
+      - VITE_API_KEY=${TESAIOT_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.tesaiot.service=react-dashboard"
+      - "com.tesaiot.description=Edge AI Telemetry Viewer Dashboard"
+
+# Development mode with hot reload
+# Uncomment to use for development instead of production build
+#
+#   react-dashboard-dev:
+#     image: node:20-alpine
+#     container_name: tesaiot-react-dashboard-dev
+#     working_dir: /app
+#     volumes:
+#       - .:/app
+#       - node_modules:/app/node_modules
+#     ports:
+#       - "5173:5173"
+#     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+#     environment:
+#       - NODE_ENV=development
+#       - VITE_API_BASE_URL=https://admin.tesaiot.com
+#
+# volumes:
+#   node_modules:

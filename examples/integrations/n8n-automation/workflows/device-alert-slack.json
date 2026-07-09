@@ -1,0 +1,113 @@
+{
+  "name": "TESAIoT Device Alert to Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tesaiot-alert",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.event_type }}",
+              "operation": "equals",
+              "value2": "anomaly"
+            }
+          ]
+        }
+      },
+      "id": "filter-anomaly",
+      "name": "Filter Anomaly",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://localhost/api/v1/devices/{{ $json.device_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "get-device-info",
+      "name": "Get Device Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1",
+          "name": "TESAIoT API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#iot-alerts",
+        "text": "=:warning: *IoT Anomaly Detected*\n\n*Device:* {{ $json.name }} ({{ $json.device_id }})\n*Type:* {{ $node['Webhook'].json.anomaly_type }}\n*Score:* {{ $node['Webhook'].json.anomaly_score }}\n*Time:* {{ $node['Webhook'].json.timestamp }}\n\n<https://localhost/devices/{{ $json.device_id }}|View in TESAIoT>",
+        "otherOptions": {}
+      },
+      "id": "slack-message",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter Anomaly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Anomaly": {
+      "main": [
+        [
+          {
+            "node": "Get Device Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Device Info": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["tesaiot", "alerting", "slack"]
+}

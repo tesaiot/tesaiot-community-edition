@@ -1,0 +1,52 @@
+<script type="text/javascript">
+(function() {
+    RED.nodes.registerType('tesaiot-device-data', {
+        category: 'tesaiot',
+        color: '#cc1f2f',
+        defaults: {
+            name: { value: '' },
+            gateway: { type: 'tesaiot-api-gateway', required: true },
+            limit: { value: 200, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'bridge.svg',
+        paletteLabel: 'TESAIoT device data',
+        label: function () {
+            return this.name || `Device data (limit ${this.limit || 200})`;
+        }
+    });
+})();
+</script>
+
+<script type="text/html" data-template-name="tesaiot-device-data">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Optional label">
+    </div>
+    <div class="form-row">
+        <label for="node-input-gateway"><i class="fa fa-key"></i> Gateway</label>
+        <input type="text" id="node-input-gateway">
+    </div>
+    <div class="form-row">
+        <label for="node-input-limit"><i class="fa fa-filter"></i> Limit</label>
+        <input type="number" id="node-input-limit" min="1" max="1000" step="1">
+    </div>
+    <p class="form-tips">Set <code>msg.tesaiot.deviceData</code> (deviceId, start_time, end_time, since, windowDays, windowHours) to override defaults.</p>
+</script>
+
+<script type="text/html" data-help-name="tesaiot-device-data">
+    <p>Retrieves telemetry slices for a device from TESAIoT (backed by TimescaleDB).</p>
+    <h4>Inputs</h4>
+    <ul>
+        <li><code>msg.tesaiot.deviceData.deviceId</code> (required)</li>
+        <li><code>msg.tesaiot.deviceData.start_time</code> / <code>end_time</code> (ISO-8601)</li>
+        <li><code>msg.tesaiot.deviceData.since</code> (e.g. <code>6h</code>, <code>3d</code>) or <code>windowDays</code>/<code>windowHours</code></li>
+        <li><code>msg.tesaiot.deviceData.limit</code> (max 1000)</li>
+    </ul>
+    <h4>Outputs</h4>
+    <ul>
+        <li><code>msg.payload</code> &ndash; telemetry array</li>
+        <li><code>msg.metadata</code> &ndash; includes window start/end and limit</li>
+    </ul>
+</script>

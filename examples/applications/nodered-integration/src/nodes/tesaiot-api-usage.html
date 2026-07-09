@@ -1,0 +1,49 @@
+<script type="text/javascript">
+(function() {
+    RED.nodes.registerType('tesaiot-api-usage', {
+        category: 'tesaiot',
+        color: '#cc1f2f',
+        defaults: {
+            name: { value: '' },
+            gateway: { type: 'tesaiot-api-gateway', required: true },
+            window: { value: 60, validate: RED.validators.number() }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'bridge.svg',
+        paletteLabel: 'TESAIoT API usage',
+        label: function () {
+            return this.name || `API usage (${this.window || 60}m)`;
+        }
+    });
+})();
+</script>
+
+<script type="text/html" data-template-name="tesaiot-api-usage">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Optional label">
+    </div>
+    <div class="form-row">
+        <label for="node-input-gateway"><i class="fa fa-key"></i> Gateway</label>
+        <input type="text" id="node-input-gateway">
+    </div>
+    <div class="form-row">
+        <label for="node-input-window"><i class="fa fa-clock-o"></i> Window (minutes)</label>
+        <input type="number" id="node-input-window" min="1" max="1440" step="1">
+    </div>
+    <p class="form-tips">Override with <code>msg.tesaiot.apiUsage.window</code> or <code>msg.window</code>.</p>
+</script>
+
+<script type="text/html" data-help-name="tesaiot-api-usage">
+    <p>Loads high level API usage metrics from <code>/dashboard/stats</code>.</p>
+    <h4>Inputs</h4>
+    <ul>
+        <li><code>msg.tesaiot.apiUsage.window</code> &ndash; rolling window in minutes (default 60, max 1440)</li>
+    </ul>
+    <h4>Outputs</h4>
+    <ul>
+        <li><code>msg.payload</code> &ndash; dashboard summary including API request rates</li>
+        <li><code>msg.metadata</code> &ndash; window size and timestamp</li>
+    </ul>
+</script>

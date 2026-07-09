@@ -1,0 +1,7 @@
+# TESAIoT Edge AI Device Simulator - Python Dependencies
+
+# MQTT Client
+paho-mqtt>=2.0.0
+
+# Environment variable loader
+python-dotenv>=1.0.0

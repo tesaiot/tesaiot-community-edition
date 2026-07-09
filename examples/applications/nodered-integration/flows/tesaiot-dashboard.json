@@ -1,0 +1,1425 @@
+[
+  {
+    "id": "5eb192a50929ba1e",
+    "type": "tab",
+    "label": "TESAIoT Dashboard 2.0",
+    "disabled": false,
+    "info": "Curated overview with KPI cards, telemetry trends, and a terminal-style raw data feed."
+  },
+  {
+    "id": "13c724b8c7f3eb60",
+    "type": "ui-base",
+    "name": "TESAIoT Console Base",
+    "path": "/dashboard",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "headerContent": "page",
+    "icon": "",
+    "className": "tesaiot-base"
+  },
+  {
+    "id": "cec81e3e4afaa906",
+    "type": "ui-theme",
+    "name": "TESAIoT Mint",
+    "colors": {
+      "surface": "#FFFFFF",
+      "primary": "#2CCFA5",
+      "primaryText": "#0F172A",
+      "bgPage": "#F4F6F8",
+      "groupBg": "#FFFFFF",
+      "groupOutline": "#DFE3E8",
+      "text": "#1D2330",
+      "hint": "#6B7280"
+    },
+    "sizes": {
+      "density": "comfortable",
+      "pagePadding": "16px",
+      "groupGap": "16px",
+      "groupBorderRadius": "14px",
+      "widgetGap": "12px"
+    },
+    "icon": "",
+    "className": "tesaiot-widget"
+  },
+  {
+    "id": "437dcd31d68a1956",
+    "type": "tesaiot-api-gateway",
+    "name": "TESAIoT Gateway",
+    "baseUrl": "",
+    "timeout": 15000,
+    "verifyTls": true
+  },
+  {
+    "id": "89b0bef717a96418",
+    "type": "ui-page",
+    "name": "Overview",
+    "ui": "13c724b8c7f3eb60",
+    "path": "/tesaiot-dashboard",
+    "icon": "view-dashboard",
+    "layout": "grid",
+    "theme": "cec81e3e4afaa906",
+    "order": 1,
+    "className": "tesaiot-page"
+  },
+  {
+    "id": "2ef2103fc16d5070",
+    "type": "ui-page",
+    "name": "Terminal Stream",
+    "ui": "13c724b8c7f3eb60",
+    "path": "/tesaiot-terminal",
+    "icon": "console",
+    "layout": "grid",
+    "theme": "cec81e3e4afaa906",
+    "order": 2,
+    "className": "tesaiot-page"
+  },
+  {
+    "id": "4ea0ce44efe5b53f",
+    "type": "ui-group",
+    "name": "Filters",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 2,
+    "order": 1,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "40a158628949583e",
+    "type": "ui-group",
+    "name": "Fleet KPIs",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 4,
+    "order": 2,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "6ae6b1bca276aac2",
+    "type": "ui-group",
+    "name": "Fleet Composition",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 4,
+    "order": 3,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "ea0a13c3ef797f5f",
+    "type": "ui-group",
+    "name": "Usage & Telemetry",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 6,
+    "order": 4,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "80416b1689985d8f",
+    "type": "ui-group",
+    "name": "Telemetry Insights",
+    "page": "89b0bef717a96418",
+    "width": 6,
+    "height": 6,
+    "order": 6,
+    "showTitle": true,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "6da94c85ca206898",
+    "type": "ui-group",
+    "name": "Device Inventory",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 8,
+    "order": 7,
+    "showTitle": true,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "7e8b5692243a7393",
+    "type": "ui-group",
+    "name": "Terminal Controls",
+    "page": "2ef2103fc16d5070",
+    "width": 12,
+    "height": 2,
+    "order": 1,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "d3bbf6e8a8a3613f",
+    "type": "ui-group",
+    "name": "Terminal Feed",
+    "page": "2ef2103fc16d5070",
+    "width": 12,
+    "height": 10,
+    "order": 2,
+    "showTitle": false,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "6c771ff1862ddfcb",
+    "type": "inject",
+    "z": "5eb192a50929ba1e",
+    "name": "Bootstrap refresh",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "once": true,
+    "onceDelay": "1",
+    "topic": "",
+    "x": 180,
+    "y": 120,
+    "wires": [
+      [
+        "38f75356b5e6d7fb",
+        "f563c622cc93d5bd"
+      ]
+    ]
+  },
+  {
+    "id": "3b6d174513772fa6",
+    "type": "ui-dropdown",
+    "z": "5eb192a50929ba1e",
+    "group": "4ea0ce44efe5b53f",
+    "name": "Filter device type",
+    "label": "Device type",
+    "place": "All types",
+    "width": 4,
+    "height": 1,
+    "passthru": true,
+    "multiple": false,
+    "options": [
+      {
+        "label": "All",
+        "value": "",
+        "type": "str"
+      },
+      {
+        "label": "Sensor",
+        "value": "sensor",
+        "type": "str"
+      },
+      {
+        "label": "Gateway",
+        "value": "gateway",
+        "type": "str"
+      },
+      {
+        "label": "Edge",
+        "value": "edge",
+        "type": "str"
+      }
+    ],
+    "payload": "",
+    "topic": "",
+    "x": 210,
+    "y": 180,
+    "wires": [
+      [
+        "d7d72ed0c5504ea8"
+      ]
+    ],
+    "icon": "",
+    "className": "tesaiot-widget"
+  },
+  {
+    "id": "010ff944d205615f",
+    "type": "ui-dropdown",
+    "z": "5eb192a50929ba1e",
+    "group": "4ea0ce44efe5b53f",
+    "name": "Telemetry window",
+    "label": "Telemetry window",
+    "place": "24h",
+    "width": 4,
+    "height": 1,
+    "passthru": true,
+    "multiple": false,
+    "options": [
+      {
+        "label": "1 hour",
+        "value": "1h",
+        "type": "str"
+      },
+      {
+        "label": "24 hours",
+        "value": "24h",
+        "type": "str"
+      },
+      {
+        "label": "7 days",
+        "value": "7d",
+        "type": "str"
+      }
+    ],
+    "payload": "24h",
+    "topic": "",
+    "x": 220,
+    "y": 220,
+    "wires": [
+      [
+        "7d3dc27d9348bc26"
+      ]
+    ],
+    "icon": "",
+    "className": "tesaiot-widget"
+  },
+  {
+    "id": "84064c5a1065215f",
+    "type": "ui-button",
+    "z": "5eb192a50929ba1e",
+    "group": "4ea0ce44efe5b53f",
+    "name": "Manual refresh",
+    "label": "Refresh now",
+    "tooltip": "Pull fresh device, usage, and telemetry data",
+    "width": 2,
+    "height": 1,
+    "passthru": false,
+    "multiple": false,
+    "topic": "refresh",
+    "className": "tesaiot-widget",
+    "x": 210,
+    "y": 260,
+    "wires": [
+      [
+        "4c1c4aaac4455816"
+      ]
+    ],
+    "icon": ""
+  },
+  {
+    "id": "d7d72ed0c5504ea8",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Update device filter",
+    "func": "const filters = flow.get('tesaiot.filters') || {};\nfilters.deviceType = (msg.payload === undefined || msg.payload === null) ? '' : msg.payload;\nflow.set('tesaiot.filters', filters);\nmsg.action = 'filters-updated';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 180,
+    "wires": [
+      [
+        "38f75356b5e6d7fb",
+        "f563c622cc93d5bd"
+      ]
+    ]
+  },
+  {
+    "id": "7d3dc27d9348bc26",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Set telemetry window",
+    "func": "const selection = typeof msg.payload === 'string' ? msg.payload : '24h';\nflow.set('tesaiot.telemetryWindow', selection);\nconst selectedId = flow.get('tesaiot.selectedDeviceId');\nif (!selectedId) {\n  return null;\n}\nreturn { deviceId: selectedId, reason: 'window-change' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 490,
+    "y": 220,
+    "wires": [
+      [
+        "a00b7b39d82e4e2e"
+      ]
+    ]
+  },
+  {
+    "id": "4c1c4aaac4455816",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Broadcast manual refresh",
+    "func": "return msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 470,
+    "y": 260,
+    "wires": [
+      [
+        "38f75356b5e6d7fb",
+        "f563c622cc93d5bd",
+        "a00b7b39d82e4e2e"
+      ]
+    ]
+  },
+  {
+    "id": "38f75356b5e6d7fb",
+    "type": "link out",
+    "z": "5eb192a50929ba1e",
+    "name": "Trigger device refresh",
+    "mode": "link",
+    "links": [
+      "0cd8fb7e9de86c52"
+    ],
+    "x": 750,
+    "y": 120,
+    "wires": []
+  },
+  {
+    "id": "f563c622cc93d5bd",
+    "type": "link out",
+    "z": "5eb192a50929ba1e",
+    "name": "Trigger usage refresh",
+    "mode": "link",
+    "links": [
+      "2f639cbedb2520f3"
+    ],
+    "x": 750,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "0cd8fb7e9de86c52",
+    "type": "link in",
+    "z": "5eb192a50929ba1e",
+    "name": "Refresh device list",
+    "links": [
+      "38f75356b5e6d7fb"
+    ],
+    "x": 120,
+    "y": 360,
+    "wires": [
+      [
+        "404b3ad5628d3962"
+      ]
+    ]
+  },
+  {
+    "id": "404b3ad5628d3962",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Prepare device list request",
+    "func": "const filters = flow.get('tesaiot.filters') || {};\nconst limit = Number(filters.limit ?? 25);\nconst params = { limit };\nif (filters.deviceType) {\n  params.device_type = filters.deviceType;\n}\nmsg.payload = {};\nmsg.tesaiot = msg.tesaiot || {};\nmsg.tesaiot.deviceList = params;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 360,
+    "wires": [
+      [
+        "749aabcf4465ad1f"
+      ]
+    ]
+  },
+  {
+    "id": "749aabcf4465ad1f",
+    "type": "tesaiot-device-lists",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch device list",
+    "gateway": "437dcd31d68a1956",
+    "limit": 20,
+    "x": 620,
+    "y": 360,
+    "wires": [
+      [
+        "f156994eb60d69ce",
+        "41ceb611c73ba226"
+      ]
+    ]
+  },
+  {
+    "id": "41ceb611c73ba226",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Tap devices for terminal",
+    "func": "const safe = JSON.parse(JSON.stringify(msg.payload || null));\nreturn { payload: safe, terminalSource: 'device-list' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 880,
+    "y": 300,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "f156994eb60d69ce",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Summarise devices",
+    "func": "const raw = msg.payload || {};\nconst array = Array.isArray(raw.devices) ? raw.devices : Array.isArray(raw) ? raw : Array.isArray(raw.items) ? raw.items : [];\nconst rows = array.map((device, index) => ({\n  index: index + 1,\n  id: device.device_id || device.id || device._id || '-',\n  name: device.name || device.label || device.metadata?.displayName || 'Unnamed device',\n  status: (device.status || device.metadata?.status || 'unknown').toString(),\n  profile: device.device_profile || device.type || device.category || 'n/a',\n  security: device.security || device.metadata?.security || 'n/a',\n  lastSeen: device.telemetry_summary?.last_update || device.last_seen || device.metadata?.lastContact || 'n/a'\n}));\nconst total = rows.length;\nconst active = rows.filter((row) => row.status.toLowerCase() === 'active').length;\nconst secure = rows.filter((row) => row.security && row.security.toLowerCase().includes('tls')).length;\nconst statusCounts = rows.reduce((acc, row) => {\n  const key = row.status || 'unknown';\n  acc[key] = (acc[key] || 0) + 1;\n  return acc;\n}, {});\nconst typeCounts = rows.reduce((acc, row) => {\n  const key = row.profile || 'n/a';\n  acc[key] = (acc[key] || 0) + 1;\n  return acc;\n}, {});\nconst statusBreakdown = Object.entries(statusCounts).map(([status, count]) => ({ status, count }));\nconst typeBreakdown = Object.entries(typeCounts)\n  .map(([type, count]) => ({ type, count }))\n  .sort((a, b) => b.count - a.count)\n  .slice(0, 6);\nconst prev = flow.get('tesaiot.lastDeviceMetrics');\nconst metrics = {\n  totalDevices: total,\n  activeDevices: active,\n  secureDevices: secure,\n  activeRate: total ? (active / total) * 100 : 0,\n  secureRate: total ? (secure / total) * 100 : 0,\n  updatedAt: new Date().toISOString(),\n  activeDelta: prev ? active - (prev.activeDevices || 0) : 0,\n  totalDelta: prev ? total - (prev.totalDevices || 0) : 0\n};\nflow.set('tesaiot.lastDeviceMetrics', metrics);\nconst primary = rows[0];\nif (primary) {\n  flow.set('tesaiot.selectedDeviceId', primary.id);\n}\nconst metricsMsg = { payload: metrics, statusBreakdown, typeBreakdown, devices: rows };\nconst tableMsg = {\n  topic: 'device-inventory',\n  payload: rows,\n  metadata: {\n    fetchedAt: msg.metadata?.fetchedAt || new Date().toISOString(),\n    total\n  }\n};\nlet detailMsg = null;\nif (primary) {\n  detailMsg = { deviceId: primary.id, from: 'auto-select' };\n}\nreturn [metricsMsg, tableMsg, detailMsg];",
+    "outputs": 3,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 880,
+    "y": 360,
+    "wires": [
+      [
+        "470ba11793356f1f",
+        "dd96ce755a3ad40d",
+        "ae1c47a52a648205"
+      ],
+      [
+        "d73148307ef179d4",
+        "c1bf1bb8d2b52ea0",
+        "b38d4dd8de886b42"
+      ],
+      [
+        "a00b7b39d82e4e2e"
+      ]
+    ]
+  },
+  {
+    "id": "470ba11793356f1f",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Total devices metric",
+    "func": "msg.metrics = msg.payload;\nmsg.payload = String(Math.round(msg.metrics.totalDevices || 0));\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 240,
+    "wires": [
+      [
+        "8e91f592602fb4f3"
+      ]
+    ]
+  },
+  {
+    "id": "8e91f592602fb4f3",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "40a158628949583e",
+    "name": "Total devices KPI",
+    "order": 1,
+    "width": 4,
+    "height": 1,
+    "label": "Total devices",
+    "format": "{{msg.payload}}",
+    "layout": "row-center",
+    "className": "tesaiot-widget",
+    "x": 1460,
+    "y": 240,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "dd96ce755a3ad40d",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Active devices metric",
+    "func": "msg.metrics = msg.payload;\nmsg.payload = String(Math.round(msg.metrics.activeDevices || 0));\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 280,
+    "wires": [
+      [
+        "729a365c1e50bfdd"
+      ]
+    ]
+  },
+  {
+    "id": "729a365c1e50bfdd",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "40a158628949583e",
+    "name": "Active devices KPI",
+    "order": 2,
+    "width": 4,
+    "height": 1,
+    "label": "Active devices",
+    "format": "{{msg.payload}}",
+    "layout": "row-center",
+    "className": "tesaiot-widget",
+    "x": 1460,
+    "y": 280,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "ae1c47a52a648205",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Secure fleet metric",
+    "func": "msg.metrics = msg.payload;\nconst rate = msg.metrics.secureRate || 0;\nmsg.payload = rate.toFixed(1) + '%';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 320,
+    "wires": [
+      [
+        "80d6eb0763f6cb7b"
+      ]
+    ]
+  },
+  {
+    "id": "80d6eb0763f6cb7b",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "40a158628949583e",
+    "name": "Secure fleet KPI",
+    "order": 3,
+    "width": 4,
+    "height": 1,
+    "label": "Secure fleet",
+    "format": "{{msg.payload}}",
+    "layout": "row-center",
+    "className": "tesaiot-widget",
+    "x": 1460,
+    "y": 320,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "d73148307ef179d4",
+    "type": "ui-table",
+    "z": "5eb192a50929ba1e",
+    "group": "6da94c85ca206898",
+    "name": "Device inventory",
+    "label": "",
+    "order": 1,
+    "width": 12,
+    "height": 8,
+    "maxrows": 0,
+    "passthru": false,
+    "autocols": false,
+    "showSearch": true,
+    "deselect": true,
+    "selectionType": "click",
+    "columns": [
+      {
+        "title": "Device ID",
+        "width": "200px",
+        "key": "id",
+        "keyType": "key"
+      },
+      {
+        "title": "Name",
+        "width": "180px",
+        "key": "name",
+        "keyType": "key"
+      },
+      {
+        "title": "Status",
+        "width": "120px",
+        "key": "status",
+        "keyType": "key"
+      },
+      {
+        "title": "Security",
+        "width": "140px",
+        "key": "security",
+        "keyType": "key"
+      },
+      {
+        "title": "Profile",
+        "width": "160px",
+        "key": "profile",
+        "keyType": "key"
+      },
+      {
+        "title": "Last seen",
+        "width": "200px",
+        "key": "lastSeen",
+        "keyType": "key"
+      }
+    ],
+    "mobileBreakpoint": "md",
+    "mobileBreakpointType": "defaults",
+    "action": "replace",
+    "className": "tesaiot-widget",
+    "x": 1200,
+    "y": 520,
+    "wires": [
+      [
+        "4635aed4bffdb24f"
+      ]
+    ],
+    "icon": ""
+  },
+  {
+    "id": "4635aed4bffdb24f",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Handle table selection",
+    "func": "if (msg.action !== 'row_click') {\n  return null;\n}\nconst row = msg.payload || {};\nreturn { deviceId: row.id || row.deviceId, from: 'table-select' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1490,
+    "y": 520,
+    "wires": [
+      [
+        "a00b7b39d82e4e2e"
+      ]
+    ]
+  },
+  {
+    "id": "a00b7b39d82e4e2e",
+    "type": "link out",
+    "z": "5eb192a50929ba1e",
+    "name": "Trigger device detail",
+    "mode": "link",
+    "links": [
+      "b1240654de784efd"
+    ],
+    "x": 1750,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "b1240654de784efd",
+    "type": "link in",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch device detail",
+    "links": [
+      "a00b7b39d82e4e2e"
+    ],
+    "x": 140,
+    "y": 640,
+    "wires": [
+      [
+        "7d72a03a286571e3"
+      ]
+    ]
+  },
+  {
+    "id": "7d72a03a286571e3",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Prepare device detail",
+    "func": "const deviceId = msg.deviceId || msg.payload?.deviceId || msg.payload?.id || flow.get('tesaiot.selectedDeviceId');\nif (!deviceId) {\n  return null;\n}\nflow.set('tesaiot.selectedDeviceId', deviceId);\nconst windowPreset = flow.get('tesaiot.telemetryWindow') || '24h';\nlet hours = 24;\nswitch (windowPreset) {\n  case '1h':\n    hours = 1;\n    break;\n  case '7d':\n    hours = 24 * 7;\n    break;\n  case '24h':\n  default:\n    hours = 24;\n    break;\n}\nconst end = new Date();\nconst start = new Date(end.getTime() - hours * 60 * 60 * 1000);\nconst telemetryRequest = {\n  deviceId,\n  start_time: start.toISOString(),\n  end_time: end.toISOString(),\n  limit: 200\n};\nconst profileMsg = { payload: {}, tesaiot: { deviceProfile: { deviceId } } };\nconst telemetryMsg = {\n  payload: {},\n  metadata: { window: { start: telemetryRequest.start_time, end: telemetryRequest.end_time } },\n  tesaiot: { deviceData: telemetryRequest }\n};\nprofileMsg.deviceId = deviceId;\ntelemetryMsg.deviceId = deviceId;\nreturn [profileMsg, telemetryMsg];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 420,
+    "y": 640,
+    "wires": [
+      [
+        "c42b6ecb8116f890"
+      ],
+      [
+        "a6a1679c41d1b15d"
+      ]
+    ]
+  },
+  {
+    "id": "c42b6ecb8116f890",
+    "type": "tesaiot-device-profile",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch device profile",
+    "gateway": "437dcd31d68a1956",
+    "x": 700,
+    "y": 600,
+    "wires": [
+      [
+        "13e4dbe6a9b09617"
+      ]
+    ]
+  },
+  {
+    "id": "13e4dbe6a9b09617",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Tap profile for terminal",
+    "func": "const safe = JSON.parse(JSON.stringify(msg.payload || null));\nfunction scrub(target) {\n  if (!target || typeof target !== 'object') {\n    return;\n  }\n  const keys = ['devicePicture', 'device_picture', 'picture', 'image', 'photo'];\n  keys.forEach((key) => {\n    if (Object.prototype.hasOwnProperty.call(target, key) && typeof target[key] === 'string' && target[key].startsWith('data:image')) {\n      target[key] = '[image omitted]';\n    }\n  });\n  Object.keys(target).forEach((key) => {\n    const value = target[key];\n    if (value && typeof value === 'object') {\n      scrub(value);\n    }\n  });\n}\nscrub(safe);\nreturn { payload: safe, terminalSource: 'device-profile' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 970,
+    "y": 560,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "a6a1679c41d1b15d",
+    "type": "tesaiot-device-data",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch telemetry window",
+    "gateway": "437dcd31d68a1956",
+    "limit": 200,
+    "debugOutput": true,
+    "x": 700,
+    "y": 700,
+    "wires": [
+      [
+        "6170a3d59928feef",
+        "97c6bbce4c8aac80"
+      ]
+    ]
+  },
+  {
+    "id": "6170a3d59928feef",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Tap telemetry for terminal",
+    "func": "const safe = JSON.parse(JSON.stringify(msg.payload || null));\nreturn { payload: safe, terminalSource: 'device-telemetry' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 980,
+    "y": 700,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "97c6bbce4c8aac80",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Build telemetry summary",
+    "func": "const payload = msg.payload || {};\nconst records = Array.isArray(payload.telemetry) ? payload.telemetry : Array.isArray(payload.data) ? payload.data : Array.isArray(payload.items) ? payload.items : Array.isArray(payload) ? payload : [];\n\nconst heartSeries = [];\nconst tempSeries = [];\nlet latestTimestamp = null;\nlet heartTotal = 0;\nlet heartCount = 0;\nlet tempTotal = 0;\nlet tempCount = 0;\n\nconst updateLatest = (candidate) => {\n  if (!candidate) {\n    return;\n  }\n  if (!latestTimestamp || candidate > latestTimestamp) {\n    latestTimestamp = candidate;\n  }\n};\n\nconst normaliseTimestamp = (value) => {\n  if (!value) {\n    return new Date().toISOString();\n  }\n  const ts = new Date(value);\n  if (Number.isNaN(ts.getTime())) {\n    return new Date().toISOString();\n  }\n  return ts.toISOString();\n};\n\nfor (const entry of records) {\n  const rawTimestamp = entry.timestamp || entry.recorded_at || entry.time || entry.metadata?.timestamp;\n  const timestamp = normaliseTimestamp(rawTimestamp);\n  updateLatest(timestamp);\n  const data = entry.data || entry.values || entry;\n\n  const heartValue = Number(data?.data_heart_rate ?? data?.data_heart_rate_bpm ?? data?.heart_rate ?? data?.heartRate ?? data?.hr);\n  if (Number.isFinite(heartValue)) {\n    heartSeries.push({ x: timestamp, y: heartValue });\n    heartTotal += heartValue;\n    heartCount += 1;\n  }\n\n  const tempValue = Number(data?.data_temperature ?? data?.temperature ?? data?.temp);\n  if (Number.isFinite(tempValue)) {\n    tempSeries.push({ x: timestamp, y: tempValue });\n    tempTotal += tempValue;\n    tempCount += 1;\n  }\n}\n\nconst limitPoints = 200;\nconst clipSeries = (series) => series.slice(-limitPoints);\nconst chartMessages = [];\n\nif (heartSeries.length) {\n  chartMessages.push({ topic: 'Heart bpm', payload: clipSeries(heartSeries) });\n}\nif (tempSeries.length) {\n  chartMessages.push({ topic: 'Temp \u00b0C', payload: clipSeries(tempSeries) });\n}\n\nif (!chartMessages.length) {\n  chartMessages.push({ topic: 'Telemetry trend', payload: [] });\n}\n\nconst statsMsg = { payload: {\n  heartAvg: heartCount ? heartTotal / heartCount : null,\n  tempAvg: tempCount ? tempTotal / tempCount : null,\n  latestTimestamp,\n  samples: records.length\n} };\n\nreturn [chartMessages, statsMsg];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 980,
+    "y": 760,
+    "wires": [
+      [
+        "ec8ac7e619d5be3f"
+      ],
+      [
+        "60345261491f35b3",
+        "9d3f48a03a425ee2"
+      ]
+    ]
+  },
+  {
+    "id": "ec8ac7e619d5be3f",
+    "type": "ui-chart",
+    "z": "5eb192a50929ba1e",
+    "group": "80416b1689985d8f",
+    "name": "Telemetry trend",
+    "order": 1,
+    "width": 6,
+    "height": 4,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Timestamp",
+    "xAxisProperty": "x",
+    "xAxisPropertyType": "property",
+    "xAxisType": "time",
+    "xAxisFormatType": "auto",
+    "yAxisLabel": "Value",
+    "yAxisProperty": "y",
+    "yAxisPropertyType": "property",
+    "action": "replace",
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": true,
+    "removeOlder": 0,
+    "removeOlderUnit": "0",
+    "interpolation": "cardinal",
+    "x": 1260,
+    "y": 720,
+    "wires": [
+      []
+    ],
+    "icon": "",
+    "className": "tesaiot-widget"
+  },
+  {
+    "id": "60345261491f35b3",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Telemetry averages",
+    "func": "const stats = msg.payload || {};\nconst heart = stats.heartAvg !== null && stats.heartAvg !== undefined ? stats.heartAvg.toFixed(0) + ' bpm' : 'n/a';\nconst temp = stats.tempAvg !== null && stats.tempAvg !== undefined ? stats.tempAvg.toFixed(1) + ' \u00b0C' : 'n/a';\nmsg.payload = `Avg heart: ${heart} | Avg temp: ${temp}`;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1260,
+    "y": 760,
+    "wires": [
+      [
+        "03b2c1c4e6d7d1ba"
+      ]
+    ]
+  },
+  {
+    "id": "03b2c1c4e6d7d1ba",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "80416b1689985d8f",
+    "name": "Telemetry averages",
+    "order": 2,
+    "width": 6,
+    "height": 1,
+    "label": "Averages",
+    "format": "{{msg.payload}}",
+    "layout": "row-left",
+    "className": "tesaiot-widget",
+    "x": 1520,
+    "y": 760,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "9d3f48a03a425ee2",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Latest telemetry",
+    "func": "const stats = msg.payload || {};\nconst latest = stats.latestTimestamp ? new Date(stats.latestTimestamp).toISOString() : 'n/a';\nmsg.payload = latest;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1260,
+    "y": 800,
+    "wires": [
+      [
+        "3a7c289ec3434802"
+      ]
+    ]
+  },
+  {
+    "id": "3a7c289ec3434802",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "80416b1689985d8f",
+    "name": "Latest telemetry",
+    "order": 3,
+    "width": 6,
+    "height": 1,
+    "label": "Last telemetry",
+    "format": "{{msg.payload}}",
+    "layout": "row-left",
+    "className": "tesaiot-widget",
+    "x": 1520,
+    "y": 800,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "2f639cbedb2520f3",
+    "type": "link in",
+    "z": "5eb192a50929ba1e",
+    "name": "Refresh usage",
+    "links": [
+      "f563c622cc93d5bd"
+    ],
+    "x": 140,
+    "y": 900,
+    "wires": [
+      [
+        "9e166cc979ef7e5f"
+      ]
+    ]
+  },
+  {
+    "id": "9e166cc979ef7e5f",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Prepare usage request",
+    "func": "const windowPreset = flow.get('tesaiot.telemetryWindow') || '24h';\nmsg.payload = {};\nmsg.tesaiot = msg.tesaiot || {};\nmsg.tesaiot.apiUsage = { window_minutes: windowPreset === '1h' ? 60 : windowPreset === '7d' ? 7 * 24 * 60 : 24 * 60 };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 420,
+    "y": 900,
+    "wires": [
+      [
+        "2f9870ac3c099895"
+      ]
+    ]
+  },
+  {
+    "id": "2f9870ac3c099895",
+    "type": "tesaiot-api-usage",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch API usage",
+    "gateway": "437dcd31d68a1956",
+    "window": 60,
+    "x": 680,
+    "y": 900,
+    "wires": [
+      [
+        "fa78a3f65bec6bea",
+        "29b1def39e0d97db"
+      ]
+    ]
+  },
+  {
+    "id": "fa78a3f65bec6bea",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Tap usage for terminal",
+    "func": "const safe = JSON.parse(JSON.stringify(msg.payload || null));\nreturn { payload: safe, terminalSource: 'api-usage' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 940,
+    "y": 860,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "29b1def39e0d97db",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Usage metrics",
+    "func": "const stats = msg.payload || {};\nmsg.payload = {\n  apiPerMin: String(Number(stats.api_requests_per_min || stats.apiRequestsPerMin || 0)),\n  telemetryPerMin: String(Number(stats.telemetry?.messages_per_minute || stats.messages_per_minute || 0)),\n  activeDevices: String(Number(stats.active_devices || stats.activeDevices || 0)),\n  totalDevices: String(Number(stats.total_devices || stats.totalDevices || 0))\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 940,
+    "y": 900,
+    "wires": [
+      [
+        "77981532ae96c747",
+        "660036f9c72ef4c0"
+      ]
+    ]
+  },
+  {
+    "id": "923b14f516a249de",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "ea0a13c3ef797f5f",
+    "name": "API throughput",
+    "order": 1,
+    "width": 3,
+    "height": 1,
+    "label": "API req / min",
+    "format": "{{msg.payload}}",
+    "layout": "row-center",
+    "className": "tesaiot-widget",
+    "x": 1220,
+    "y": 880,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "c6f9e8aa8556c678",
+    "type": "ui-text",
+    "z": "5eb192a50929ba1e",
+    "group": "ea0a13c3ef797f5f",
+    "name": "Telemetry throughput",
+    "order": 2,
+    "width": 3,
+    "height": 1,
+    "label": "Telemetry msg / min",
+    "format": "{{msg.payload}}",
+    "layout": "row-center",
+    "className": "tesaiot-widget",
+    "x": 1230,
+    "y": 920,
+    "wires": [],
+    "icon": ""
+  },
+  {
+    "id": "cf3db50f5bc10e0d",
+    "type": "link in",
+    "z": "5eb192a50929ba1e",
+    "name": "Terminal tap",
+    "links": [
+      "41ceb611c73ba226",
+      "13e4dbe6a9b09617",
+      "6170a3d59928feef",
+      "fa78a3f65bec6bea",
+      "12aa4f6f5b396be4"
+    ],
+    "x": 260,
+    "y": 1120,
+    "wires": [
+      [
+        "0c3a54a4534a0c5c"
+      ]
+    ]
+  },
+  {
+    "id": "0c3a54a4534a0c5c",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Build terminal line",
+    "func": "if (msg.payload === 'clear-terminal') {\n  msg.action = 'clear';\n  msg.terminalLine = null;\n  return msg;\n}\nconst source = msg.terminalSource || 'unknown';\nconst text = typeof msg.payload === 'string' ? msg.payload : JSON.stringify(msg.payload, null, 2);\nconst line = `[${new Date().toISOString()}] ${source}: ${text}`;\nmsg.terminalLine = line;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 1120,
+    "wires": [
+      [
+        "3f99f41b3411e71e"
+      ]
+    ]
+  },
+  {
+    "id": "3f99f41b3411e71e",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Accumulate terminal log",
+    "func": "let lines = flow.get('tesaiot.terminalLines') || [];\nif (msg.action === 'clear') {\n  lines = [];\n} else if (msg.terminalLine) {\n  lines.push(msg.terminalLine);\n  if (lines.length > 200) {\n    lines = lines.slice(-200);\n  }\n}\nflow.set('tesaiot.terminalLines', lines);\nmsg.payload = lines;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 780,
+    "y": 1120,
+    "wires": [
+      [
+        "5a76fc03ae19b552"
+      ]
+    ]
+  },
+  {
+    "id": "5a76fc03ae19b552",
+    "type": "ui-template",
+    "z": "5eb192a50929ba1e",
+    "group": "d3bbf6e8a8a3613f",
+    "name": "Terminal viewer",
+    "order": 1,
+    "width": 12,
+    "height": 10,
+    "format": "<div class=\"tesaiot-terminal\">\n  <div v-for=\"(line, index) in (msg.payload || [])\" :key=\"index\" class=\"tesaiot-terminal__line\">{{ line }}</div>\n</div>\n<style>\n.tesaiot-terminal {\n  background: #111827;\n  color: #e5e7eb;\n  font-family: 'Fira Code', monospace;\n  font-size: 0.85rem;\n  padding: 16px;\n  border-radius: 12px;\n  height: 100%;\n  overflow-y: auto;\n}\n.tesaiot-terminal__line {\n  white-space: pre-wrap;\n  margin-bottom: 6px;\n}\n</style>",
+    "templateScope": "local",
+    "className": "tesaiot-widget",
+    "x": 1080,
+    "y": 1120,
+    "wires": [
+      []
+    ],
+    "icon": ""
+  },
+  {
+    "id": "bef8034b749085ab",
+    "type": "ui-button",
+    "z": "5eb192a50929ba1e",
+    "group": "7e8b5692243a7393",
+    "name": "Clear terminal",
+    "label": "Clear log",
+    "tooltip": "Reset the live feed",
+    "width": 2,
+    "height": 1,
+    "passthru": false,
+    "multiple": false,
+    "topic": "",
+    "className": "tesaiot-widget",
+    "x": 250,
+    "y": 1060,
+    "wires": [
+      [
+        "588eacd6bbf52e06"
+      ]
+    ],
+    "icon": ""
+  },
+  {
+    "id": "588eacd6bbf52e06",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Trigger terminal clear",
+    "func": "return { payload: 'clear-terminal' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 540,
+    "y": 1060,
+    "wires": [
+      [
+        "0c3a54a4534a0c5c"
+      ]
+    ]
+  },
+  {
+    "id": "77981532ae96c747",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Format API text",
+    "func": "const stats = msg.payload || {};\nconst value = stats.apiPerMin ?? stats.api_requests_per_min ?? stats.payload?.apiPerMin ?? 0;\nreturn [{ payload: String(value) }];",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1200,
+    "y": 880,
+    "wires": [
+      [
+        "923b14f516a249de"
+      ]
+    ]
+  },
+  {
+    "id": "660036f9c72ef4c0",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Format telemetry text",
+    "func": "const stats = msg.payload || {};\nconst value = stats.telemetryPerMin ?? stats.telemetry?.messages_per_minute ?? stats.messages_per_minute ?? stats.payload?.telemetryPerMin ?? 0;\nreturn [{ payload: String(value) }];",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1200,
+    "y": 920,
+    "wires": [
+      [
+        "c6f9e8aa8556c678"
+      ]
+    ]
+  },
+  {
+    "id": "a1b58b7dfb4629ed",
+    "type": "ui-group",
+    "name": "Telemetry history",
+    "page": "89b0bef717a96418",
+    "width": 12,
+    "height": 8,
+    "order": 8,
+    "showTitle": true,
+    "visible": true,
+    "icon": "",
+    "className": "tesaiot-group"
+  },
+  {
+    "id": "dd0bba54ee5c0438",
+    "type": "ui-table",
+    "z": "5eb192a50929ba1e",
+    "group": "a1b58b7dfb4629ed",
+    "name": "Telemetry history",
+    "label": "Telemetry history (14 days)",
+    "order": 1,
+    "width": 12,
+    "height": 8,
+    "maxrows": 0,
+    "passthru": false,
+    "autocols": false,
+    "showSearch": true,
+    "deselect": true,
+    "selectionType": "none",
+    "columns": [
+      {
+        "title": "Device ID",
+        "width": "220px",
+        "key": "deviceId",
+        "keyType": "key"
+      },
+      {
+        "title": "Device name",
+        "width": "200px",
+        "key": "deviceName",
+        "keyType": "key"
+      },
+      {
+        "title": "Timestamp",
+        "width": "240px",
+        "key": "timestamp",
+        "keyType": "key"
+      },
+      {
+        "title": "Heart bpm",
+        "width": "120px",
+        "key": "heartBpm",
+        "keyType": "key"
+      },
+      {
+        "title": "Temp \u00b0C",
+        "width": "120px",
+        "key": "temperatureC",
+        "keyType": "key"
+      }
+    ],
+    "mobileBreakpoint": "md",
+    "mobileBreakpointType": "defaults",
+    "action": "replace",
+    "className": "tesaiot-widget",
+    "x": 1200,
+    "y": 560,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c1bf1bb8d2b52ea0",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Prepare history fetch",
+    "func": "const devices = Array.isArray(msg.payload) ? msg.payload.filter(device => device && (device.id || device.device_id)) : [];\nconst total = devices.length;\nconst batchId = `history-${Date.now()}`;\nconst end = new Date();\nconst start = new Date(end.getTime() - 14 * 24 * 60 * 60 * 1000);\nconst range = {\n  start: start.toISOString(),\n  end: end.toISOString()\n};\nconst apiMessages = [];\nconst resetMessages = [{\n  batchId,\n  historyReset: true,\n  total,\n  range,\n  generatedAt: end.toISOString()\n}];\nif (total === 0) {\n  return [apiMessages, resetMessages];\n}\ndevices.forEach((device, index) => {\n  const deviceId = device.id || device.device_id;\n  if (!deviceId) {\n    return;\n  }\n  apiMessages.push({\n    batchId,\n    total,\n    index,\n    device,\n    deviceId,\n    metadata: { range },\n    tesaiot: {\n      deviceData: {\n        deviceId,\n        start_time: range.start,\n        end_time: range.end,\n        limit: 500\n      }\n    }\n  });\n});\nreturn [apiMessages, resetMessages];",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1180,
+    "y": 420,
+    "wires": [
+      [
+        "d5acf5b3b3a0c1e7"
+      ],
+      [
+        "12aa4f6f5b396be4"
+      ]
+    ]
+  },
+  {
+    "id": "d5acf5b3b3a0c1e7",
+    "type": "tesaiot-device-data",
+    "z": "5eb192a50929ba1e",
+    "name": "Fetch 14d history",
+    "gateway": "437dcd31d68a1956",
+    "limit": 500,
+    "debugOutput": true,
+    "x": 1480,
+    "y": 420,
+    "wires": [
+      [
+        "12aa4f6f5b396be4"
+      ]
+    ]
+  },
+  {
+    "id": "12aa4f6f5b396be4",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Collect history results",
+    "func": "const stateKey = 'tesaiot.historyBatches';\nconst store = flow.get(stateKey) || {};\nif (msg.historyReset) {\n  const { batchId, total = 0, range = {}, generatedAt } = msg;\n  if (!batchId) {\n    return null;\n  }\n  if (total === 0) {\n    const tableMsg = {\n      payload: [],\n      metadata: { range, generatedAt, totalDevices: 0 }\n    };\n    const terminalMsg = {\n      payload: { summary: { rows: 0, devices: 0, range } },\n      terminalSource: 'device-history'\n    };\n    return [[tableMsg], [terminalMsg]];\n  }\n  store[batchId] = {\n    total,\n    remaining: total,\n    range,\n    generatedAt,\n    rows: []\n  };\n  flow.set(stateKey, store);\n  return null;\n}\nconst batchId = msg.batchId;\nif (!batchId || !store[batchId]) {\n  return null;\n}\nconst entry = store[batchId];\nconst raw = msg.payload || {};\nconst records = Array.isArray(raw.telemetry) ? raw.telemetry :\n  Array.isArray(raw.data) ? raw.data :\n  Array.isArray(raw.items) ? raw.items :\n  Array.isArray(raw) ? raw : [];\nconst device = msg.device || {};\nconst deviceId = msg.deviceId || device.id || device.device_id || 'unknown';\nconst deviceName = device.name || device.label || device.metadata?.displayName || 'Unnamed device';\nrecords.forEach(record => {\n  const payload = record.data || record.values || record;\n  const rawTimestamp = record.timestamp || record.recorded_at || record.time || record.metadata?.timestamp || entry.generatedAt || new Date().toISOString();\n  const tsDate = new Date(rawTimestamp);\n  const timestamp = Number.isNaN(tsDate.getTime()) ? new Date().toISOString() : tsDate.toISOString();\n  const heart = Number(payload?.data_heart_rate ?? payload?.data_heart_rate_bpm ?? payload?.heart_rate ?? payload?.heartRate ?? payload?.hr);\n  const temp = Number(payload?.data_temperature ?? payload?.temperature ?? payload?.temp);\n  entry.rows.push({\n    deviceId,\n    deviceName,\n    timestamp,\n    heartBpm: Number.isFinite(heart) ? Math.round(heart * 100) / 100 : 'n/a',\n    temperatureC: Number.isFinite(temp) ? Math.round(temp * 100) / 100 : 'n/a'\n  });\n});\nentry.remaining -= 1;\nlet outputs = null;\nif (entry.remaining <= 0) {\n  const sorted = entry.rows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));\n  const limited = sorted.slice(0, 200).map(row => ({\n    deviceId: row.deviceId,\n    deviceName: row.deviceName,\n    timestamp: row.timestamp,\n    heartBpm: row.heartBpm ?? 'n/a',\n    temperatureC: row.temperatureC ?? 'n/a'\n  }));\n  const tableMsg = {\n    payload: limited,\n    metadata: {\n      range: entry.range,\n      generatedAt: entry.generatedAt,\n      totalDevices: entry.total\n    }\n  };\n  const terminalMsg = {\n    payload: {\n      summary: {\n        rows: tableMsg.payload.length,\n        devices: entry.total,\n        range: entry.range\n      }\n    },\n    terminalSource: 'device-history'\n  };\n  delete store[batchId];\n  flow.set(stateKey, store);\n  outputs = [[tableMsg], [terminalMsg]];\n} else {\n  flow.set(stateKey, store);\n}\nreturn outputs;",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1760,
+    "y": 460,
+    "wires": [
+      [
+        "dd0bba54ee5c0438"
+      ],
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "3e6dc92f4a16a5d1",
+    "type": "catch",
+    "z": "5eb192a50929ba1e",
+    "name": "TESAIoT API errors",
+    "scope": [
+      "749aabcf4465ad1f",
+      "c42b6ecb8116f890",
+      "a6a1679c41d1b15d",
+      "d5acf5b3b3a0c1e7"
+    ],
+    "uncaught": false,
+    "x": 520,
+    "y": 980,
+    "wires": [
+      [
+        "5fbc0a9df4818c3f"
+      ]
+    ]
+  },
+  {
+    "id": "5fbc0a9df4818c3f",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Format TESAIoT error",
+    "func": "function safe(obj) {\n  return JSON.parse(JSON.stringify(obj, (key, value) => {\n    if (typeof value === 'string' && value.length > 1000) {\n      return value.slice(0, 1000) + '\u2026';\n    }\n    return value;\n  }));\n}\nconst info = msg.error || msg.payload || {};\nconst source = info.source || {};\nconst status = info.statusCode || info.status || msg.statusCode;\nconst message = info.message || info.toString();\nmsg.payload = {\n  type: 'error',\n  source: {\n    id: source.id || source.type || 'unknown',\n    name: source.name || source.type || 'unknown',\n    type: source.type || 'node'\n  },\n  status,\n  message,\n  details: safe(info)\n};\nmsg.terminalSource = 'tesaiot-error';\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 980,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ]
+  },
+  {
+    "id": "b38d4dd8de886b42",
+    "type": "function",
+    "z": "5eb192a50929ba1e",
+    "name": "Tap inventory for terminal",
+    "func": "const safe = JSON.parse(JSON.stringify(msg.payload || []));\nreturn { payload: safe, terminalSource: 'device-inventory' };",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 980,
+    "y": 560,
+    "wires": [
+      [
+        "cf3db50f5bc10e0d"
+      ]
+    ],
+    "icon": ""
+  }
+]
