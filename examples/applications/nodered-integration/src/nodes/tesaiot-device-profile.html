@@ -1,0 +1,42 @@
+<script type="text/javascript">
+(function() {
+    RED.nodes.registerType('tesaiot-device-profile', {
+        category: 'tesaiot',
+        color: '#cc1f2f',
+        defaults: {
+            name: { value: '' },
+            gateway: { type: 'tesaiot-api-gateway', required: true }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: 'bridge.svg',
+        paletteLabel: 'TESAIoT device profile',
+        label: function () {
+            return this.name || 'Device profile';
+        }
+    });
+})();
+</script>
+
+<script type="text/html" data-template-name="tesaiot-device-profile">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Optional label">
+    </div>
+    <div class="form-row">
+        <label for="node-input-gateway"><i class="fa fa-key"></i> Gateway</label>
+        <input type="text" id="node-input-gateway">
+    </div>
+    <p class="form-tips">Provide a device id via <code>msg.tesaiot.deviceProfile.deviceId</code> or <code>msg.deviceId</code>.</p>
+</script>
+
+<script type="text/html" data-help-name="tesaiot-device-profile">
+    <p>Loads a single device profile using the TESAIoT external API.</p>
+    <h4>Inputs</h4>
+    <p>Set <code>msg.tesaiot.deviceProfile.deviceId</code>, <code>msg.tesaiot.deviceId</code> or <code>msg.deviceId</code>.</p>
+    <h4>Outputs</h4>
+    <ul>
+        <li><code>msg.payload</code> &ndash; JSON document returned by <code>/devices/:id</code></li>
+        <li><code>msg.metadata</code> &ndash; device id and fetch timestamp</li>
+    </ul>
+</script>

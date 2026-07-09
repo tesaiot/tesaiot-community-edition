@@ -1,0 +1,47 @@
+<script type="text/javascript">
+(function() {
+    RED.nodes.registerType('tesaiot-api-gateway', {
+        category: 'config',
+        defaults: {
+            name: { value: '' },
+            baseUrl: { value: '', required: false },
+            timeout: { value: 10000, validate: RED.validators.number() },
+            verifyTls: { value: true }
+        },
+        credentials: {
+            apiKey: { type: 'password' }
+        },
+        label: function () {
+            return this.name || this.baseUrl || 'TESAIoT Gateway';
+        }
+    });
+})();
+</script>
+
+<script type="text/html" data-template-name="tesaiot-api-gateway">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-config-input-name" placeholder="Optional label">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-baseUrl"><i class="fa fa-link"></i> Base URL</label>
+        <input type="text" id="node-config-input-baseUrl" placeholder="https://localhost/api/v1">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-timeout"><i class="fa fa-clock-o"></i> Timeout (ms)</label>
+        <input type="number" id="node-config-input-timeout" min="1000" step="1000">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-verifyTls"><i class="fa fa-lock"></i> Verify TLS</label>
+        <input type="checkbox" id="node-config-input-verifyTls" checked>
+        <span style="margin-left: 5px;">Reject invalid certificates</span>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API Key</label>
+        <input type="password" id="node-config-input-apiKey" placeholder="tesa_ak_...">
+    </div>
+</script>
+
+<script type="text/html" data-help-name="tesaiot-api-gateway">
+    <p>Configuration node that stores the TESAIoT API Gateway base URL, timeout and API key. Other TESAIoT nodes reference it to make authenticated calls through APISIX.</p>
+</script>

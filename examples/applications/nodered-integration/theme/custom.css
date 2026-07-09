@@ -1,0 +1,47 @@
+.red-ui-flow-node[data-palette-id='tesaiot-device-lists'],
+.red-ui-flow-node[data-palette-id='tesaiot-device-profile'],
+.red-ui-flow-node[data-palette-id='tesaiot-device-data'],
+.red-ui-flow-node[data-palette-id='tesaiot-api-usage'] {
+  fill: #cc1f2f !important;
+  stroke: #9f0f20 !important;
+}
+
+.red-ui-flow-node[data-palette-id='tesaiot-device-lists'] text,
+.red-ui-flow-node[data-palette-id='tesaiot-device-profile'] text,
+.red-ui-flow-node[data-palette-id='tesaiot-device-data'] text,
+.red-ui-flow-node[data-palette-id='tesaiot-api-usage'] text {
+  fill: #ffffff !important;
+}
+
+.tesaiot-card {
+  background: linear-gradient(135deg, #e01f2f 0%, #a40f1f 100%);
+  color: #ffffff !important;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(162, 0, 22, 0.35);
+  font-family: 'IBM Plex Sans', 'Sarabun', sans-serif;
+}
+
+.tesaiot-card h2,
+.tesaiot-card h3,
+.tesaiot-card h4,
+.tesaiot-card p,
+.tesaiot-card span {
+  color: inherit !important;
+}
+
+.tesaiot-metric {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tesaiot-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
