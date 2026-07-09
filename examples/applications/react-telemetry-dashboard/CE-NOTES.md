@@ -29,3 +29,16 @@ npm run dev       # or: npm run build && preview
 > The dashboard talks to CE over HTTPS. For local dev against a self-signed edge, either
 > trust the CE CA (`config/tls/ca-bundle.pem`) in your browser or run the dashboard behind
 > the same origin.
+
+## Chart library (CE change)
+
+The upstream example rendered with plotly.js, which does not bundle reliably with Vite —
+in a production build the chart silently draws no traces. The CE port re-implements
+`EdgeAIChart` with **recharts** (the same library the CE Admin UI uses): multi-series
+lines, automatic dual Y-axis when magnitudes differ (e.g. pressure vs temperature), and
+the AI overlay only when `ai_*` fields exist (never on stock CE). Verified end-to-end —
+the snapshot below is real telemetry fetched from a live CE install.
+
+## Snapshot (real data from a live CE run)
+
+![react telemetry dashboard with real CE data](../../images/screenshots/react-telemetry-dashboard.png)

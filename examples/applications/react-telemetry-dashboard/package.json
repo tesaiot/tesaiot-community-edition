@@ -19,16 +19,13 @@
   "author": "TESAIoT Platform",
   "license": "Apache-2.0",
   "dependencies": {
-    "plotly.js": "^2.27.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-plotly.js": "^2.6.0",
-    "plotly.js-basic-dist-min": "^2.27.0"
+    "recharts": "^2.10.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
-    "@types/react-plotly.js": "^2.6.3",
     "@vitejs/plugin-react": "^4.7.0",
     "typescript": "^5.9.3",
     "vite": "^5.4.21",

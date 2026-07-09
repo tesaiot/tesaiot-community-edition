@@ -73,11 +73,19 @@ function parseTopic(topic: string): { deviceId: string; sensorType: string } {
 }
 
 /**
- * Parse message payload (assumes JSON format)
+ * Parse message payload (assumes JSON format).
+ *
+ * CE devices publish the canonical telemetry envelope
+ * `{"device_id": ..., "timestamp": ..., "data": {metric: value, ...}}` —
+ * flatten the inner `data` object so the chart sees the metrics directly.
  */
 function parsePayload(payload: Buffer): Record<string, unknown> {
   try {
-    return JSON.parse(payload.toString());
+    const parsed = JSON.parse(payload.toString());
+    if (parsed && typeof parsed === 'object' && parsed.data && typeof parsed.data === 'object') {
+      return { ...parsed.data, timestamp: parsed.timestamp };
+    }
+    return parsed;
   } catch {
     return { raw: payload.toString() };
   }

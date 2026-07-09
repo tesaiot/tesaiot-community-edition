@@ -34,6 +34,10 @@ interface ConnectionPanelProps {
   onUsernameChange: (value: string) => void;
   /** Callback when the password input changes */
   onPasswordChange: (value: string) => void;
+  /** Optional topic override (defaults to the credential's own telemetry topic) */
+  topic: string;
+  /** Callback when the topic input changes */
+  onTopicChange: (value: string) => void;
   /** Current connection status */
   status: ConnectionStatus;
   /** Error message if connection failed */
@@ -84,6 +88,8 @@ export function ConnectionPanel({
   password,
   onUsernameChange,
   onPasswordChange,
+  topic,
+  onTopicChange,
   status,
   error,
   onConnect,
@@ -148,6 +154,29 @@ export function ConnectionPanel({
           <p className="text-xs text-gray-500 mt-1">
             Provision a serverTLS device, then get its password from{' '}
             <code>POST /api/v1/devices/&lt;id&gt;/reset-mqtt-password</code>.
+          </p>
+        </div>
+        <div>
+          <label htmlFor="mqtt-topic" className="block text-sm text-gray-400 mb-2">
+            Topic <span className="text-gray-500">(optional)</span>
+          </label>
+          <input
+            id="mqtt-topic"
+            type="text"
+            value={topic}
+            onChange={(e) => onTopicChange(e.target.value)}
+            placeholder="device/<device-id>/telemetry"
+            disabled={isConnected || isConnecting}
+            className={`w-full px-4 py-2 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              isConnected || isConnecting
+                ? 'border-gray-700 opacity-50 cursor-not-allowed'
+                : 'border-gray-600'
+            }`}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Defaults to this credential's own telemetry topic. A service account (e.g.{' '}
+            <code>mqtt-bridge-*</code> with <code>MQTT_BRIDGE_PASSWORD</code>) may subscribe
+            to the fleet with <code>device/+/telemetry</code>.
           </p>
         </div>
 

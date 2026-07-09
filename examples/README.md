@@ -33,6 +33,13 @@ Vault-issued certificates the mTLS examples enrolled.
 | `esp32-servertls` (firmware contract) | temperature / humidity | ![esp32-servertls telemetry](images/screenshots/esp32-servertls-telemetry.png) |
 | `mqtt-telemetry-simulator` (Python) | continuous sensor stream | ![simulator telemetry](images/screenshots/mqtt-telemetry-simulator-telemetry.png) |
 
+### Dashboard applications — charting real CE data
+
+| Example | What it shows | Snapshot |
+|---|---|---|
+| `react-telemetry-dashboard` (React + recharts) | historical telemetry fetched over the CE REST API (JWT) | ![react dashboard](images/screenshots/react-telemetry-dashboard.png) |
+| `live-streaming-dashboard` (React + MQTT-over-WS) | a real device's stream, charted live via EMQX `:8083` | ![live streaming dashboard](images/screenshots/live-streaming-dashboard.png) |
+
 ### Per-example certificate — the Vault PKI cert each mTLS example enrolled
 
 | Example | What it enrolled | Snapshot |
@@ -61,15 +68,23 @@ WSS/B2B, Grafana/Prometheus, multi-tenancy) is **not** part of CE.
 
 ## Available now
 
-All four have been exercised against a live Community Edition install; telemetry
+Runnable units were exercised against a live Community Edition install; device telemetry
 was confirmed landing in the `device_telemetry` TimescaleDB hypertable.
 
 | Example | Path | CE capabilities | Status |
 |---|---|---|---|
 | serverTLS device client (Python) | [`embedded-devices/rpi-servertls`](embedded-devices/rpi-servertls) | #3 #5 #6 #7 #8 | ✅ **verified end-to-end** — MQTT (serverTLS 8884) + REST (`/api/v1/telemetry`, strict TLS) |
 | serverTLS device client (C / Mongoose) | [`embedded-devices/device-servertls`](embedded-devices/device-servertls) | #3 #5 #6 #7 #8 | ✅ **verified end-to-end** — builds with OpenSSL 3; MQTTS + HTTPS both land |
-| shared C library (Mongoose transport) | [`embedded-devices/common-c`](embedded-devices/common-c) | dependency | ✅ builds + links into the C example |
+| mTLS device client (C / Mongoose) | [`embedded-devices/device-mtls`](embedded-devices/device-mtls) | #3 #4 #6 #7 #8 | ✅ **verified end-to-end** — Vault CSR-enrolled cert, mTLS publish lands |
+| shared C library (Mongoose transport) | [`embedded-devices/common-c`](embedded-devices/common-c) | dependency | ✅ builds + links into the C examples |
 | ESP32 serverTLS firmware | [`embedded-devices/esp32-servertls`](embedded-devices/esp32-servertls) | #3 #6 #8 | ✅ **contract verified** — its exact topic/payload/serverTLS auth reproduced on a host simulator and confirmed landing (needs ESP32 hardware to flash) |
+| MQTT telemetry simulator (Python) | [`integrations/mqtt-telemetry-simulator`](integrations/mqtt-telemetry-simulator) | #6 #7 #8 | ✅ **verified end-to-end** — continuous serverTLS stream lands |
+| n8n workflows | [`integrations/n8n-automation`](integrations/n8n-automation) | #2 #7 #8 | ◻ CE-adapted JSON (import into your n8n; JWT wiring documented) |
+| Secure-element mTLS (OPTIGA/PSE84 sim) | [`security/secure-element-mtls`](security/secure-element-mtls) | #2 #3 #4 #6 #8 | ✅ **verified end-to-end** — on-chip-style keygen + CSR → Vault cert → mTLS publish lands |
+| NCSA / EN 303 645 mapping | [`security/ncsa`](security/ncsa) | docs | ✅ CE-scoped documentation |
+| React telemetry dashboard | [`applications/react-telemetry-dashboard`](applications/react-telemetry-dashboard) | #1 #7 #8 | ✅ **verified** — JWT login + CE endpoints; recharts chart renders real data |
+| Live streaming dashboard | [`applications/live-streaming-dashboard`](applications/live-streaming-dashboard) | #6 #8 | ✅ **verified live** — charts a real device stream over MQTT-over-WS `:8083` |
+| Node-RED custom nodes | [`applications/nodered-integration`](applications/nodered-integration) | #2 #5 #8 | ◻ CE-adapted source (missing upstream client restored; run in your Node-RED) |
 
 ### mTLS device auth — verified at the platform level
 

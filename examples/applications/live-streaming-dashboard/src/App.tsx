@@ -23,7 +23,9 @@ const DEFAULT_SERIES: SeriesConfig[] = [
   { key: 'temperature', name: 'Temperature (°C)', color: '#ef4444', yAxisId: 'left', visible: true, unit: '°C' },
   { key: 'humidity', name: 'Humidity (%)', color: '#3b82f6', yAxisId: 'left', visible: true, unit: '%' },
   { key: 'pressure', name: 'Pressure (hPa)', color: '#10b981', yAxisId: 'left', visible: false, unit: 'hPa' },
-  { key: 'confidence', name: 'AI Confidence', color: '#22c55e', yAxisId: 'right', visible: true },
+  // ai_* series stay hidden by default — Community Edition excludes the AI module,
+  // so stock CE telemetry never carries these fields.
+  { key: 'confidence', name: 'AI Confidence', color: '#22c55e', yAxisId: 'right', visible: false },
   { key: 'anomalyScore', name: 'Anomaly Score', color: '#f97316', yAxisId: 'right', visible: false },
 ];
 
@@ -31,12 +33,15 @@ function App() {
   // Community Edition: per-device MQTT credentials (username = device id).
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // Optional topic override — a service account may watch the fleet (device/+/telemetry).
+  const [topic, setTopic] = useState('');
   const [series, setSeries] = useState<SeriesConfig[]>(DEFAULT_SERIES);
   const [showRawData, setShowRawData] = useState(false);
 
   const { status, error, messages, messageCount, connect, disconnect, clearMessages } = useMQTTStream({
     username,
     password,
+    topic: topic || undefined,
     maxMessages: 500,
   });
 
@@ -99,6 +104,8 @@ function App() {
               password={password}
               onUsernameChange={setUsername}
               onPasswordChange={setPassword}
+              topic={topic}
+              onTopicChange={setTopic}
               status={status}
               error={error?.message ?? null}
               onConnect={handleConnect}

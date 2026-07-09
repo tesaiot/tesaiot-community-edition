@@ -333,7 +333,7 @@ function App() {
             <p><strong>This is a standalone third-party application example.</strong></p>
             <p style={{ marginTop: 8 }}>
               It demonstrates how to connect to TESAIoT Platform using API Key authentication
-              and visualize Edge AI telemetry data with Plotly charts.
+              and visualize telemetry data with recharts.
             </p>
             <p style={{ marginTop: 8 }}>
               <strong>Features:</strong> Multi-axis chart, AI inference overlay, zoom/pan,

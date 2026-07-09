@@ -29,3 +29,22 @@ Connection panel.
 > Served over **https**, browsers block a plain `ws://` connection (mixed content). For an
 > https deployment, provision an EMQX WSS listener fronted by nginx/APISIX TLS and point
 > `brokerUrl` at `wss://<host>/mqtt`.
+
+## Verified live stream + fleet view (CE)
+
+The dashboard was verified **live** against CE: a real serverTLS device published over
+MQTTS (:8884) while the dashboard, connected to MQTT-over-WS (:8083), charted the stream
+in real time. Two CE-specific behaviours matter:
+
+- **Payload envelope:** CE devices publish `{"device_id", "timestamp", "data": {...}}`;
+  the hook flattens the inner `data` object so the chart sees the metrics.
+- **Watching a live device needs a service account.** CE's auth + ACL key off the MQTT
+  client id, so a viewer using the device's own credential collides with the device
+  (session takeover). Connect the dashboard with an internal service credential instead —
+  username/client-id starting with `mqtt-bridge` (e.g. `mqtt-bridge-dashboard`) and
+  `MQTT_BRIDGE_PASSWORD` from the platform `.env` — and set Topic to `device/+/telemetry`
+  for a fleet-wide view. Per-device credentials still work for a device watching itself.
+
+## Snapshot (real data from a live CE run)
+
+![live streaming dashboard receiving a real device stream](../../images/screenshots/live-streaming-dashboard.png)
