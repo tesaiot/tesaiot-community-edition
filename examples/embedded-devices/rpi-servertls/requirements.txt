@@ -1,0 +1,15 @@
+# TESAIoT Raspberry Pi Server TLS Client - Dependencies
+# Install: pip install -r requirements.txt
+
+# MQTT Client
+paho-mqtt>=1.6.1,<2.0
+
+# HTTP Client
+requests>=2.28.0
+
+# Environment Configuration
+python-dotenv>=1.0.0
+
+# Optional: Hardware Sensors (uncomment as needed)
+# adafruit-circuitpython-dht>=4.0.0
+# adafruit-circuitpython-bmp280>=3.0.0
