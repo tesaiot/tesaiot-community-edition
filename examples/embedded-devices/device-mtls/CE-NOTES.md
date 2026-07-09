@@ -29,3 +29,7 @@ COMM_MODE=MQTTS MQTT_HOST=localhost MQTT_PORT=8883 CERTS_DIR=$PWD/certs_credenti
 > The EMQX mTLS listener (`:8883`) is container-internal in the default compose. To reach
 > it from the host, either expose the port or forward it (e.g. a `socat` container on the
 > `tesa` network). On real hardware/edge the device connects to `:8883` directly.
+
+## Snapshot (real data from a live CE run)
+
+![device-mtls Vault-issued certificate](../../images/screenshots/device-mtls-certificate.png)

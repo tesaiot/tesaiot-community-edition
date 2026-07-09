@@ -49,9 +49,9 @@ interface UseMQTTStreamResult {
 // Serve the dashboard over http for local use, or front an EMQX WSS listener with
 // nginx/APISIX TLS termination and use wss://<host>/mqtt.
 const DEFAULT_BROKER_URL = 'ws://localhost:8083/mqtt';
-// CE's per-device ACL scopes a device credential to its OWN topic, so the default
-// subscribes to the connected device. Use a privileged/service account for a fleet view.
-const DEFAULT_TOPIC = 'device/+/telemetry';
+// CE's per-device ACL scopes a device credential to its OWN topic. When no explicit
+// topic is provided we subscribe to `device/<username>/telemetry` (built in connect()).
+// A wildcard fleet view (device/+/telemetry) needs a privileged/service MQTT account.
 const DEFAULT_MAX_MESSAGES = 1000;
 
 /** CE uses per-device username/password — just require both to be present. */
@@ -88,7 +88,7 @@ export function useMQTTStream({
   password,
   clientId,
   brokerUrl = DEFAULT_BROKER_URL,
-  topic = DEFAULT_TOPIC,
+  topic,
   maxMessages = DEFAULT_MAX_MESSAGES,
 }: UseMQTTStreamOptions): UseMQTTStreamResult {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
@@ -118,6 +118,9 @@ export function useMQTTStream({
 
     // CE's ACL keys off the MQTT client id; default it to the device id (username).
     const resolvedClientId = clientId || username;
+    // Default to this device's own telemetry topic (CE ACL denies wildcard for
+    // per-device credentials).
+    const resolvedTopic = topic || `device/${username}/telemetry`;
 
     const options: IClientOptions = {
       username,
@@ -137,7 +140,7 @@ export function useMQTTStream({
       console.log('[MQTT] Connected successfully');
       setStatus('connected');
 
-      client.subscribe(topic, { qos: 1 }, (err, granted) => {
+      client.subscribe(resolvedTopic, { qos: 1 }, (err, granted) => {
         if (err) {
           console.error('[MQTT] Subscription error:', err);
           setError(new Error(`Subscription failed: ${err.message}`));

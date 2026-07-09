@@ -39,3 +39,7 @@ COMM_MODE=HTTPS API_BASE_URL=https://localhost CERTS_DIR=$PWD/certs_credentials 
 
 > Path note: `make` cannot `include ../common-c/mg_fetch.mk` if the repo lives under a
 > directory whose name contains spaces. Clone into a space-free path to build.
+
+## Snapshot (real data from a live CE run)
+
+![device-servertls telemetry in CE Device Details](../../images/screenshots/device-servertls-telemetry.png)

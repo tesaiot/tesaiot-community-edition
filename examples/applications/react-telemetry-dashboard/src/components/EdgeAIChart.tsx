@@ -10,8 +10,14 @@
  * Copyright (c) 2024-2025 TESAIoT Platform
  */
 
-import React, { useMemo, useCallback, useState, useRef } from 'react';
-import Plot from 'react-plotly.js';
+import React, { useMemo, useCallback, useState } from 'react';
+// plotly.js does not bundle cleanly with Vite via the default `react-plotly.js`
+// entry (the chart silently renders no traces in a production build). Build the
+// React component from the prebuilt dist bundle instead — the standard Vite fix.
+import createPlotlyComponent from 'react-plotly.js/factory';
+// @ts-expect-error - no bundled types for the dist-min build
+import Plotly from 'plotly.js-basic-dist-min';
+const Plot = createPlotlyComponent(Plotly);
 import type { TelemetryPoint } from '../api/tesaiotApi';
 
 interface EdgeAIChartProps {
@@ -54,7 +60,6 @@ export const EdgeAIChart: React.FC<EdgeAIChartProps> = ({
   height = 500,
   onRangeChange,
 }) => {
-  const plotRef = useRef<any>(null);
   const [xAxisRange, setXAxisRange] = useState<[string, string] | null>(null);
 
   // Detect available sensor keys from data
@@ -171,6 +176,7 @@ export const EdgeAIChart: React.FC<EdgeAIChartProps> = ({
   const layout = useMemo((): Partial<Plotly.Layout> => ({
     // Preserve zoom state when data changes
     uirevision: 'preserve-zoom',
+    autosize: true,
     height,
     title: {
       text: title,
@@ -288,12 +294,12 @@ export const EdgeAIChart: React.FC<EdgeAIChartProps> = ({
   return (
     <div className="edge-ai-chart">
       <Plot
-        ref={plotRef}
         data={traces}
         layout={layout}
         config={config}
         onRelayout={handleRelayout}
-        style={{ width: '100%' }}
+        useResizeHandler
+        style={{ width: '100%', height: `${height}px` }}
       />
       <div style={{
         textAlign: 'center',

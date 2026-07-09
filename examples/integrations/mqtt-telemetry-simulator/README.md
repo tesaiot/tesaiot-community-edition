@@ -33,3 +33,7 @@ Provision a serverTLS device first (Admin UI or API), then set `MQTT_PASSWORD` f
 - The upstream example was framed as an "Edge-AI / Infineon" simulator; CE excludes the
   AI/analytics module, so this is a plain telemetry simulator — the out-of-range values it
   emits are ordinary telemetry, with no anomaly-detection backend implied.
+
+## Snapshot (real data from a live CE run)
+
+![simulator telemetry stream in CE Device Details](../../images/screenshots/mqtt-telemetry-simulator-telemetry.png)

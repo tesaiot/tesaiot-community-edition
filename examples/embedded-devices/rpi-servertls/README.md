@@ -81,3 +81,7 @@ FROM device_telemetry WHERE device_id='<DEVICE_ID>' ORDER BY time DESC LIMIT 10;
   `keyUsage` to the Bootstrap CA), HTTPS mode requires that fix. **Do not** disable TLS
   verification. MQTT mode is unaffected — EMQX chains to the Vault Intermediate CA.
   See `TESAIoT_PLAN/examples-vv-evidence.md` §4.
+
+## Snapshot (real data from a live CE run)
+
+![rpi-servertls telemetry in CE Device Details](../../images/screenshots/rpi-servertls-telemetry.png)

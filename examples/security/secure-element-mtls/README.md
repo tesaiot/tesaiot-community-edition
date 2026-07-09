@@ -49,3 +49,7 @@ The full firmware lives in the developer hub under `security/pse84_tesaiot_clien
 Trust M). They implement the identical mTLS publish contract verified here; flashing them
 exercises the same CE path. Requires the physical hardware (and, for PSE84, a valid
 TESAIoT license / `libtesaiot`).
+
+## Snapshot (real data from a live CE run)
+
+![secure-element Vault-issued certificate](../../images/screenshots/secure-element-mtls-certificate.png)

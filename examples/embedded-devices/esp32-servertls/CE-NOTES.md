@@ -16,3 +16,7 @@ the exact topic (`device/<id>/telemetry`), payload
 username/password auth were reproduced on a host simulator and confirmed landing in the CE
 `device_telemetry` hypertable. Flashing real hardware exercises the identical path. See
 `TESAIoT_PLAN/examples-vv-evidence.md` §5.
+
+## Snapshot (real data from a live CE run)
+
+![esp32-servertls telemetry contract in CE Device Details](../../images/screenshots/esp32-servertls-telemetry.png)
