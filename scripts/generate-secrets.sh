@@ -218,16 +218,27 @@ if [ -f "${SRV_CERT}" ] && [ "${FORCE}" -eq 0 ] && [ "${DOMAIN_CHANGED}" -eq 0 ]
 else
   TMP="$(mktemp -d)"
   trap 'rm -rf "${TMP}"' EXIT
-  # Self-signed CA.
+  # Self-signed CA. It MUST carry keyUsage(keyCertSign,cRLSign) +
+  # basicConstraints(CA:TRUE); without keyUsage, strict TLS stacks (OpenSSL 3,
+  # Go, Java, Python requests) refuse it as a trust anchor with
+  # "CA cert does not include key usage extension" - so every REST/HTTPS client
+  # would fail to verify the nginx edge even with the correct CA bundle.
   openssl req -x509 -newkey rsa:2048 -nodes \
     -keyout "${TMP}/ca-key.pem" -out "${TMP}/ca.pem" -days 3650 \
-    -subj "/O=TESAIoT Community Edition/CN=TESAIoT Community Edition Bootstrap CA" >/dev/null 2>&1
-  # Server cert signed by that CA, SAN = DOMAIN (+localhost/127.0.0.1).
+    -subj "/O=TESAIoT Community Edition/CN=TESAIoT Community Edition Bootstrap CA" \
+    -addext "basicConstraints=critical,CA:TRUE" \
+    -addext "keyUsage=critical,keyCertSign,cRLSign" \
+    -addext "subjectKeyIdentifier=hash" >/dev/null 2>&1
+  # Server cert signed by that CA, SAN = DOMAIN (+localhost/127.0.0.1), with a
+  # proper serverAuth EKU + keyUsage so strict clients accept the leaf too.
   openssl req -newkey rsa:2048 -nodes \
     -keyout "${SRV_KEY}" -out "${TMP}/server.csr" \
     -subj "/O=TESAIoT Community Edition/CN=${DOMAIN_VAL}" >/dev/null 2>&1
   cat > "${TMP}/ext.cnf" <<EOF
 subjectAltName = DNS:${DOMAIN_VAL},DNS:localhost,DNS:mqtt.${DOMAIN_VAL},IP:127.0.0.1
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
 EOF
   openssl x509 -req -in "${TMP}/server.csr" \
     -CA "${TMP}/ca.pem" -CAkey "${TMP}/ca-key.pem" -CAcreateserial \

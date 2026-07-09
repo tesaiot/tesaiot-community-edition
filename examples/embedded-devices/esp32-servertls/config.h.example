@@ -1,0 +1,43 @@
+/**
+ * TESAIoT ESP32 Client Configuration
+ *
+ * Copy this file to config.h and update with your credentials.
+ *
+ * Copyright (c) 2025 TESAIoT Platform (TESA)
+ * Licensed under Apache License 2.0
+ */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ======================
+// WiFi Configuration
+// ======================
+#define WIFI_SSID "your-wifi-ssid"
+#define WIFI_PASSWORD "your-wifi-password"
+
+// ======================
+// MQTT Configuration
+// ======================
+#define MQTT_HOST "localhost"
+#define MQTT_PORT 8884  // Server TLS port
+
+// Device credentials (from TESAIoT Admin UI)
+#define DEVICE_ID "your-device-id"
+#define MQTT_USERNAME "your-device-id"      // Same as DEVICE_ID
+#define MQTT_PASSWORD "your-mqtt-password"  // From Server TLS bundle
+
+// ======================
+// Optional Settings
+// ======================
+
+// Telemetry publish interval (milliseconds)
+// #define TELEMETRY_INTERVAL 10000
+
+// MQTT buffer size (bytes)
+// #define MQTT_BUFFER_SIZE 512
+
+// Enable debug output
+// #define DEBUG_MODE 1
+
+#endif // CONFIG_H

@@ -1,0 +1,6 @@
+device_client
+*.o
+.env
+certs_credentials/*
+!certs_credentials/*.example*
+!certs_credentials/README.md

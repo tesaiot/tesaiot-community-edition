@@ -27,9 +27,29 @@ WSS/B2B, Grafana/Prometheus, multi-tenancy) is **not** part of CE.
 
 ## Available now
 
+All four have been exercised against a live Community Edition install; telemetry
+was confirmed landing in the `device_telemetry` TimescaleDB hypertable.
+
 | Example | Path | CE capabilities | Status |
 |---|---|---|---|
-| serverTLS device client (Python) | [`embedded-devices/rpi-servertls`](embedded-devices/rpi-servertls) | #3 #5 #6 #7 #8 | ✅ **verified end-to-end** (MQTT), REST functional |
+| serverTLS device client (Python) | [`embedded-devices/rpi-servertls`](embedded-devices/rpi-servertls) | #3 #5 #6 #7 #8 | ✅ **verified end-to-end** — MQTT (serverTLS 8884) + REST (`/api/v1/telemetry`, strict TLS) |
+| serverTLS device client (C / Mongoose) | [`embedded-devices/device-servertls`](embedded-devices/device-servertls) | #3 #5 #6 #7 #8 | ✅ **verified end-to-end** — builds with OpenSSL 3; MQTTS + HTTPS both land |
+| shared C library (Mongoose transport) | [`embedded-devices/common-c`](embedded-devices/common-c) | dependency | ✅ builds + links into the C example |
+| ESP32 serverTLS firmware | [`embedded-devices/esp32-servertls`](embedded-devices/esp32-servertls) | #3 #6 #8 | ✅ **contract verified** — its exact topic/payload/serverTLS auth reproduced on a host simulator and confirmed landing (needs ESP32 hardware to flash) |
+
+### mTLS device auth — verified at the platform level
+
+The mTLS path (EMQX `:8883`, client certificate from Vault PKI) was proven end-to-end
+by simulating a secure element: an on-host EC keypair + CSR (as an OPTIGA/PSE84 chip
+would generate on-chip) was signed through CE's own
+`POST /api/v1/certificates/devices/{id}/certificate/sign-csr`, then used to publish over
+mTLS — telemetry landed. **Critical CE adaptation:** an mTLS client must still send an
+MQTT **username = device_id and a non-empty password** (its device API key) — CE's EMQX
+runs a `password_based` webhook authenticator, so a certificate-only connection with an
+empty password is rejected *before* the webhook validates the cert CN. This is why
+`pse84_tesaiot_client` sets `MQTT_PASSWORD = API_KEY`; the `device-mtls` C example (which
+sends `username=NULL, password=NULL`) must be adapted the same way. See
+`TESAIoT_PLAN/examples-vv-evidence.md` §6.
 
 ## Porting status of all 24 developer-hub units
 

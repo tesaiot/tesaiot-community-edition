@@ -1,0 +1,24 @@
+/**
+ * TESAIoT CA Certificate
+ *
+ * Copy this file to ca_cert.h and replace with your CA certificate.
+ * Download the CA certificate from TESAIoT Admin UI → Credentials.
+ *
+ * Copyright (c) 2025 TESAIoT Platform (TESA)
+ * Licensed under Apache License 2.0
+ */
+
+#ifndef CA_CERT_H
+#define CA_CERT_H
+
+// TESAIoT Platform CA Certificate
+// Replace this with the actual CA certificate from your Server TLS bundle
+const char* CA_CERT = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOYMA0GCSqGSIb3Df
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQ
+... (your CA certificate content here) ...
+-----END CERTIFICATE-----
+)EOF";
+
+#endif // CA_CERT_H

@@ -1,0 +1,3 @@
+YOUR_DEVICE_UUID_HERE
+# Example: 95ad6ed3-c9a7-43e3-96ba-871f25b5cfe9
+# Same as device_id for Server-TLS authentication
