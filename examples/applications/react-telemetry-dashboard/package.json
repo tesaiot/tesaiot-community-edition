@@ -1,0 +1,36 @@
+{
+  "name": "edge-ai-telemetry-viewer",
+  "version": "1.0.0",
+  "description": "Standalone Edge AI Telemetry Viewer - Third Party App Example using TESAIoT API Gateway",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "edge-ai",
+    "telemetry",
+    "iot",
+    "visualization",
+    "plotly",
+    "tesaiot"
+  ],
+  "author": "TESAIoT Platform",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "plotly.js": "^2.27.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-plotly.js": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@types/react-plotly.js": "^2.6.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vitest": "^4.0.16"
+  }
+}
