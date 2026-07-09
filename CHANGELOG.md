@@ -5,6 +5,62 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-09
+
+### Added
+
+- **Verified examples suite (`examples/`).** A selective port of the developer-hub
+  examples to Community Edition — 12 units across four categories, each adapted to
+  CE endpoints/auth and exercised against a live install (telemetry confirmed in
+  the `device_telemetry` hypertable; mTLS certificates enrolled through Vault PKI):
+  - *Embedded devices* — serverTLS clients in Python (`rpi-servertls`) and
+    C/Mongoose (`device-servertls`), an mTLS C client (`device-mtls`), ESP32
+    serverTLS firmware (contract-verified on a host simulator), and the shared
+    `common-c` Mongoose transport library.
+  - *Integrations* — an MQTT telemetry simulator (serverTLS + username/password
+    auth added; CE rejects anonymous/plaintext clients) and CE-adapted n8n
+    workflows.
+  - *Security* — a runnable OPTIGA/PSE84-style secure-element mTLS client
+    (on-chip-style EC keygen → CSR → Vault-signed certificate → mTLS publish) and
+    a CE-scoped NCSA / EN 303 645 mapping.
+  - *Applications* — a React telemetry dashboard (JWT login + CE REST endpoints,
+    recharts) and a live MQTT-over-WebSocket streaming dashboard, both charting
+    real CE data; Node-RED custom nodes (missing upstream `client.ts` restored so
+    the TypeScript builds).
+  - Every runnable unit ships a **real-data snapshot** captured from a live
+    install, plus per-example CE notes documenting the adaptations: endpoint and
+    auth boundaries (API-key = telemetry ingest only, reads are JWT), the mTLS
+    requirement to send `username=device_id` + a non-empty password (device API
+    key) so the auth webhook can validate the client-certificate CN, and the
+    internal-service-account pattern (`mqtt-bridge-*` + `MQTT_BRIDGE_PASSWORD`)
+    for fleet-wide MQTT subscriptions.
+
+### Fixed
+
+- **First-run bootstrap CA now carries `keyUsage`, so strict TLS clients can
+  verify the HTTPS edge.** `generate-secrets.sh` issued the self-signed bootstrap
+  CA without the `keyUsage` extension (and the nginx server leaf without
+  `extendedKeyUsage`), so OpenSSL-3-based clients — Python `requests`, Go, Java —
+  rejected `https://<host>` with *"CA cert does not include key usage extension"*
+  even when given the correct `ca-bundle.pem`. New installs now issue the CA with
+  `basicConstraints=critical,CA:TRUE` + `keyUsage=critical,keyCertSign,cRLSign`
+  and the server leaf with `keyUsage` + `extendedKeyUsage=serverAuth`.
+
+  **Upgrade note (existing installs):** the fix only affects newly generated
+  bootstrap material — an existing install keeps its old certificate until you
+  regenerate it:
+
+  ```bash
+  rm config/tls/server-cert.pem   # force the bootstrap TLS material to regenerate
+  make secrets                    # re-issues the bootstrap CA + server cert
+  make init-pki                   # re-appends the Vault chain to ca-bundle.pem
+  make restart s=nginx
+  ```
+
+  Then redistribute `config/tls/ca-bundle.pem` to any REST/HTTPS clients that pin
+  it. MQTT (`8883`/`8884`) is unaffected — EMQX chains to the Vault intermediate
+  CA, which always carried proper `keyUsage`.
+
 ## [1.2.1] - 2026-07-02
 
 ### Security
