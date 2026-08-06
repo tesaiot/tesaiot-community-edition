@@ -87,6 +87,36 @@ against the CA bundle and then the API authorizes the specific device.
   EMQX validates the client cert chain, then calls the API auth webhook with
   `cert_common_name` / `cert_subject` so the API can map the cert to a device.
 
+### Trusting a CA that is not the Vault PKI
+
+Some devices arrive with a client certificate this installation did not issue —
+an organisation's existing device CA, or the factory certificate burned into an
+OPTIGA™ Trust M secure element by Infineon. EMQX can only accept those if it
+trusts the issuing authority, which means the certificate has to be in
+`vault-ca-bundle.pem`.
+
+Do **not** append it to that file directly. `vault-ca-bundle.pem` is rewritten
+from the Vault bundle by `config/vault-agent/scripts/split-emqx-bundle.sh` every
+time the server certificate is renewed, and anything added by hand is lost at
+that point. The symptom is delayed and misleading: devices that worked for weeks
+begin failing with `unknown_ca`, while the broker still reports healthy.
+
+Put the certificate in `trust-anchors.d` instead — the split script appends
+every `*.pem` there to the bundle on each renewal:
+
+```bash
+docker cp my-device-ca.pem tesa-emqx:/opt/emqx/etc/certs/trust-anchors.d/
+docker exec tesa-emqx emqx ctl listeners   # confirm ssl:mtls is still running
+```
+
+The directory is created automatically. Files that do not parse as a PEM
+certificate are skipped with a warning rather than appended, because a truncated
+anchor would corrupt the bundle and stop every TLS listener.
+
+`scripts/healthcheck.sh` reports an `emqx-tls` row covering both halves of this:
+whether the broker can read its key/certificate/CA bundle, and whether the mTLS
+and serverTLS listeners are actually running.
+
 - **API gateway (optional)** — see `config/apisix/mtls-routes.yaml` for ready
   route patterns (add a `client` block with `ca` + `verify_client: true` to the
   `ssls` entry, then merge the routes into `apisix.yaml`).

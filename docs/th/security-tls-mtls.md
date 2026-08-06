@@ -86,6 +86,31 @@ mosquitto_pub \
 
 CN ในใบรับรองไคลเอนต์จะถูกใช้กำหนด identity ของอุปกรณ์ และ ACL จะตรวจผ่าน webhook ของ API
 
+### การเพิ่ม CA ที่ไม่ได้ออกโดย Vault PKI
+
+อุปกรณ์บางชนิดมาพร้อมใบรับรองที่ระบบนี้ไม่ได้เป็นผู้ออก เช่น device CA เดิมขององค์กร
+หรือใบรับรองจากโรงงานที่ Infineon เขียนไว้ในชิป OPTIGA™ Trust M — EMQX จะรับอุปกรณ์เหล่านี้ได้
+ก็ต่อเมื่อเชื่อถือ CA ผู้ออก ซึ่งหมายความว่าใบรับรองนั้นต้องอยู่ใน `vault-ca-bundle.pem`
+
+**อย่าเติมลงไฟล์นั้นโดยตรง** เพราะ `vault-ca-bundle.pem` ถูกเขียนทับใหม่จาก Vault bundle
+โดย `config/vault-agent/scripts/split-emqx-bundle.sh` ทุกครั้งที่ต่ออายุใบรับรองเซิร์ฟเวอร์
+สิ่งที่เติมด้วยมือจะหายไปตอนนั้น อาการที่เกิดขึ้นจะมาช้าและชวนเข้าใจผิด — อุปกรณ์ที่ใช้งานได้มาหลายสัปดาห์
+จะเริ่มล้มด้วย `unknown_ca` ขณะที่ broker ยังรายงานว่าปกติดี
+
+ให้วางใบรับรองไว้ใน `trust-anchors.d` แทน สคริปต์ split จะเติมไฟล์ `*.pem` ทุกไฟล์ในนั้น
+เข้า bundle ให้ทุกครั้งที่ต่ออายุ:
+
+```bash
+docker cp my-device-ca.pem tesa-emqx:/opt/emqx/etc/certs/trust-anchors.d/
+docker exec tesa-emqx emqx ctl listeners   # ยืนยันว่า ssl:mtls ยังทำงานอยู่
+```
+
+ไดเรกทอรีนี้ถูกสร้างให้อัตโนมัติ ไฟล์ที่ไม่ใช่ PEM certificate จะถูกข้ามพร้อมคำเตือน
+ไม่ถูกเติมเข้า bundle เพราะ anchor ที่ไม่สมบูรณ์จะทำให้ bundle เสียและ TLS listener ล่มทั้งหมด
+
+`scripts/healthcheck.sh` มีแถว `emqx-tls` ที่ตรวจทั้งสองด้าน คือ broker อ่าน key/cert/CA bundle
+ได้หรือไม่ และ listener ของ mTLS กับ serverTLS ทำงานอยู่จริงหรือไม่
+
 ### APISIX mTLS
 
 เปิด mTLS ที่ gateway โดยเพิ่มบล็อก `client` ในรายการ `ssls` พร้อม `ca` + `depth` และตั้ง

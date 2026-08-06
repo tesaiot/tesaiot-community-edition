@@ -52,6 +52,50 @@ chown 1000:1000 "$KEY_OUT"
 chmod 0600 "$KEY_OUT"
 
 cat "$TMPDIR/issuing_ca.pem" "$TMPDIR/root_ca.pem" > "$CA_OUT"
+
+# Trust anchors that are NOT part of the Vault PKI belong in the CA bundle too.
+# A device whose client certificate was issued by some other authority — an
+# organisation's own device CA, or the factory certificate burned into an OPTIGA
+# Trust M secure element by Infineon — can only be accepted by the mTLS listener
+# if EMQX trusts that authority.
+#
+# This file is rewritten from the Vault bundle on every certificate renewal, so
+# anything appended to it by hand disappears the next time the agent rotates the
+# certificate. The failure is nasty: devices that worked for weeks start failing
+# with `unknown_ca`, the broker itself still looks healthy, and the only clue is
+# a TLS alert in its log. Anything dropped into trust-anchors.d survives every
+# renewal instead.
+#
+#   docker cp my-device-ca.pem tesa-emqx:/opt/emqx/etc/certs/trust-anchors.d/
+#
+ANCHOR_DIR="/opt/emqx/etc/certs/trust-anchors.d"
+
+# Create it even when empty, so the place to put an extra CA is discoverable on
+# a running install instead of only being described in the docs. A failure here
+# is not fatal — the bundle is still valid without any extra anchors.
+if [ ! -d "$ANCHOR_DIR" ]; then
+  if mkdir -p "$ANCHOR_DIR" 2>/dev/null; then
+    chown 1000:1000 "$ANCHOR_DIR" 2>/dev/null || true
+    chmod 0755 "$ANCHOR_DIR" 2>/dev/null || true
+  else
+    echo "[split] note: could not create $ANCHOR_DIR (extra trust anchors unsupported)" >&2
+  fi
+fi
+
+if [ -d "$ANCHOR_DIR" ]; then
+  for anchor in "$ANCHOR_DIR"/*.pem; do
+    [ -f "$anchor" ] || continue
+    if pem_ok "$anchor"; then
+      cat "$anchor" >> "$CA_OUT"
+      echo "[split] added trust anchor: $(basename "$anchor")"
+    else
+      # Appending a truncated file would corrupt the bundle and take down every
+      # TLS listener, so skip it loudly rather than quietly.
+      echo "[split] WARNING: skipping unreadable trust anchor $anchor" >&2
+    fi
+  done
+fi
+
 chown 1000:1000 "$CA_OUT"
 chmod 0644 "$CA_OUT"
 

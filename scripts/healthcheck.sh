@@ -63,6 +63,46 @@ else
 fi
 
 chk_exec "emqx"   tesa-emqx emqx ctl status
+
+# EMQX TLS. `emqx ctl status` above answers "is the broker alive?", which stays
+# green while every TLS connection is being refused — so it is not enough on its
+# own. Two things actually have to hold:
+#
+#   1. the broker can READ its key, certificate and CA bundle. The files are
+#      written by the vault-agent container (running as root) onto a volume the
+#      broker reads as uid 1000; get the handover wrong and EMQX fails each
+#      handshake with {keyfile, ..., {error, eacces}} while still reporting
+#      healthy. `docker exec` runs as the image's own user, so `test -r` here is
+#      asking the question from the broker's side, which is the only side that
+#      matters.
+#   2. the TLS listeners are actually running. A malformed CA bundle — a
+#      truncated trust anchor, say — starts the broker but not its listeners.
+tls_missing=""
+for f in key.pem cert-with-chain.pem vault-ca-bundle.pem; do
+  docker exec tesa-emqx test -r "/opt/emqx/etc/certs/${f}" 2>/dev/null || tls_missing="${tls_missing} ${f}"
+done
+
+if [ -n "${tls_missing}" ]; then
+  row "emqx-tls" fail "broker cannot read:${tls_missing}"
+else
+  # `emqx ctl listeners` prints a block per listener; ssl:mtls (8883) and
+  # ssl:servertls (8884) are the two that carry device traffic.
+  listeners="$(docker exec tesa-emqx emqx ctl listeners 2>/dev/null)"
+  tls_down=""
+  for l in mtls servertls; do
+    echo "${listeners}" | awk -v want="ssl:${l}" '
+      $0 == want {inblock=1; next}
+      /^[^ ]/    {inblock=0}
+      inblock && /running/ && /true/ {found=1}
+      END {exit found ? 0 : 1}' || tls_down="${tls_down} ssl:${l}"
+  done
+  if [ -n "${tls_down}" ]; then
+    row "emqx-tls" fail "certs readable but listener down:${tls_down}"
+  else
+    row "emqx-tls" ok "certs readable, mTLS+serverTLS listening"
+  fi
+fi
+
 chk_exec "nginx"  tesa-nginx nginx -t
 if docker exec tesa-apisix sh -c 'grep -qsl . /proc/[0-9]*/comm 2>/dev/null; for c in /proc/[0-9]*/comm; do cat "$c" 2>/dev/null; done | grep -qE "openresty|nginx"'; then
   row "apisix" ok "gateway running"
