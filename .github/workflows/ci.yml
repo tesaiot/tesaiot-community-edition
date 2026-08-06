@@ -64,6 +64,37 @@ jobs:
       - name: Byte-compile check
         run: python -m compileall -q services/api services/mqtt-bridge
 
+  unit-tests:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # pymongo comes along for bson.ObjectId, which data_fixes imports. Pinned to
+      # the version in services/api/requirements.txt so the tests exercise the
+      # same library the service runs against.
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest "pymongo==4.6.3"
+      # These tests need no stack — no Mongo, no Vault, no broker — so they run
+      # here without any service containers or secrets.
+      #
+      # TZ is set explicitly to the compose default. The timestamp helpers exist
+      # because a naive datetime means different things in different zones, so a
+      # suite that only ever ran in the runner's UTC would not be exercising the
+      # case that broke.
+      - name: Run unit tests (TZ=Asia/Bangkok)
+        env:
+          TZ: Asia/Bangkok
+        run: python -m pytest
+      # Then again in UTC: the helpers must produce the same instant either way.
+      # If these two runs ever disagree, a zone assumption has leaked back in.
+      - name: Run unit tests (TZ=UTC)
+        env:
+          TZ: UTC
+        run: python -m pytest
+
   admin-ui:
     name: Build admin UI
     runs-on: ubuntu-latest
