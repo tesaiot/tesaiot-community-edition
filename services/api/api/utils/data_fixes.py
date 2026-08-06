@@ -261,25 +261,36 @@ def fix_certificate_data(data):
     if not data.get('serial_number'):
         data['serial_number'] = data.get('certificate_id', '')[:16].upper()
     
-    # Fix validity dates
+    # Fix validity dates.
+    #
+    # Certificate dates are UTC (Vault PKI and x509 notBefore/notAfter both are),
+    # but arrive here naive from MongoDB. This block used to serialise them without
+    # an offset while fix_device_data() above did attach one — so two fields of the
+    # same response disagreed about what a bare timestamp meant, and the browser
+    # read the offset-less one as local time.
+    from .timefmt import iso_from_utc_naive, now_utc
+
     for field in ['valid_from', 'valid_to', 'issued_at']:
         if field in data and data[field]:
-            if isinstance(data[field], str):
+            if isinstance(data[field], (datetime, str)):
                 try:
-                    dt = datetime.fromisoformat(data[field].replace('Z', '+00:00'))
-                    data[field] = dt.isoformat()
-                except:
-                    data[field] = datetime.now().isoformat()
-            elif isinstance(data[field], datetime):
-                data[field] = data[field].isoformat()
+                    data[field] = iso_from_utc_naive(data[field])
+                except Exception:
+                    data[field] = now_utc().isoformat()
     
-    # Calculate days until expiry
+    # Calculate days until expiry.
+    #
+    # valid_to now always carries an offset (see above), so 'now' must be aware
+    # too: subtracting a naive datetime from an aware one raises TypeError, the
+    # bare except below swallows it, and every certificate silently reports
+    # 0 days remaining — an expiry warning that fires constantly is one nobody
+    # reads. now_utc() keeps both sides aware.
     if data.get('valid_to'):
         try:
             expiry = datetime.fromisoformat(data['valid_to'].replace('Z', '+00:00'))
-            days_left = (expiry - datetime.now()).days
+            days_left = (expiry - now_utc()).days
             data['days_until_expiry'] = max(0, days_left)
-        except:
+        except Exception:
             data['days_until_expiry'] = 0
     
     # Remove None values
@@ -384,17 +395,24 @@ def fix_telemetry_data(data):
     # Create clean telemetry object
     cleaned = {}
     
-    # Handle timestamp
+    # Handle timestamp.
+    #
+    # These come from MongoDB, where BSON stores UTC and pymongo hands the value
+    # back with no tzinfo. Serialising that naive datetime produced a string with
+    # no offset, which a browser reads as *local* time — the telemetry chart was
+    # seven hours behind for exactly this reason under the compose default
+    # TZ=Asia/Bangkok. iso_from_utc_naive() states the assumption (this is UTC)
+    # instead of leaving it implicit.
+    from .timefmt import iso_from_utc_naive, now_utc
+
     timestamp = data.get('timestamp')
     if timestamp:
-        if isinstance(timestamp, datetime):
-            cleaned['timestamp'] = timestamp.isoformat()
-        elif isinstance(timestamp, str):
-            cleaned['timestamp'] = timestamp
+        if isinstance(timestamp, (datetime, str)):
+            cleaned['timestamp'] = iso_from_utc_naive(timestamp)
         else:
-            cleaned['timestamp'] = datetime.now().isoformat()
+            cleaned['timestamp'] = now_utc().isoformat()
     else:
-        cleaned['timestamp'] = datetime.now().isoformat()
+        cleaned['timestamp'] = now_utc().isoformat()
     
     # Handle device_id
     device_id = data.get('device_id', '')

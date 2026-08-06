@@ -16,6 +16,12 @@ import logging
 import time
 import jwt
 from datetime import datetime
+# Every timestamp this service puts on the wire renders in a browser, so it must
+# carry an offset. datetime.utcnow().isoformat() does not — it emits naive UTC,
+# which a browser reads as local time. now_utc() is the same instant with '+00:00'.
+# The remaining datetime.utcnow() calls below are internal bookkeeping that is
+# never serialised, and are correct as they stand.
+from ..utils.timefmt import now_utc, iso_from_utc_naive
 from typing import Dict, Set, Optional, Any
 from collections import defaultdict, deque
 from threading import Thread, Lock
@@ -369,7 +375,7 @@ class WebSocketTelemetryService:
                     ws.send(json.dumps({
                         'type': 'error',
                         'message': 'Authentication failed',
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': now_utc().isoformat()
                     }))
                     ws.close()
                     return
@@ -395,7 +401,7 @@ class WebSocketTelemetryService:
                 'connection_id': connection_id,
                 'authenticated': user_data is not None,
                 'user_id': user_data.get('sub') if user_data else None,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': now_utc().isoformat(),
                 'server_info': {
                     'protocol': 'native_websocket',
                     'version': '1.0.0',
@@ -413,7 +419,7 @@ class WebSocketTelemetryService:
                         ws.send(json.dumps({
                             'type': 'error',
                             'message': 'Rate limit exceeded',
-                            'timestamp': datetime.utcnow().isoformat()
+                            'timestamp': now_utc().isoformat()
                         }))
                         continue
                     
@@ -431,7 +437,7 @@ class WebSocketTelemetryService:
                         ws.send(json.dumps({
                             'type': 'error',
                             'message': 'Invalid JSON format',
-                            'timestamp': datetime.utcnow().isoformat()
+                            'timestamp': now_utc().isoformat()
                         }))
                     
                     # Update last activity
@@ -494,7 +500,7 @@ class WebSocketTelemetryService:
                 # Handle ping/keepalive
                 send_func({
                     'type': 'pong',
-                    'timestamp': datetime.utcnow().isoformat(),
+                    'timestamp': now_utc().isoformat(),
                     'echo': message.get('data')
                 })
             
@@ -527,7 +533,7 @@ class WebSocketTelemetryService:
                         'status': 'success' if granted and not denied else (
                             'partial' if granted else 'denied'
                         ),
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': now_utc().isoformat()
                     })
 
                     if denied:
@@ -542,7 +548,7 @@ class WebSocketTelemetryService:
                     send_func({
                         'type': 'error',
                         'message': 'Authentication required for device subscriptions',
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': now_utc().isoformat()
                     })
             
             elif message_type == 'unsubscribe':
@@ -562,7 +568,7 @@ class WebSocketTelemetryService:
                     'type': 'unsubscribed',
                     'deviceIds': device_ids,
                     'status': 'success',
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': now_utc().isoformat()
                 })
                 
                 logger.info(f"Connection {connection_id} unsubscribed from devices: {device_ids}")
@@ -576,17 +582,20 @@ class WebSocketTelemetryService:
                         'device_subscriptions': len(self.device_subscriptions),
                         'total_subscriptions': sum(len(subs) for subs in self.device_subscriptions.values()),
                         'user_id': conn_data['user_data'].get('sub') if conn_data['user_data'] else None,
-                        'connected_at': conn_data['connected_at'].isoformat(),
+                        # Stored above as a naive datetime.utcnow(); say so rather
+                        # than emitting a bare timestamp next to the offset-carrying
+                        # 'timestamp' field two lines below.
+                        'connected_at': iso_from_utc_naive(conn_data['connected_at']),
                         'subscribed_devices': list(conn_data['subscriptions'])
                     },
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': now_utc().isoformat()
                 })
             
             else:
                 send_func({
                     'type': 'error',
                     'message': f'Unknown message type: {message_type}',
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': now_utc().isoformat()
                 })
                 
         except Exception as e:
@@ -595,7 +604,7 @@ class WebSocketTelemetryService:
                 send_func({
                     'type': 'error',
                     'message': 'Internal server error',
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': now_utc().isoformat()
                 })
     
     def broadcast_telemetry(self, device_id: str, telemetry_data: Dict[str, Any], source: str = 'unknown'):
@@ -608,7 +617,7 @@ class WebSocketTelemetryService:
             'deviceId': device_id,
             'data': telemetry_data,
             'source': source,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': now_utc().isoformat()
         }
         
         json_message = json.dumps(message)
@@ -636,7 +645,7 @@ class WebSocketTelemetryService:
         message = {
             'type': 'metrics_update',
             'data': metrics,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': now_utc().isoformat()
         }
         
         json_message = json.dumps(message)
@@ -808,7 +817,7 @@ class WebSocketTelemetryService:
                         reverse=True
                     )[:10]
                 ],
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': now_utc().isoformat()
             }
     
     def shutdown(self):
@@ -825,7 +834,7 @@ class WebSocketTelemetryService:
                     ws.send(json.dumps({
                         'type': 'server_shutdown',
                         'message': 'Server is shutting down',
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': now_utc().isoformat()
                     }))
                     ws.close()
                 except:

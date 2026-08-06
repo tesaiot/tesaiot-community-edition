@@ -14,6 +14,9 @@ Compatible with browser WebSocket API
 import logging
 import json
 from datetime import datetime
+# Payload timestamps must carry an offset or a browser reads them as local
+# time; utcnow().isoformat() emits none. Same instant, honest on the wire.
+from ..utils.timefmt import now_utc
 from flask import request
 from simple_websocket import Server, ConnectionClosed
 
@@ -32,7 +35,7 @@ def handle_websocket():
         ws.send(json.dumps({
             'type': 'connected',
             'status': 'connected',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': now_utc().isoformat()
         }))
         
         # Generate unique connection ID
@@ -57,7 +60,7 @@ def handle_websocket():
                         # Respond to ping
                         ws.send(json.dumps({
                             'type': 'pong',
-                            'timestamp': datetime.utcnow().isoformat(),
+                            'timestamp': now_utc().isoformat(),
                             'echo': message.get('data')
                         }))
                         
@@ -70,7 +73,7 @@ def handle_websocket():
                                 'type': 'subscribed',
                                 'device_id': device_id,
                                 'status': 'subscribed',
-                                'timestamp': datetime.utcnow().isoformat()
+                                'timestamp': now_utc().isoformat()
                             }))
                             logger.info(f"Client {connection_id} subscribed to device: {device_id}")
                             
@@ -82,7 +85,7 @@ def handle_websocket():
                                 'type': 'unsubscribed',
                                 'device_id': device_id,
                                 'status': 'unsubscribed',
-                                'timestamp': datetime.utcnow().isoformat()
+                                'timestamp': now_utc().isoformat()
                             }))
                             logger.info(f"Client {connection_id} unsubscribed from device: {device_id}")
                             
@@ -119,7 +122,7 @@ def broadcast_telemetry(device_id, telemetry_data):
         'type': 'telemetry_update',
         'device_id': device_id,
         'data': telemetry_data,
-        'timestamp': datetime.utcnow().isoformat()
+        'timestamp': now_utc().isoformat()
     })
     
     # Send to all active connections
@@ -147,7 +150,7 @@ def broadcast_device_status(device_id, status):
         'type': 'device_status',
         'device_id': device_id,
         'status': status,
-        'timestamp': datetime.utcnow().isoformat()
+        'timestamp': now_utc().isoformat()
     })
     
     # Send to all active connections

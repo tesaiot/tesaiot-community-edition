@@ -61,6 +61,7 @@ from ..services.notification_acl_service import notification_acl_service
 # from ..services.auto_device_registration_service import auto_device_registration_service
 auto_device_registration_service = None  # Placeholder
 from ..utils.data_fixes import fix_device_data
+from ..utils.timefmt import iso_from_utc_naive
 
 logger = logging.getLogger(__name__)
 
@@ -190,8 +191,14 @@ def get_last_telemetry(device_id: str):
                     cursor = db.telemetry.find({'device_id': device_id}).sort('timestamp', -1).limit(limit)
                     for doc in cursor:
                         ts = doc.get('timestamp')
-                        if hasattr(ts, 'isoformat'):
-                            doc['timestamp'] = ts.isoformat()
+                        if ts is not None:
+                            # This is what the admin UI telemetry chart reads
+                            # (GET /api/v1/devices/<id>/telemetry). It queries
+                            # db.telemetry directly and never goes through
+                            # fix_telemetry_data(), so it needs the same UTC
+                            # declaration or the chart renders every point in
+                            # the container's zone instead of the real instant.
+                            doc['timestamp'] = iso_from_utc_naive(ts)
                         doc.pop('_id', None)
                         items.append(doc)
             except Exception:
@@ -378,7 +385,9 @@ def get_device_details(device_id):
         
         device['telemetry_summary'] = {
             'total_records': telemetry_count,
-            'last_update': last_telemetry['timestamp'].isoformat() if last_telemetry else None
+            # Same Mongo-naive value as above; declare it UTC rather than emitting
+            # a bare timestamp the browser will read as local time.
+            'last_update': iso_from_utc_naive(last_telemetry['timestamp']) if last_telemetry else None
         }
         
         # Get certificate info if exists

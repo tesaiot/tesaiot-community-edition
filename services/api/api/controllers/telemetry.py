@@ -22,6 +22,7 @@ from ..core.auth import require_api_key, require_api_key_or_mtls, require_auth, 
 from ..utils.validation import (
     validate_device_id, sanitize_string, validate_request_size
 )
+from ..utils.timefmt import iso_from_utc_naive
 
 # Protected Update (OTA) is out of scope for the Community Edition.
 logger = logging.getLogger(__name__)
@@ -1327,7 +1328,12 @@ def get_unified_telemetry(device_id):
 
                 for doc in cursor:
                     point = {
-                        'timestamp': doc['timestamp'].isoformat() if hasattr(doc['timestamp'], 'isoformat') else doc['timestamp'],
+                        # MongoDB path. BSON dates are UTC and pymongo returns
+                        # them naive; the shipped React dashboard example reads
+                        # this endpoint (examples/applications/react-telemetry-
+                        # dashboard), so a bare isoformat() puts its chart in the
+                        # viewer's zone rather than the instant we recorded.
+                        'timestamp': iso_from_utc_naive(doc['timestamp']),
                         'device_id': doc['device_id'],
                     }
 
