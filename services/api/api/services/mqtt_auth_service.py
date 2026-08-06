@@ -53,6 +53,37 @@ def _is_trustm_uid_format(client_id: str) -> bool:
 
     return False
 
+
+def _trustm_uid_match(uid: str):
+    """Mongo query fragment matching a Trust M UID regardless of hex letter case.
+
+    The UID is a hex string, so its case carries no meaning — but the two sides
+    disagree in practice: the device reports it uppercase in the MQTT client id
+    (CD16334D...), while the platform stores it lowercase when the bundle is
+    generated (cd16334d...). An exact match therefore failed and the device was
+    rejected as "not pre-registered" even though its record was right there.
+
+    Matching on a small $in set keeps the trustm_uid index usable, which a
+    case-insensitive regex would not.
+    """
+    if not uid:
+        return uid
+    return {'$in': list({uid, uid.lower(), uid.upper()})}
+
+
+def _uid_equal(a, b) -> bool:
+    """Compare two Trust M UIDs ignoring hex letter case.
+
+    Same reason as :func:`_trustm_uid_match`. Fixing only the database lookup is
+    not enough: these comparisons run one step later and would reject the same
+    device again with "does not match trustm_uid", which reads like a different
+    problem and is not.
+    """
+    if not a or not b:
+        return False
+    return str(a).strip().lower() == str(b).strip().lower()
+
+
 def validate_mqtt_auth(webhook_data):
     """
     Validate MQTT authentication request from EMQX webhook.
@@ -167,7 +198,7 @@ def validate_mqtt_auth(webhook_data):
         if not device and _is_trustm_uid_format(client_id):
             logger.info(f"client_id '{client_id}' looks like Trust M UID, trying trustm_uid lookup...")
             device = db.devices.find_one({
-                'trustm_uid': client_id,
+                'trustm_uid': _trustm_uid_match(client_id),
                 'status': {'$in': ['awaiting_first_connection', 'active']}
             })
             if device:
@@ -176,7 +207,7 @@ def validate_mqtt_auth(webhook_data):
         # Step 2.5: For Trust M devices, check for different identification methods
         if not device and peer_cert_cn:
             # Method 1: CN matches registered Trust M UID (e.g., hex string like "CD1633940100...")
-            device = db.devices.find_one({'trustm_uid': peer_cert_cn})
+            device = db.devices.find_one({'trustm_uid': _trustm_uid_match(peer_cert_cn)})
             if device:
                 logger.info(f"Device found by Trust M UID in CN: {peer_cert_cn} -> device_id: {device.get('device_id')}")
 
@@ -194,7 +225,7 @@ def validate_mqtt_auth(webhook_data):
 
                     # Find pre-registered device by Trust M UID
                     device = db.devices.find_one({
-                        'trustm_uid': trustm_uid,
+                        'trustm_uid': _trustm_uid_match(trustm_uid),
                         'status': {'$in': ['awaiting_first_connection', 'active']}
                     })
 
@@ -447,8 +478,10 @@ def validate_mqtt_auth(webhook_data):
                         cn_valid = True
                         auth_method = 'device_id_match'
 
-                    # Method 2: CN matches Trust M UID (Trust M factory certificate)
-                    elif device.get('trustm_uid') and peer_cert_cn == device.get('trustm_uid'):
+                    # Method 2: CN matches Trust M UID (Trust M factory certificate).
+                    # Case-insensitive: the UID is hex, the device reports it
+                    # uppercase and the platform stores it lowercase.
+                    elif device.get('trustm_uid') and _uid_equal(peer_cert_cn, device.get('trustm_uid')):
                         cn_valid = True
                         auth_method = 'trustm_uid_match'
                         logger.info(f"Trust M UID authentication: CN {peer_cert_cn} matches registered Trust M UID for device {client_id}")
@@ -458,7 +491,8 @@ def validate_mqtt_auth(webhook_data):
                         # For Infineon factory certificates:
                         # - CN is always "InfineonIoTNode" (not the device ID or Trust M UID)
                         # - client_id MUST match the registered Trust M UID
-                        if client_id == device.get('trustm_uid'):
+                        #   (hex, so compared without regard to letter case)
+                        if _uid_equal(client_id, device.get('trustm_uid')):
                             # Optionally verify fingerprint if factory cert was already stored
                             if device.get('factory_certificate', {}).get('active'):
                                 if peer_cert:
@@ -521,8 +555,10 @@ def validate_mqtt_auth(webhook_data):
                         cn_valid = True
                         auth_method = 'device_id_match'
 
-                    # Method 2: CN matches Trust M UID (Trust M factory certificate)
-                    elif device.get('trustm_uid') and peer_cert_cn == device.get('trustm_uid'):
+                    # Method 2: CN matches Trust M UID (Trust M factory certificate).
+                    # Case-insensitive: the UID is hex, the device reports it
+                    # uppercase and the platform stores it lowercase.
+                    elif device.get('trustm_uid') and _uid_equal(peer_cert_cn, device.get('trustm_uid')):
                         cn_valid = True
                         auth_method = 'trustm_uid_match'
                         logger.info(f"Trust M UID authentication: CN {peer_cert_cn} matches registered Trust M UID for device {client_id}")
@@ -532,7 +568,8 @@ def validate_mqtt_auth(webhook_data):
                         # For Infineon factory certificates:
                         # - CN is always "InfineonIoTNode" (not the device ID or Trust M UID)
                         # - client_id MUST match the registered Trust M UID
-                        if client_id == device.get('trustm_uid'):
+                        #   (hex, so compared without regard to letter case)
+                        if _uid_equal(client_id, device.get('trustm_uid')):
                             # Optionally verify fingerprint if factory cert was already stored
                             if device.get('factory_certificate', {}).get('active'):
                                 import hashlib

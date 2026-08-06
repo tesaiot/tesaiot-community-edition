@@ -596,10 +596,18 @@ def _check_device_acl(client_id, action, topic):
 
         # For Trust M devices: client_id = trustm_uid, but topics use device_id
         # Need to lookup device by trustm_uid to get the associated device_id
+        #
+        # The UID is hex and the device reports it uppercase while the platform
+        # stores it lowercase, so match on both. Without this the ACL lookup
+        # misses, actual_device_id falls back to the client id (the UID), and
+        # every publish to devices/<device_id>/... is denied — the connection
+        # succeeds and then silently carries no telemetry, which is far harder
+        # to diagnose than a refused connection.
+        uid_variants = list({client_id, client_id.lower(), client_id.upper()})
         device = db.devices.find_one({
             '$or': [
                 {'device_id': client_id},
-                {'trustm_uid': client_id}
+                {'trustm_uid': {'$in': uid_variants}}
             ]
         })
 
