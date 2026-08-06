@@ -422,7 +422,21 @@ class BaseConfig:
     LOG_DIR = os.getenv('LOG_DIR', '/app/logs')
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-    # Protected update feature gate & paths
+    # Protected update feature gate & paths.
+    #
+    # ENTERPRISE ONLY — inert in the Community Edition. OPTIGA Trust M Protected
+    # Update is not shipped here (see PRINCIPLES.md and examples/security/ncsa),
+    # there is no protected_update service or MQTT bridge in this build, and no
+    # code below reads these settings. The default paths point into
+    # /opt/tesa/protected-update, which this image does not contain.
+    #
+    # Setting PROTECTED_UPDATE_ENABLED=true therefore enables nothing. The block
+    # is kept so a device record or audit entry carrying a protected-update
+    # provisioning method still deserialises, and so the setting names match
+    # Enterprise Cloud for anyone migrating between the two.
+    #
+    # To rotate an OPTIGA Trust M device onto platform-issued credentials in CE,
+    # use the CSR workflow (services/api/api/services/csr_workflow_service.py).
     PROTECTED_UPDATE_ENABLED = os.getenv('PROTECTED_UPDATE_ENABLED', 'false').lower() == 'true'
     PROTECTED_UPDATE_FEATURE_FLAG = os.getenv('PROTECTED_UPDATE_FLAG', 'protected_update')
     PROTECTED_UPDATE_CLI_PATH = os.getenv(

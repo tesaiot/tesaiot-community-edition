@@ -69,6 +69,7 @@ import { DevicePictureUpload } from './DevicePictureUpload';
 import { DeviceSchemaEditor } from './DeviceSchemaEditor';
 import { CertificateOptionsTab } from './CertificateOptionsTab';
 import { CertificateTTLValue } from '@/components/CertificateTTL';
+import { EnterpriseOnlyBadge, EnterpriseOnlyNote } from '@/components/common/EnterpriseOnly';
 import { useAuth } from '@/hooks/useAuth';
 import { tesaApi } from '@/services/api/tesaApi';
 import { deviceService } from '../services/deviceService';
@@ -1590,17 +1591,25 @@ export const DeviceDialog: React.FC<DeviceDialogProps> = ({
                       <AlertDescription className="space-y-2 text-blue-800">
                         <p>
                           <strong>Trust M Workflow:</strong> Factory certificates are used only for the first connection.
-                          After the device is online, trigger a <strong>Protected Update</strong> job to rotate into a TESAIoT-issued certificate.
+                          After the device is online, the certificate is rotated to a TESAIoT-issued one.
                         </p>
                         <ul className="list-disc list-inside text-sm space-y-1">
                           <li>Store the Infineon trust anchor into OID <code>0xE0E8</code>.</li>
                           <li>Keep the factory certificate in OID <code>0xE0E9</code> (optional, for audit).</li>
-                          <li>Protected Update writes the TESAIoT certificate into OID <code>0xE0E1</code> and disables factory access automatically.</li>
+                          <li>
+                            Protected Update <EnterpriseOnlyBadge /> writes the TESAIoT certificate into
+                            OID <code>0xE0E1</code> and disables factory access automatically.
+                          </li>
                         </ul>
                       </AlertDescription>
                     </Alert>
+                    <EnterpriseOnlyNote feature="OPTIGA&trade; Trust M Protected Update">
+                      In the Community Edition, rotate the device onto a TESAIoT-issued
+                      certificate with the CSR workflow instead: the device generates its key
+                      in the secure element and submits a CSR, which this build signs.
+                    </EnterpriseOnlyNote>
                     <p className="text-sm text-muted-foreground">
-                      Use the generated bundle to populate your project. Download the Protected Update manifest after device creation from the device details page.
+                      Use the generated bundle to populate your project.
                     </p>
                   </CardContent>
                 </Card>
@@ -1749,8 +1758,9 @@ export const DeviceDialog: React.FC<DeviceDialogProps> = ({
                       )}
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Use this bundle for the first boot. After the device connects with its factory certificate, run a
-                      Protected Update job to rotate into TESAIoT-issued credentials.
+                      Use this bundle for the first boot. After the device connects with its factory
+                      certificate, rotate it onto TESAIoT-issued credentials with the CSR workflow.
+                      Rotation via Protected Update <EnterpriseOnlyBadge /> is not available in this build.
                     </p>
                   </CardContent>
                 </Card>

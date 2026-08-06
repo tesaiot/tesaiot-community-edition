@@ -43,6 +43,7 @@ import { tesaApi } from '@/services/api/tesaApi';
 import { deviceService } from '../services/deviceService';
 import { useAuth } from '@/hooks/useAuth';
 import authFetch from '@/utils/auth-fetch';
+import { EnterpriseOnlyBadge } from '@/components/common/EnterpriseOnly';
 
 interface DeviceCredentialsProps {
   device: Device & { auth_mode?: 'mtls' | 'server_tls' | 'optiga_trust_mtls' };
@@ -1394,8 +1395,8 @@ function publishTelemetry(data) {
                     <CardContent className="space-y-3">
                       <p className="text-sm text-muted-foreground">
                         Bundle includes the Infineon trust anchor, the recorded factory certificate, a factory metadata
-                        summary, and a preconfigured `mqtt_client_config.h`. Use it to preload OPTIGA™ OIDs (0xE0E8/0xE0E9)
-                        before running the Protected Update rotation job.
+                        summary, and a preconfigured `mqtt_client_config.h`. Use it to preload OPTIGA™ OIDs
+                        (0xE0E8/0xE0E9) before rotating the device onto TESAIoT-issued credentials.
                       </p>
                       <Button
                         variant="primary"
@@ -1421,8 +1422,12 @@ function publishTelemetry(data) {
                             <li><code>0xE0C2</code> – Factory UID (read-only)</li>
                             <li><code>0xE0E8</code> – Infineon trust anchor</li>
                             <li><code>0xE0E9</code> – Factory certificate (optional)</li>
-                            <li><code>0xE0F1</code> – CSR/key slot for Protected Update rotation</li>
+                            <li><code>0xE0F1</code> – CSR/key slot used for certificate rotation</li>
                           </ul>
+                          <p>
+                            Rotation via Protected Update <EnterpriseOnlyBadge /> — in this build,
+                            rotate with the CSR workflow.
+                          </p>
                         </AlertDescription>
                       </Alert>
                     </CardContent>

@@ -73,6 +73,7 @@ import { getFeatureFlags } from '@/config/features.config';
 import authFetch from '@/utils/auth-fetch';
 import { AuthTokenManager } from '@/utils/auth-token-manager';
 import { deviceService } from '../services/deviceService';
+import { EnterpriseOnlyBadge } from '@/components/common/EnterpriseOnly';
 
 interface CertificateGenerationDialogProps {
   isOpen: boolean;
@@ -1161,8 +1162,12 @@ export const CertificateGenerationDialog: React.FC<CertificateGenerationDialogPr
                         <li><code>0xE0C2</code> – Factory UID (read-only)</li>
                         <li><code>0xE0E8</code> – Infineon trust anchor</li>
                         <li><code>0xE0E9</code> – Factory certificate (optional)</li>
-                        <li><code>0xE0F1</code> – CSR/key slot for TESAIoT Protected Update rotation</li>
+                        <li><code>0xE0F1</code> – CSR/key slot used for certificate rotation</li>
                       </ul>
+                      <p>
+                        Rotation via Protected Update <EnterpriseOnlyBadge /> — in this build,
+                        rotate with the CSR workflow.
+                      </p>
                     </AlertDescription>
                   </Alert>
                 </CardContent>

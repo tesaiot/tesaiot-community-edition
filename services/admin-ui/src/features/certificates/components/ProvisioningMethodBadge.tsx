@@ -44,9 +44,14 @@ const PROVISIONING_CONFIGS: Record<string, ProvisioningConfig> = {
     variant: 'default',
     className: 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300',
   },
+  // Kept as a display case even though this build cannot produce it: a device
+  // record can carry this method after being imported from an Enterprise Cloud
+  // deployment, and rendering it as 'Unknown' would misreport a certificate that
+  // was provisioned perfectly well. The description says which edition issues it
+  // so nobody reads the badge as an offer.
   hsm_protected_update: {
     label: 'HSM-PU',
-    description: 'OPTIGA Trust M Protected Update - RFC 9019 SUIT compliant hardware-secured provisioning',
+    description: 'OPTIGA Trust M Protected Update - RFC 9019 SUIT compliant hardware-secured provisioning (issued by TESAIoT Enterprise Cloud; not available in the Community Edition)',
     icon: <ShieldCheck className="h-3 w-3 flex-shrink-0" />,
     variant: 'default',
     className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-300',

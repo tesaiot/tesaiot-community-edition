@@ -51,7 +51,15 @@ if not INTERNAL_SERVICE_SECRET:
         "service secret configured."
     )
 
-# Allowed internal services
+# Allowed internal services.
+#
+# 'mqtt-bridge-protected-update' is ENTERPRISE ONLY and has no counterpart in
+# this build — CE ships no Protected Update bridge, so nothing ever presents
+# that identity and 'protected-update.execute' is never checked against
+# anything. It is listed rather than removed so an Enterprise Cloud bridge
+# pointed at a CE API is rejected by the shared secret (a real authentication
+# failure) instead of by an unknown-service branch that would read as a
+# misconfiguration. Grant no new permissions to it.
 ALLOWED_SERVICES = {
     'mqtt-bridge': ['certificate.sign', 'device.read'],
     'mqtt-bridge-csr': ['certificate.sign'],
