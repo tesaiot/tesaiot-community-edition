@@ -5,6 +5,89 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-08-06
+
+### Fixed
+
+- **Telemetry timestamps now say which timezone they are in.** MongoDB stores
+  BSON dates in UTC and pymongo hands them back with no `tzinfo`; a bare
+  `.isoformat()` on one of those produces a string with no offset, and every
+  browser reads that as *local* time. With the compose default
+  `TZ=Asia/Bangkok`, the dashboard telemetry chart therefore rendered seven
+  hours behind the instant that was actually recorded. The new
+  `api/utils/timefmt.py` refuses to guess between the two kinds of naive
+  datetime — `utcnow()` produces naive UTC, `now()` produces naive local, and
+  they need *opposite* corrections — so the caller states which it holds with
+  `iso_from_utc_naive()` or `iso_from_local_naive()`. Fixed on the paths that
+  reach a browser: `GET /api/v1/devices/<id>/telemetry` (what the admin UI
+  chart reads), `GET /api/v1/telemetry/unified/<id>` (what the shipped React
+  dashboard example reads), the device-details telemetry summary, the shared
+  `fix_telemetry_data()`/`fix_certificate_data()` shapers, and every payload on
+  the `/ws` telemetry socket. Deliberately unchanged: the TimescaleDB read path
+  (its `time` columns are `TIMESTAMPTZ`, so psycopg2 already returns an aware
+  datetime), the call sites that append their own `'Z'` (adding an offset there
+  would emit `...+00:00Z`, which is `Invalid Date`), and internal bookkeeping
+  timestamps that are never serialised.
+- **Certificates no longer all report "0 days until expiry".** Once
+  `valid_to` carried a UTC offset, the `days_until_expiry` arithmetic beside it
+  was still comparing against a naive `datetime.now()`. Subtracting a naive
+  datetime from an aware one raises `TypeError`, the surrounding `except`
+  swallowed it, and every certificate came back with `0` — an expiry warning
+  that fires constantly is one nobody reads. Both sides are now aware.
+- **OPTIGA™ Trust M devices are matched by UID without regard to hex letter
+  case.** The device reports its UID uppercase in the MQTT client id
+  (`CD16334D…`) while the platform stores it lowercase when the device bundle
+  is generated (`cd16334d…`). The UID is hex, so the case carries no meaning,
+  but an exact match rejected devices whose record was sitting right there —
+  logged, misleadingly, as *"Trust M device not pre-registered"*. Both halves
+  are fixed: the device lookup in `mqtt_auth_service`, and the ACL lookup in
+  `emqx_auth` — where a miss was worse than a refused connection, because the
+  device connected successfully and then silently carried no telemetry. The
+  lookup uses a small `$in` set rather than a case-insensitive regex so the
+  `trustm_uid` index stays usable.
+
+### Added
+
+- **Trust anchors that are not part of the Vault PKI now survive certificate
+  renewal.** `vault-ca-bundle.pem` is rewritten from the Vault bundle on every
+  renewal, so a CA appended to it by hand — an organisation's own device CA, or
+  the Infineon factory CA needed to accept an OPTIGA™ Trust M secure element —
+  disappeared the next time the server certificate rotated. Devices that had
+  worked for weeks began failing with `unknown_ca` while the broker still
+  reported healthy. Drop the certificate in
+  `/opt/emqx/etc/certs/trust-anchors.d/` instead and `split-emqx-bundle.sh`
+  re-appends it on every run. The directory is created automatically; files
+  that do not parse as a PEM certificate are skipped with a warning rather than
+  appended, since a truncated anchor would corrupt the bundle and stop every
+  TLS listener. Documented in `docs/{en,th}/security-tls-mtls.md`.
+- **`healthcheck.sh` now reports an `emqx-tls` row.** `emqx ctl status` answers
+  "is the broker alive?", which stays green while every TLS handshake is being
+  refused. The new check covers the two things that actually have to hold: that
+  the broker can *read* its key, certificate and CA bundle (asked from its own
+  side — `docker exec` runs as the image's uid, so a root-owned key that EMQX
+  cannot open is caught), and that the `ssl:mtls` and `ssl:servertls` listeners
+  are genuinely running.
+- **Python unit tests and a CI job to run them.** `services/api/tests/` with
+  coverage of the timestamp helpers, the two response shapers that use them,
+  and the Trust M UID matching. They need no running stack. CI runs the suite
+  twice — once under `TZ=Asia/Bangkok` and once under `TZ=UTC`; if the two runs
+  ever disagree, a timezone assumption has leaked back into the code.
+
+### Changed
+
+- **Capabilities that belong to Enterprise Cloud are now labelled as such.**
+  The admin UI told the operator to "trigger a Protected Update job" to rotate
+  an OPTIGA™ Trust M device onto platform-issued credentials, but Protected
+  Update is not shipped in the Community Edition (see `PRINCIPLES.md` and
+  `examples/security/ncsa/`) — there is no such job in this build. Instructions
+  for a button that is not there read as a broken install long before they read
+  as an edition boundary. Those screens now carry an *Enterprise only* marker
+  and point at the CSR workflow, which is the supported way to do the same
+  rotation here. The inert `PROTECTED_UPDATE_*` settings and the
+  `mqtt-bridge-protected-update` service identity are annotated rather than
+  removed, so the configuration surface still matches Enterprise Cloud for
+  anyone migrating between the two.
+
 ## [1.3.0] - 2026-07-09
 
 ### Added
