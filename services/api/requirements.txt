@@ -33,7 +33,16 @@ bcrypt==4.0.1
 # pyOpenSSL 23.2.0 caps cryptography at <42.
 cryptography==42.0.8
 pyOpenSSL==24.1.0
-authlib==1.3.2
+# authlib removed 2026-08-06. Nothing in this service imported it — one grep hit
+# across the whole repository, and that hit was this line — and `pip show` in a
+# fully installed environment reported no reverse dependencies. It appears to
+# have come along when CE was split out of the full platform.
+#
+# It was not free to keep: authlib 1.3.2 carries CVE-2026-27962, an
+# authentication bypass via JWK header, which Trivy reports as CRITICAL. A
+# vulnerability in code nothing calls cannot be exploited, but it still fails
+# the scan, and every reader has to re-derive that reasoning. Deleting it closes
+# the finding outright. JWT handling here is PyJWT (see api/core/auth.py).
 
 # MQTT (EMQX auth/webhook integration)
 paho-mqtt==2.1.0
