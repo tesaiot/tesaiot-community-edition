@@ -206,7 +206,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Trivy scan (deps + IaC/Dockerfile misconfig)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -226,7 +226,7 @@ jobs:
       - name: Build admin-ui image
         run: docker build -t tesa-admin-ui:ci ./services/admin-ui
       - name: Trivy image scan (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
         with:
           scan-type: image
           image-ref: tesa-admin-ui:ci
@@ -234,7 +234,7 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
       - name: Generate SBOM (CycloneDX)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8  # v0.36.0
         with:
           scan-type: image
           image-ref: tesa-admin-ui:ci

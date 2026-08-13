@@ -32,7 +32,6 @@ env_set() {  # key value   (same portable in-place edit as init-vault-pki.sh)
 }
 
 MONGO_C="tesa-mongodb"
-API_C="tesa-api"
 
 [ -f "${ENV_FILE}" ] || die ".env not found - nothing to reset"
 
