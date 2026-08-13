@@ -26,7 +26,12 @@ redis==4.6.0
 hvac==1.1.1
 
 # Auth + crypto (JWT, bcrypt, x509)
-PyJWT==2.8.0
+# 2.13.0 clears six advisories, including CVE-2026-32597: PyJWT accepted unknown `crit` header
+# extensions, contrary to RFC 7515. This service signs and verifies its own
+# HS256 tokens with its own JWT_SECRET (api/core/auth.py), so the practical
+# exposure is low — but it is a small, same-major bump, so there is no reason
+# to carry the finding.
+PyJWT==2.13.0
 python-jose==3.4.0
 bcrypt==4.0.1
 # cryptography 42.0.8 (CVE fixes); pyOpenSSL bumped in lockstep because
