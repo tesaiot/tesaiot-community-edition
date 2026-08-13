@@ -50,9 +50,16 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
-  
+
+  // Every hook has to run on every render, in the same order — React matches
+  // them positionally, so one that sits behind the early return below is called
+  // on some renders and skipped on others. That is what produces "Rendered
+  // fewer hooks than expected", and it crashes the component rather than
+  // degrading it. Call it here and guard the result instead.
+  const formContext = useFormContext();
+
   // PRODUCTION FIX: Return safe defaults instead of throwing error
-  if (!fieldContext) {
+  if (!fieldContext || !formContext) {
     console.warn('useFormField called outside FormField - using defaults');
     return {
       id: 'form-field-default',
@@ -67,7 +74,7 @@ const useFormField = () => {
     };
   }
   
-  const { getFieldState, formState } = useFormContext();
+  const { getFieldState, formState } = formContext;
   const fieldState = getFieldState(fieldContext.name, formState);
 
   // PRODUCTION FIX: Check itemContext before using it

@@ -107,7 +107,7 @@ export function formatLocalDateTime(date: Date | string | null | undefined): str
     }
     
     // Format with browser's local timezone
-    let formatted = dateObj.toLocaleString(undefined, {
+    const formatted = dateObj.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

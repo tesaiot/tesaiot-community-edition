@@ -421,7 +421,8 @@ const TelemetrySparkline: React.FC<{ values: number[]; loading: boolean }> = ({ 
   );
 };
 
-interface HeroMetricCardProps extends HeroMetric {}
+// An interface that adds no members is just an alias for its supertype.
+type HeroMetricCardProps = HeroMetric;
 
 const HeroMetricCard: React.FC<HeroMetricCardProps & { loading: boolean }> = ({
   title,

@@ -6,8 +6,11 @@ FROM python:3.11.15-slim AS builder
 
 WORKDIR /app
 
-# Build deps for psycopg2 / cryptography wheels
-RUN apt-get update && apt-get install -y \
+# Build deps for psycopg2 / cryptography wheels.
+# --no-install-recommends: apt pulls "recommended" packages by default, which
+# here means docs and tooling this image never runs. Every extra package is
+# more to download, more to store, and more surface for a scanner to flag.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     build-essential \
     python3-dev \
@@ -22,8 +25,8 @@ FROM python:3.11.15-slim
 
 WORKDIR /app
 
-# Runtime deps only
-RUN apt-get update && apt-get install -y \
+# Runtime deps only (same --no-install-recommends rationale as the build stage)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libmagic1 \
     && rm -rf /var/lib/apt/lists/*

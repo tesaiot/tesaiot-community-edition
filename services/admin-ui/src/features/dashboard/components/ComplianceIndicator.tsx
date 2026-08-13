@@ -144,6 +144,7 @@ export const ComplianceIndicator: React.FC<ComplianceIndicatorProps> = ({ enhanc
         )}
         
         {!loading && !error && (
+        <>
         <div>
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium">Overall Compliance</span>
@@ -173,6 +174,7 @@ export const ComplianceIndicator: React.FC<ComplianceIndicatorProps> = ({ enhanc
             <span>Last audit: {new Date().toLocaleDateString()}</span>
           </div>
         </div>
+        </>
         )}
       </CardContent>
     </Card>

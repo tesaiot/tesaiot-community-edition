@@ -307,8 +307,9 @@ export const CertificateGenerationDialog: React.FC<CertificateGenerationDialogPr
     const deviceIdentifier = device.device_id || device.serialNumber || device._id || device.id;
     if (!deviceIdentifier) return;
     if (!isCSRDevice()) return;
-    // Prefill once when empty to guide users
-    // @ts-ignore allow flexible field
+    // Prefill once when empty to guide users.
+    // No suppression needed: the `as any` cast below already opens the field up,
+    // so a directive here would be reported as unused under @ts-expect-error.
     if (!(renewForm as any).csrAltNames) {
       const recommended = `DNS:${deviceIdentifier},URI:urn:tesa:device:${deviceIdentifier}`;
       setRenewForm(prev => ({ ...(prev as any), csrAltNames: recommended } as any));

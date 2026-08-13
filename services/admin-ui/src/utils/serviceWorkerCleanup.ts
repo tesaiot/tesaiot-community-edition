@@ -298,7 +298,8 @@ class ServiceWorkerCleanupManager {
    */
   private forceGarbageCollection(): void {
     try {
-      // @ts-ignore - gc might be available in dev tools
+      // @ts-expect-error - window.gc only exists when the browser was started
+      // with --expose-gc; it is deliberately absent from the DOM typings.
       if (window.gc) {
         window.gc();
         console.log('🗑️ Forced garbage collection');
