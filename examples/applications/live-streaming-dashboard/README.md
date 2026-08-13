@@ -60,7 +60,7 @@ npm run preview
 ```bash
 # Build and run with Docker
 docker build -t tesaiot-streaming-dashboard .
-docker run -p 8080:80 tesaiot-streaming-dashboard
+docker run -p 8080:8080 tesaiot-streaming-dashboard
 
 # Or use docker-compose
 docker-compose up -d
