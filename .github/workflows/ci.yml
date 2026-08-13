@@ -46,6 +46,36 @@ jobs:
           # -x lets shellcheck follow `source ./lib.sh`; warnings are non-fatal.
           shellcheck -x -S warning "${files[@]}"
 
+  versions:
+    name: Version files agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Three VERSION.txt files, three consumers:
+      #   VERSION.txt                     -> release-images.yml, the published image tag
+      #   services/admin-ui/VERSION.txt   -> vite.config.ts, __APP_VERSION__ + build-version meta
+      #   services/api/VERSION.txt        -> services/api/Dockerfile, /app/BUILD_INFO
+      #
+      # Each service image is built from its own directory as the context, so a
+      # service cannot read the root file at build time and needs its own copy.
+      # Copies drift: services/api/VERSION.txt was written once at v1.0.0 and
+      # then missed nine releases, so a v1.3.0 container reported v2026.02-rc.1
+      # in BUILD_INFO — the wrong answer to "which version are you running?",
+      # which is the first question asked on any self-host bug report.
+      - name: Compare VERSION.txt files
+        run: |
+          root=$(tr -d '[:space:]' < VERSION.txt)
+          fail=0
+          for f in services/admin-ui/VERSION.txt services/api/VERSION.txt; do
+            got=$(tr -d '[:space:]' < "$f")
+            if [ "$got" != "$root" ]; then
+              echo "::error file=$f::expected '$root' (from VERSION.txt), found '$got'"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "all VERSION.txt files agree on $root"
+          exit "$fail"
+
   python:
     name: Lint Python services
     runs-on: ubuntu-latest
