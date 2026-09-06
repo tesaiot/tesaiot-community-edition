@@ -2,13 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Web framework (Flask monolith + thin FastAPI mount for device-management)
-Flask==2.3.2
-# Werkzeug pinned explicitly: Flask 2.3.x effectively requires Werkzeug>=2.3,<3
-# (Werkzeug 3.x removed APIs Flask 2.3 relies on); the pin stops the float.
-Werkzeug==2.3.8
-Flask-Cors==4.0.2
-Flask-JWT-Extended==4.5.3
-Flask-Limiter==3.5.0
+# Flask 3 stack. These five move together or not at all: Flask-JWT-Extended
+# 4.5.3 and Flask-Limiter 3.5.0 were both pinned against Flask 2.x, so bumping
+# Flask alone leaves an unsatisfiable set. Versions below are what pip itself
+# resolves for Flask>=3.1.3 + Werkzeug>=3.1.6 + Flask-Cors>=6.0.0, not a guess.
+Flask==3.1.3
+# Werkzeug still pinned explicitly rather than floating: Flask's own constraint
+# is a lower bound, and Werkzeug majors have removed APIs before (which is why
+# 2.3.8 was pinned here in the first place).
+Werkzeug==3.1.8
+Flask-Cors==6.0.5
+Flask-JWT-Extended==4.7.4
+Flask-Limiter==4.1.1
 simple-websocket==1.0.0
 gunicorn==23.0.0
 
@@ -26,7 +31,12 @@ redis==4.6.0
 hvac==1.1.1
 
 # Auth + crypto (JWT, bcrypt, x509)
-PyJWT==2.8.0
+# 2.13.0 clears six advisories, including CVE-2026-32597: PyJWT accepted unknown `crit` header
+# extensions, contrary to RFC 7515. This service signs and verifies its own
+# HS256 tokens with its own JWT_SECRET (api/core/auth.py), so the practical
+# exposure is low — but it is a small, same-major bump, so there is no reason
+# to carry the finding.
+PyJWT==2.13.0
 python-jose==3.4.0
 bcrypt==4.0.1
 # cryptography 42.0.8 (CVE fixes); pyOpenSSL bumped in lockstep because
