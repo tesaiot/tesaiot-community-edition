@@ -174,7 +174,7 @@ Apache License 2.0 - See [LICENSE](./LICENSE) file.
 
 ## Credits
 
-- **TESAIoT Platform**: https://admin.tesaiot.com
+- **Your Community Edition install**: the address `install.sh` printed (`https://localhost/` by default)
 - **Thai Embedded Systems Association (TESA)**
 - **Plotly.js**: https://plotly.com/javascript/
 - **React**: https://react.dev/

@@ -151,9 +151,15 @@ class InfineonDPS368Simulator:
         self,
         client: mqtt.Client,
         userdata: Any,
+        disconnect_flags: Any = None,
         reason_code: Any = None,
         properties: Optional[Any] = None,
     ) -> None:
+        # paho-mqtt 2.x with CallbackAPIVersion.VERSION2 calls this with
+        # (client, userdata, disconnect_flags, reason_code, properties).
+        # Without disconnect_flags the call raised TypeError inside the paho
+        # network thread on every disconnect, so the reconnect path below was
+        # never reached — the client simply stopped.
         """Handle disconnection from broker."""
         self.connected = False
         if self.running:

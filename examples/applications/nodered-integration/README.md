@@ -101,7 +101,8 @@ nodered-to-platform/
   🇹🇭 เอกสารทางการของ Node-RED สำหรับสร้างและเผยแพร่โหนดใหม่
 - 🇬🇧 [FlowFuse Dashboard Docs](https://dashboard.flowfuse.com/) – component reference and layout best practices
   🇹🇭 สารานุกรม component ของ FlowFuse พร้อมตัวอย่างการจัดเลย์เอาต์
-- 🇬🇧 [TESAIoT Admin UI](https://admin.tesaiot.com/) – authenticate to download credential bundles used throughout this sample
+- The Admin UI of your own Community Edition install (`https://localhost/` by
+  default) – authenticate there to download the credential bundles this sample uses
   🇹🇭 เข้าระบบ TESAIoT Admin UI เพื่อดาวน์โหลด credential bundle สำหรับใช้งานกับตัวอย่างนี้
 
 ---

@@ -84,7 +84,7 @@ nodered-to-platform/
 
 - [Node-RED Creating Nodes](https://nodered.org/docs/creating-nodes/) – เอกสารทางการของ Node-RED สำหรับสร้างและเผยแพร่โหนดใหม่
 - [FlowFuse Dashboard Docs](https://dashboard.flowfuse.com/) – สารานุกรม component ของ FlowFuse พร้อมตัวอย่างการจัดเลย์เอาต์
-- [TESAIoT Admin UI](https://admin.tesaiot.com/) – เข้าระบบ TESAIoT Admin UI เพื่อดาวน์โหลด credential bundle สำหรับใช้งานกับตัวอย่างนี้
+- Admin UI ของ Community Edition ที่ติดตั้งเอง (ค่าเริ่มต้นคือ `https://localhost/`) – เข้าระบบเพื่อดาวน์โหลด credential bundle สำหรับตัวอย่างนี้
 
 ---
 

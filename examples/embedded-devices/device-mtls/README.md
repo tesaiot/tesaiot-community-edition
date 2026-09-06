@@ -18,7 +18,9 @@ Uses Cesanta Mongoose single-file library with TLS backends: OpenSSL, mbedTLS, o
 
 ### Step 1: Download mTLS Bundle
 
-1. Login to **TESAIoT Admin Portal**: https://admin.tesaiot.com
+1. Log in to the Admin UI of **your own** Community Edition install — the
+   address `install.sh` printed when it finished (`https://localhost/` on a
+   default install). There is no hosted portal involved.
 2. Navigate to **Devices** > Select your device
 3. Go to the **Credentials** tab
 4. Click **Download mTLS Bundle** (MQTT or HTTPS)

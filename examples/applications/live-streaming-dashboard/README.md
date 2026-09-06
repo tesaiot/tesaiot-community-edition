@@ -24,7 +24,8 @@ Real-time MQTT telemetry visualization dashboard for TESAIoT Platform. Stream an
 
 ### Get Your MQTT Token
 
-1. Log in to [TESAIoT Admin Portal](https://admin.tesaiot.com)
+1. Log in to the Admin UI of your own Community Edition install (the address
+   `install.sh` printed; `https://localhost/` by default)
 2. Navigate to **Settings → MQTT API Tokens**
 3. Click **Create Token**
 4. Copy the generated token (format: `tesa_mqtt_<org>_<32chars>`)

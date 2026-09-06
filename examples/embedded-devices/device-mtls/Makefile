@@ -9,6 +9,10 @@ TLS_BACKEND ?= openssl # openssl | mbedtls | wolfssl
 TLS_BACKEND := $(strip $(TLS_BACKEND))
 
 COMMON_DIR := $(CURDIR)/../common-c
+# mg_fetch.mk defines 'deps' and is included before 'all' is declared, so
+# without this a bare `make` selects 'deps' — which only prints how to
+# install a TLS library and builds nothing.
+.DEFAULT_GOAL := all
 include $(COMMON_DIR)/mg_fetch.mk
 
 TARGET ?= device_client
