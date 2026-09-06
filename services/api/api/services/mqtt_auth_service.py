@@ -71,6 +71,22 @@ def _trustm_uid_match(uid: str):
     return {'$in': list({uid, uid.lower(), uid.upper()})}
 
 
+def _cn_matches_device_id(peer_cert_cn, client_id):
+    """Does this client certificate belong to the device it claims to be?
+
+    Equality, deliberately. certificate_service.py forces the certificate CN to
+    the device id at issuance, so every platform-issued device certificate
+    satisfies ==. This was once ``client_id in peer_cert_cn or
+    peer_cert_cn.startswith(client_id)``, which let any device whose id is a
+    substring or prefix of another's authenticate as that other device:
+    sensor-10's own genuine certificate connected as sensor-1, published to
+    device/sensor-1/telemetry and subscribed to device/sensor-1/commands.
+    """
+    if not peer_cert_cn or not client_id:
+        return False
+    return peer_cert_cn == client_id
+
+
 def _uid_equal(a, b) -> bool:
     """Compare two Trust M UIDs ignoring hex letter case.
 
@@ -473,8 +489,8 @@ def validate_mqtt_auth(webhook_data):
                     cn_valid = False
                     auth_method = None
 
-                    # Method 1: CN matches device_id (standard mTLS)
-                    if client_id in peer_cert_cn or peer_cert_cn.startswith(client_id):
+                    # Method 1: CN equals device_id (standard mTLS)
+                    if _cn_matches_device_id(peer_cert_cn, client_id):
                         cn_valid = True
                         auth_method = 'device_id_match'
 
@@ -550,8 +566,8 @@ def validate_mqtt_auth(webhook_data):
                     cn_valid = False
                     auth_method = None
 
-                    # Method 1: CN matches device_id (standard mTLS)
-                    if client_id in peer_cert_cn or peer_cert_cn.startswith(client_id):
+                    # Method 1: CN equals device_id (standard mTLS)
+                    if _cn_matches_device_id(peer_cert_cn, client_id):
                         cn_valid = True
                         auth_method = 'device_id_match'
 

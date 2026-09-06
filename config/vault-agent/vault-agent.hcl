@@ -89,7 +89,15 @@ cache {
   use_auto_auth_token = true
 }
 
+# The cache listener hands out the auto-auth token to anyone who reaches it
+# (cache.use_auto_auth_token = true), and that token carries the api-pki policy
+# — so on 0.0.0.0 any container on the internal network could mint a
+# certificate for any common name, with its private key, from the intermediate
+# CA, without presenting a credential. Nothing consumes this proxy across the
+# network: the API talks to Vault directly on VAULT_ADDR, and the only code
+# that names this port (services/api/api/services/vault_integration_service.py)
+# defaults to 127.0.0.1:8100 and is imported by nothing. Loopback only.
 listener "tcp" {
-  address = "0.0.0.0:8100"
+  address = "127.0.0.1:8100"
   tls_disable = true
 }

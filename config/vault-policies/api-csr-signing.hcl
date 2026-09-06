@@ -23,11 +23,27 @@ path "pki-int/sign/iot-device-ecc" {
   capabilities = ["create", "update"]
 }
 
-# Direct issuance - DEVICE roles only, enumerated on purpose. The API code
-# (services/api: certificate_service.py, pki_provisioning_service.py) issues
-# exclusively from 'device-cert' with 'iot-device-ecc' as fallback; a wildcard
-# here would also let a compromised API token mint SERVER certs from the
-# emqx-server / platform-service roles and impersonate platform endpoints.
+# Direct issuance, enumerated rather than wildcarded so every grant is visible.
+#
+# READ THIS BEFORE TRUSTING THE SHAPE OF THIS FILE. The device roles below are
+# what the API itself uses: certificate_service.py hardcodes 'iot-device-ecc'
+# and pki_provisioning_service.py 'device-cert', and both force the common name
+# to the device id, so no request can steer issuance to another role.
+#
+# The SERVER roles below (emqx-server, emqx-server-ecdsa, platform-service) are
+# NOT for the API. They are here because the Vault Agent renders the TLS
+# material for emqx, nginx, apisix and mqtt-bridge from its templates, and the
+# agent authenticates with the SAME AppRole ('api-service') whose token the API
+# then reads from the agent's sink. One identity, two consumers — so this policy
+# is the union of what both need, and a token stolen from either could mint a
+# server certificate and impersonate a platform endpoint.
+#
+# Removing the server roles here does NOT fix that: it breaks TLS for every
+# service the agent provisions. The fix is privilege separation — give the agent
+# its own AppRole and policy for the server roles, leave the API with the device
+# roles only — which changes the provisioning flow in init-vault-pki.sh and the
+# agent config, and is tracked as its own change rather than done inline here.
+#
 # If you add a new device role in init-vault-pki.sh, add its issue path here.
 path "pki-int/issue/device-cert" {
   capabilities = ["create", "update"]

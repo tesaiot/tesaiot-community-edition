@@ -11,7 +11,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 
-from ..core.database import db_manager
+from ..core.database import db_manager, get_redis
 from ..core.rbac import RBAC
 from .models import User
 
@@ -73,6 +73,26 @@ def get_current_user(
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"}
             )
+
+        # Honour the logout blacklist. controllers/auth.py logout() calls
+        # blacklist_token(), which writes blacklist_<token> into Redis, and the
+        # Flask path (core/auth.py) checks it — this FastAPI path did not, so a
+        # token kept working on every FastAPI-served route after its owner had
+        # logged out. Fail closed only on an actual hit: if Redis is
+        # unreachable, get_redis() returns None and behaviour is unchanged.
+        try:
+            redis_client = get_redis()
+            if redis_client and redis_client.get(f"blacklist_{token}"):
+                logger.warning("Blacklisted token used on a FastAPI route")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Your session has been terminated. Please login again.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+        except HTTPException:
+            raise
+        except Exception as redis_error:  # pragma: no cover - availability only
+            logger.warning(f"Blacklist check unavailable: {redis_error}")
 
         # Extract user info from token
         user_id = payload.get('user_id') or payload.get('sub')

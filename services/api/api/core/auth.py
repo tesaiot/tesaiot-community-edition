@@ -22,6 +22,7 @@ Provides authentication decorators and JWT token management.
 import jwt
 import hashlib
 import logging
+import uuid
 import os
 import hmac
 from functools import wraps
@@ -331,7 +332,14 @@ def generate_token(user_data, expires_in=None, session_start=None):
         'organization_id': user_data.get('organization_id'),
         'exp': now + timedelta(seconds=expires_in),
         'iat': now,
-        'session_start': int(session_start) if session_start else int(now.timestamp())
+        'session_start': int(session_start) if session_start else int(now.timestamp()),
+        # Unique per issuance. Without it every field is second-granularity, so
+        # two logins by the same user in the same second produced a byte-identical
+        # token: logout (which blacklists the token string) then logged out every
+        # session that had signed in during that second, and a user who logged out
+        # and straight back in was handed the token just blacklisted. Measured
+        # before this line existed: 12 rapid logins yielded 4 distinct tokens.
+        'jti': uuid.uuid4().hex
     }
 
     token = jwt.encode(
