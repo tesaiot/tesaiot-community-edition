@@ -112,6 +112,36 @@ remaining operator/roadmap items published as openly as the strengths.
 
 ---
 
+### Built with it — the examples
+
+Everything in [`examples/`](examples/) is run against a live install before it is
+published here, and each ships the data it produced. Two that show the platform
+end to end:
+
+**A third-party app reading telemetry over the REST API.** JWT sign-in, then
+`/api/v1/telemetry/unified/{device}` charted with recharts — 614 points across six
+series from a device publishing over MQTT and HTTPS at once.
+[`examples/applications/react-telemetry-dashboard`](examples/applications/react-telemetry-dashboard)
+
+![React telemetry dashboard](examples/images/screenshots/react-telemetry-dashboard.png)
+
+**Live streaming over MQTT-over-WebSocket.** The browser subscribes to
+`device/+/telemetry` with a device credential and plots each message as it lands —
+no polling, no REST round trip.
+[`examples/applications/live-streaming-dashboard`](examples/applications/live-streaming-dashboard)
+
+![Live streaming dashboard](examples/images/screenshots/live-streaming-dashboard.png)
+
+And on the device side, a secure element enrolling itself: on-chip key, CSR,
+certificate signed by the install's own Vault PKI, then mutual-TLS publish —
+[`examples/security/secure-element-mtls`](examples/security/secure-element-mtls).
+
+![Secure element certificate](examples/images/screenshots/secure-element-mtls-certificate.png)
+
+[**All examples and how to run them →**](examples/README.md)
+
+---
+
 ## Architecture
 
 ```mermaid
