@@ -1371,7 +1371,7 @@ def get_org_certificate_policy():
 def update_org_certificate_policy():
     """Update organization-level certificate policy (Phase 2)."""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         # Validate and build update payload
         update_doc = {}
         threshold = data.get('early_renewal_threshold_days')

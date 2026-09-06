@@ -149,7 +149,7 @@ def update_profile():
             return jsonify({'error': 'User context invalid'}), 401
         
         # Get update data
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         
         # Fields that can be updated (organization and email are excluded - read-only)
         # Email changes should go through a separate verification process

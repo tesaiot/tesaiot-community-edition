@@ -163,7 +163,7 @@ def renew_certificate(device_id):
     """
     try:
         db = get_db()
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         
         # Verify device ownership
         device = db.devices.find_one({

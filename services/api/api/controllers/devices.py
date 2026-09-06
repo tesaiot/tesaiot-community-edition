@@ -1544,7 +1544,7 @@ def revoke_certificate(device_id):
         
         device_id = sanitize_string(device_id, 64)
         
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         reason = data.get('reason', 'Manual revocation requested')
         
         # Sanitize reason field
@@ -2931,7 +2931,7 @@ def reset_device_password(device_id):
             }), 400
         
         # Get request data
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         notify = data.get('notify', True)
         reason = sanitize_string(data.get('reason', 'Password reset requested by administrator'))
         
@@ -3147,7 +3147,7 @@ def regenerate_device_api_key_endpoint(device_id):
             }), 400
         
         # Get request data
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         reason = sanitize_string(data.get('reason', 'API key regeneration requested by administrator'))
         
         # Import required services

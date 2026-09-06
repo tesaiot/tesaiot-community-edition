@@ -117,7 +117,7 @@ def generate_api_key(device_id):
             }), 400
         
         # Get expiration days from request (default 365)
-        request_data = request.get_json() or {}
+        request_data = request.get_json(silent=True) or {}
         expires_days = request_data.get('expires_days', 365)
         
         if expires_days < 1 or expires_days > 3650:  # Max 10 years
@@ -161,7 +161,7 @@ def revoke_api_key(device_id):
         JSON response confirming revocation
     """
     try:
-        request_data = request.get_json() or {}
+        request_data = request.get_json(silent=True) or {}
         reason = request_data.get('reason', 'Revoked by administrator')
         
         success = revoke_device_api_key(device_id, reason)

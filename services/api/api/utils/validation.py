@@ -565,7 +565,7 @@ def validate_input(**field_validators):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             try:
-                data = request.get_json() or {}
+                data = request.get_json(silent=True) or {}
                 errors = {}
                 
                 for field_name, validator in field_validators.items():

@@ -526,7 +526,7 @@ async def create_from_standard(standard_type: str, org_id: str, user_id: str):
     """Create a template from an industry standard"""
     try:
         template_service = get_template_service()
-        customizations = request.get_json() or {}
+        customizations = request.get_json(silent=True) or {}
         
         template = await template_service.create_industry_standard_template(
             standard_type=standard_type,
