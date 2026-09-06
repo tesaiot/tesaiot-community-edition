@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { EMAIL_INVALID_MESSAGE, isValidEmail } from '@/lib/email';
 
 interface ForgotPasswordModalProps {
   open: boolean;
@@ -47,10 +48,8 @@ export default function ForgotPasswordModal({ open, onClose }: ForgotPasswordMod
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+    if (!isValidEmail(email)) {
+      setError(EMAIL_INVALID_MESSAGE);
       return;
     }
 

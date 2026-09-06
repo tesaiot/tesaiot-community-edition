@@ -5,6 +5,40 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2026-09-06
+
+### Fixed
+
+- **A default install created an operator account that its own sign-in page
+  refused.** `generate-secrets.sh` derives `ADMIN_EMAIL=admin@${DOMAIN}`, and
+  `DOMAIN` falls back to `localhost`, so every install that does not pass
+  `--domain` gets `admin@localhost` — the address `install.sh` then prints as
+  the bootstrap login. The sign-in form validated with zod's `.email()`, which
+  requires a dot in the domain, so it rejected that address with *"Please enter
+  a valid email address."* before a request was ever sent. The API accepts it,
+  and so does the browser on `<input type="email">`; only the form disagreed.
+
+  The UI held three different rules: `.email()` in the three auth schemas,
+  `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` in the forgot-password modal, and a looser
+  `/^[^\s@]+@[^\s@]+$/` in the setup wizard — so the wizard accepted an
+  address the sign-in page would go on to refuse, and an operator could finish
+  first-run setup and be locked out by it.
+
+  All of them now use one validator, `src/lib/email.ts`, built on the WHATWG
+  "valid e-mail address" definition the browser already enforces. Single-label
+  domains (`localhost`, a container name, an internal host) are accepted, as
+  RFC 5321 has always allowed; malformed input is still rejected. Existing
+  installs are fixed by the new image alone — no re-provisioning, and no change
+  to any stored credential.
+
+### Added
+
+- **`Admin UI unit tests` CI job** running `vitest`, plus the first tests in
+  `services/admin-ui` (`src/lib/email.test.ts`, 19 cases covering every address
+  the installer can issue). It is a separate job from `Build admin UI` on
+  purpose: that job lints before it builds, so a failing test placed after the
+  lint step would not be reached while the lint backlog stands.
+
 ## [1.3.3] - 2026-09-06
 
 ### Fixed

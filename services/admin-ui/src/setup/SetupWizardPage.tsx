@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { isValidEmail } from '@/lib/email';
 
 type SetupStatus = {
   setup_required: boolean;
@@ -161,7 +162,7 @@ export default function SetupWizardPage() {
     [password],
   );
   const passwordValid = passwordChecks.every((c) => c.ok);
-  const emailValid = /^[^\s@]+@[^\s@]+$/.test(email);
+  const emailValid = isValidEmail(email);
 
   const verifyToken = useCallback(async () => {
     setBusy(true);

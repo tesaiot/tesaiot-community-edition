@@ -7,12 +7,14 @@
 
 import { z } from 'zod';
 
+import { EMAIL_INVALID_MESSAGE, EMAIL_PATTERN } from '@/lib/email';
+
 export const getSignupSchema = () => {
   return z
     .object({
       email: z
         .string()
-        .email({ message: 'Please enter a valid email address.' })
+        .regex(EMAIL_PATTERN, { message: EMAIL_INVALID_MESSAGE })
         .min(1, { message: 'Email is required.' }),
       password: z
         .string()
