@@ -5,6 +5,32 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2026-09-06
+
+### Security
+
+- **Dependency advisories: 85 known vulnerabilities across 14 packages, down to
+  31 across 7.** The Flask 3 stack (Flask 3.1.3, Werkzeug 3.1.8, Flask-Cors
+  6.0.5, Flask-JWT-Extended 4.7.4, Flask-Limiter 4.1.1) and PyJWT 2.13.0 came
+  from branches already prepared for them; `aiohttp` 3.14.2, `cryptography`
+  46.0.3, `pyOpenSSL` 25.3.0, `marshmallow` 3.26.2, `msgpack` 1.2.1 and
+  `python-dotenv` 1.2.2 are added here, each within its current major.
+
+  What remains is `starlette` 0.27 and the `fastapi` 0.100 that pins it. Their
+  fixes land in starlette 1.x, which is a framework migration rather than a
+  version bump, and it needs its own change and its own verification.
+
+### Fixed
+
+- **Live telemetry streaming never connected.** `websocket_telemetry` built its
+  own database connections from raw environment variables rather than the URIs
+  `core/config` assembles — and compose passes the parts, not the URIs. So
+  `MONGODB_URI` was unset, the fallback connected without credentials, and every
+  aggregate (which is what a change stream issues) was refused inside a
+  five-second retry loop: 336 errors in ten minutes and no streaming at all. The
+  Redis client in the same function was built from host and port alone, omitting
+  `REDIS_PASSWORD`, so a password-protected Redis refused it with NOAUTH.
+
 ## [1.3.6] - 2026-09-06
 
 ### Fixed
