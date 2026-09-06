@@ -18,6 +18,105 @@ here, and each is adapted to CE endpoints and auth.
 > TimescaleDB / Device Details). Analysis-only candidates stay in the plan below until
 > they clear that bar.
 
+## Before you start
+
+Everything below assumes **your own** install. There is no hosted service in the
+loop: the address is whatever `install.sh` printed when it finished, which on a
+stock install is `https://localhost`. A stock install also serves its own
+private-PKI certificate, so `curl` needs `-k` and browsers will warn once.
+
+Each example is run the same way: register a device, collect the credentials it
+needs, point the example at your install, run it, then confirm the data arrived.
+That last step matters — an example that prints "sent" has not proved anything.
+
+### 1. Register a device and collect its credentials
+
+```bash
+BASE=https://localhost                       # your install
+TOKEN=$(curl -sk -X POST $BASE/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])')
+
+# auth_mode: server_tls for username/password, mtls for a client certificate
+curl -sk -X POST $BASE/api/v1/devices -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id":"my-device","name":"my-device","device_type":"sensor","auth_mode":"server_tls"}'
+
+# MQTT password (serverTLS) — shown once
+curl -sk -X POST $BASE/api/v1/devices/my-device/reset-mqtt-password \
+  -H "Authorization: Bearer $TOKEN"
+
+# device API key (REST ingest, and the MQTT password on the mTLS listener)
+curl -sk -X POST $BASE/api/v1/devices/my-device/regenerate-api-key \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` are in the `.env` at the root of your install.
+
+For an mTLS device, download its certificate bundle:
+
+```bash
+curl -sk -o my-device.zip -H "Authorization: Bearer $TOKEN" \
+  $BASE/api/v1/certificates/devices/my-device/certificate/download/bundle
+```
+
+The bundle contains `<device_id>.pem`, `<device_id>.key`, `ca-chain.pem`,
+`endpoints.json` and a rendered `mqtt_client_config.h`. Each example's own
+README says which of those it reads and under what name — they are **not**
+always the names in the zip.
+
+### 2. Know which port to use
+
+| Listener | Port | Credential |
+|---|---|---|
+| MQTT over TLS (serverTLS) | 8884 | device id + MQTT password |
+| MQTT over mutual TLS | 8883 | client certificate **and** device id + API key as the password |
+| MQTT over WebSocket | 8083 | device id + MQTT password |
+| REST ingest / reads | 443 | device API key for ingest, JWT for reads |
+
+Two things surprise people here. On the **mTLS** listener the broker still wants
+a username and a non-empty password — the device id and its API key — and
+rejects an empty one with `bad_username_or_password` *after* a successful TLS
+handshake, which reads like a certificate fault but is not. And the MQTT
+**client id must equal the device id**: Community Edition's ACL keys off it, so
+a client id of `my-app-1` on a device called `my-device` is refused.
+
+### 3. Confirm the data actually landed
+
+```bash
+# from the install directory
+docker compose exec -e PGPASSWORD="$POSTGRES_PASSWORD" timescaledb \
+  psql -U postgres -d tesa_telemetry \
+  -c "select time, device_id, metric_name, metric_value
+        from device_telemetry where device_id='my-device'
+       order by time desc limit 10;"
+```
+
+If rows appear, the path worked end to end: device → broker → bridge →
+TimescaleDB. If the example printed success and this is empty, trust this.
+
+## Which examples run where
+
+| Example | Language | What it needs | Verified |
+|---|---|---|---|
+| `embedded-devices/rpi-servertls` | Python | `pip install -r requirements.txt` | MQTT and HTTPS modes |
+| `embedded-devices/device-servertls` | C | `make servertls` (OpenSSL) | serverTLS MQTT |
+| `embedded-devices/device-mtls` | C | `make mtls` (OpenSSL) | mutual TLS MQTT |
+| `embedded-devices/esp32-servertls` | firmware | ESP-IDF | contract only, not run here |
+| `integrations/mqtt-telemetry-simulator` | Python | `pip install -r requirements.txt` | serverTLS MQTT |
+| `security/secure-element-mtls` | Python | `pip install -r requirements.txt` | CSR → Vault → mTLS publish |
+| `applications/react-telemetry-dashboard` | Node | `npm install` | build, tests, live read |
+| `applications/live-streaming-dashboard` | Node | `npm install` | build, tests |
+| `applications/nodered-integration` | Node | `npm install && npm run build` | build |
+| `integrations/n8n-automation` | n8n | import the workflows | not run here |
+
+The two browser dashboards read through the Vite dev-server proxy rather than
+calling the API directly: Community Edition answers a CORS preflight without an
+`access-control-allow-origin` header, so a direct cross-origin call from
+`npm run dev` is blocked by the browser. Point `VITE_DEV_PROXY_TARGET` at your
+install and leave the client on the same origin.
+
 ## Snapshots (real data)
 
 Every snapshot below is **real data captured after running the example against a live

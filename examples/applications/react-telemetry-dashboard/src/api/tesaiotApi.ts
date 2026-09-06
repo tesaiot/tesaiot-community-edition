@@ -15,7 +15,11 @@ const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? 
 
 const API_CONFIG = {
   // CE edge (nginx/APISIX). Default to the local install.
-  baseUrl: env.VITE_API_BASE_URL || 'https://localhost',
+  // Same-origin under `npm run dev` so requests go through the Vite proxy.
+  // CE answers a preflight 200 but sends no access-control-allow-origin, so a
+  // direct cross-origin call from the dev server is blocked by the browser —
+  // which is what the proxy is for. A built bundle keeps an absolute default.
+  baseUrl: env.VITE_API_BASE_URL || (env.DEV ? '' : 'https://localhost'),
   // Demo credentials for the JWT login (set these in .env; never commit real ones).
   email: env.VITE_ADMIN_EMAIL || '',
   password: env.VITE_ADMIN_PASSWORD || '',
