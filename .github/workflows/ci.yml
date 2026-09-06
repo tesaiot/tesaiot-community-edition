@@ -93,6 +93,12 @@ jobs:
           ruff check --select E9,F63,F7,F82,F401,F811 services/api services/mqtt-bridge
       - name: Byte-compile check
         run: python -m compileall -q services/api services/mqtt-bridge
+      # Neither ruff nor compileall can see a call to an API that the pinned
+      # library does not have — model_dump() under a pydantic 1 pin is a valid
+      # attribute access to both of them, and an AttributeError at runtime.
+      # This reads the pin and rejects the spellings it forbids.
+      - name: pydantic major matches the pin
+        run: ./scripts/check-pydantic-major.sh
 
   unit-tests:
     name: Python unit tests
@@ -106,7 +112,13 @@ jobs:
       # the version in services/api/requirements.txt so the tests exercise the
       # same library the service runs against.
       - name: Install pytest
-        run: python -m pip install --upgrade pip pytest "pymongo==4.6.3"
+        # pydantic is read out of requirements.txt rather than repeated here, so
+        # the tests always run against the version the image installs. Repeating
+        # the number is how the two drift apart, and a model test on the wrong
+        # major proves nothing.
+        run: |
+          python -m pip install --upgrade pip pytest "pymongo==4.6.3"
+          python -m pip install "$(grep -E '^pydantic==' services/api/requirements.txt | head -1)"
       # These tests need no stack — no Mongo, no Vault, no broker — so they run
       # here without any service containers or secrets.
       #

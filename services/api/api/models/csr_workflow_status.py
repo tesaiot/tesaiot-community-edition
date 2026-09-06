@@ -161,7 +161,7 @@ class CSRWorkflowStatusModel(BaseModel):
 
     def to_mongo_dict(self) -> Dict[str, Any]:
         """Convert to MongoDB-compatible dictionary"""
-        data = self.model_dump(by_alias=True, exclude_none=True)
+        data = self.dict(by_alias=True, exclude_none=True)
 
         # Ensure timestamps are datetime objects
         for field in ['started_at', 'completed_at', 'updated_at']:
