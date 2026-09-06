@@ -142,7 +142,14 @@ class WebSocketTelemetryService:
         try:
             # MongoDB connection
             if MONGODB_AVAILABLE:
-                mongo_uri = os.getenv('MONGODB_URI', 'mongodb://tesa-mongodb:27017/tesa_iot')
+                # Config assembles the URI from MONGODB_USER/PASSWORD/HOST when no
+                # explicit MONGODB_URI is set — which is the normal case, since
+                # compose passes the parts, not the URI. Building one here from a
+                # bare MONGODB_URI meant an unauthenticated connection whose every
+                # aggregate was refused, so the change stream below failed on a
+                # five-second loop forever and live telemetry never streamed.
+                from ..core.config import BaseConfig
+                mongo_uri = os.getenv('MONGODB_URI') or BaseConfig.MONGODB_URI
                 self.mongo_client = pymongo.MongoClient(mongo_uri)
                 logger.info("MongoDB connection initialized")
             else:
@@ -150,9 +157,13 @@ class WebSocketTelemetryService:
             
             # Redis connection
             if REDIS_AVAILABLE:
-                redis_host = os.getenv('REDIS_HOST', 'tesa-redis')
-                redis_port = int(os.getenv('REDIS_PORT', 6379))
-                self.redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
+                # Same reason: host and port alone leave out REDIS_PASSWORD, and
+                # a password-protected Redis refuses every command with NOAUTH.
+                from ..core.config import BaseConfig
+                self.redis_client = redis.Redis.from_url(
+                    os.getenv('REDIS_URL') or BaseConfig.REDIS_URL,
+                    decode_responses=True,
+                )
                 logger.info("Redis connection initialized")
             else:
                 logger.warning("Redis not available - caching disabled")
