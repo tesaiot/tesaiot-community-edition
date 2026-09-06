@@ -6,8 +6,8 @@ and visualizes Edge AI telemetry data using Plotly charts.
 ## Overview
 
 This example demonstrates how external applications can:
-- Connect to TESAIoT Platform via API Gateway
-- Authenticate using API Keys
+- Connect to a Community Edition install
+- Authenticate with a JWT (CE gates reads behind one)
 - Fetch telemetry data from BDH AI API
 - Visualize sensor data with AI inference overlay
 
@@ -22,7 +22,7 @@ This example demonstrates how external applications can:
 ## Prerequisites
 
 - Node.js 18+ and npm
-- TESAIoT Platform account with API Key
+- A Community Edition install you can log in to
 
 ## Getting Started
 
@@ -32,24 +32,21 @@ This example demonstrates how external applications can:
 npm install
 ```
 
-### 2. Configure API Key
+### 2. Point it at your install and give it a way to sign in
 
-Edit `src/api/tesaiotApi.ts` and replace the API key:
+Community Edition requires a JWT on read endpoints. Create `.env`:
 
-```typescript
-const API_CONFIG = {
-  baseUrl: 'https://admin.tesaiot.com',
-  apiKey: 'YOUR_API_KEY_HERE', // Get from TESAIoT Platform > API Keys
-};
+```bash
+VITE_API_BASE_URL=https://localhost      # the address install.sh printed
+VITE_ADMIN_EMAIL=admin@localhost         # ADMIN_EMAIL from your .env
+VITE_ADMIN_PASSWORD=...                  # ADMIN_PASSWORD from your .env
 ```
 
-Or configure at runtime:
+The app logs in with those and caches the token. If you would rather not put a
+password in a file, paste a JWT into the field in the UI, or set `VITE_JWT`.
 
-```typescript
-import { configureApi } from './api/tesaiotApi';
-
-configureApi({ apiKey: 'YOUR_API_KEY_HERE' });
-```
+A device API key is **not** accepted here: in CE an API key authorises telemetry
+*ingest* from a device, while reads are JWT-only.
 
 ### 3. Run Development Server
 
@@ -79,11 +76,14 @@ Note: AI inference results are embedded in telemetry data as `ai_*` fields (ai_c
 
 ## Authentication
 
-All API requests use API Key authentication via the `X-API-Key` header:
+Reads are JWT-authenticated. The client calls `POST /api/v1/auth/login` with the
+configured email and password, then sends the token it gets back:
 
 ```
-X-API-Key: tesa_ak_YOUR_API_KEY_HERE
+Authorization: Bearer <jwt>
 ```
+
+Supplying `VITE_JWT` (or pasting a token into the UI) skips the login call.
 
 ## Project Structure
 
@@ -117,10 +117,11 @@ Modify the `styles` object in `App.tsx` or add CSS files as needed.
 
 ### API Configuration
 
-Update `src/api/tesaiotApi.ts` to change:
-- Base URL
-- Default API Key
-- Request headers
+Set these in `.env` rather than editing source:
+- `VITE_API_BASE_URL` — your install's address
+- `VITE_ADMIN_EMAIL` / `VITE_ADMIN_PASSWORD`, or `VITE_JWT`
+
+`src/api/tesaiotApi.ts` reads them and falls back to a stock local install.
 
 ## Deployment
 
@@ -158,15 +159,18 @@ If running locally and getting CORS errors:
 
 ### No Data Displayed
 
-1. Verify API Key is valid
-2. Check device has data for selected date range
-3. Look for errors in browser console
+1. Check the device actually has data for the selected range — query
+   `device_telemetry` in TimescaleDB if you are not sure
+2. Look for errors in the browser console
+3. Confirm `VITE_API_BASE_URL` points at your install, not the default
 
 ### Authentication Failed
 
-1. Verify API Key format: `tesa_ak_...`
-2. Check API Key permissions in TESAIoT Platform
-3. Ensure API Key is active (not revoked)
+1. `CE reads require authentication` means no credentials reached the client —
+   set `VITE_ADMIN_EMAIL`/`VITE_ADMIN_PASSWORD`, or `VITE_JWT`
+2. `Login failed (401)` means the credentials were rejected: they are the
+   `ADMIN_EMAIL`/`ADMIN_PASSWORD` from your install's `.env`
+3. A device API key will not work here — reads are JWT-only
 
 ## License
 

@@ -130,7 +130,9 @@ const styles: { [key: string]: React.CSSProperties } = {
 
 function App() {
   // State
-  const [apiKey, setApiKey] = useState('');
+  // Community Edition gates reads behind a JWT, not an API key: the API key is
+  // a device credential for telemetry INGEST and is not accepted on reads.
+  const [jwt, setJwt] = useState('');
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [startDate, setStartDate] = useState(() => {
@@ -145,12 +147,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update API config when API key changes
+  // Update API config when the token changes
   useEffect(() => {
-    if (apiKey) {
-      configureApi({ apiKey });
+    if (jwt) {
+      configureApi({ token: jwt });
     }
-  }, [apiKey]);
+  }, [jwt]);
 
   // Fetch devices on mount
   useEffect(() => {
@@ -226,13 +228,13 @@ function App() {
 
           <div style={styles.formGrid}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>API Key</label>
+              <label style={styles.label}>JWT (optional)</label>
               <input
-                type="text"
+                type="password"
                 style={styles.input}
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="tesa_ak_..."
+                value={jwt}
+                onChange={(e) => setJwt(e.target.value)}
+                placeholder="paste a token, or set VITE_ADMIN_EMAIL/PASSWORD"
               />
             </div>
 
@@ -332,7 +334,7 @@ function App() {
           <div style={styles.info}>
             <p><strong>This is a standalone third-party application example.</strong></p>
             <p style={{ marginTop: 8 }}>
-              It demonstrates how to connect to TESAIoT Platform using API Key authentication
+              It demonstrates how to read from a Community Edition install with a JWT
               and visualize telemetry data with recharts.
             </p>
             <p style={{ marginTop: 8 }}>
@@ -340,7 +342,8 @@ function App() {
               time range selector, anomaly markers.
             </p>
             <p style={{ marginTop: 8 }}>
-              <strong>Get your API Key:</strong> Visit TESAIoT Platform &gt; API Keys menu
+              <strong>Signing in:</strong> set VITE_ADMIN_EMAIL and VITE_ADMIN_PASSWORD and the
+              app logs in for you, or paste a JWT above.
             </p>
           </div>
         </div>
