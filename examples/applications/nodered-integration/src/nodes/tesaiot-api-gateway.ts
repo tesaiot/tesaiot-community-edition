@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { TesaiotClient } from '../lib/client';
 import { Node, NodeDef, NodeInitializer } from 'node-red';
 import { createTesaiotClient } from '../lib/client';
 
@@ -10,8 +10,8 @@ interface TesaiotApiGatewayConfig extends NodeDef {
 
 type TesaiotApiGatewayNode = Node & {
   credentials?: TesaiotApiGatewayCredentials;
-  client?: AxiosInstance;
-  getClient: () => AxiosInstance;
+  client?: TesaiotClient;
+  getClient: () => TesaiotClient;
 };
 
 interface TesaiotApiGatewayCredentials {
@@ -29,7 +29,7 @@ const nodeInit: NodeInitializer = (RED): void => {
     const verifyTls = config.verifyTls !== false;
     const apiKey = (credentials.apiKey || process.env.TESAIOT_API_KEY || '').trim();
 
-    this.getClient = (): AxiosInstance => {
+    this.getClient = (): TesaiotClient => {
       throw new Error('TESAIoT API Gateway client is not initialised. Provide a base URL and API key.');
     };
 
@@ -40,14 +40,19 @@ const nodeInit: NodeInitializer = (RED): void => {
     }
 
     try {
+      // lib/client.ts is fetch-based, not axios: the option is timeoutMs, and
+      // TLS verification is Node's (set NODE_TLS_REJECT_UNAUTHORIZED=0 for a
+      // stock install's private-PKI certificate) rather than a client option.
       this.client = createTesaiotClient({
         baseUrl,
         apiKey,
-        timeout,
-        verifyTls
+        timeoutMs: timeout
       });
+      if (!verifyTls) {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+      }
 
-      this.getClient = (): AxiosInstance => {
+      this.getClient = (): TesaiotClient => {
         if (!this.client) {
           throw new Error('API client has not been initialised.');
         }

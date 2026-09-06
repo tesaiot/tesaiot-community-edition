@@ -2,7 +2,7 @@
 
 Real-time MQTT telemetry visualization dashboard for TESAIoT Platform. Stream and visualize IoT device data with WebSocket Secure (WSS) MQTT connections.
 
-![Dashboard Screenshot](docs/screenshot.png)
+![Dashboard Screenshot](../../images/screenshots/live-streaming-dashboard.png)
 
 ## Features
 
@@ -79,7 +79,7 @@ cp .env.example .env
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VITE_MQTT_BROKER_URL` | WSS MQTT broker URL | `wss://mqtt.tesaiot.com:8085/mqtt` |
+| `VITE_MQTT_BROKER_URL` | MQTT-over-WebSocket broker URL | `ws://localhost:8083/mqtt` |
 | `VITE_MQTT_TOPIC` | Telemetry topic pattern | `device/+/telemetry/#` |
 
 ### Chart Series

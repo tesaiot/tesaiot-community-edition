@@ -1,5 +1,5 @@
 import { Node, NodeDef, NodeInitializer } from 'node-red';
-import { AxiosInstance } from 'axios';
+import { TesaiotClient } from '../lib/client';
 
 interface TesaiotApiUsageConfig extends NodeDef {
   gateway: string;
@@ -7,11 +7,11 @@ interface TesaiotApiUsageConfig extends NodeDef {
 }
 
 type TesaiotApiUsageNode = Node & {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 };
 
 interface TesaiotApiGatewayNode extends Node {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 }
 
 const clampWindow = (value: number): number => {
@@ -41,7 +41,7 @@ const nodeInit: NodeInitializer = (RED): void => {
 
       try {
         const client = gatewayNode.getClient();
-        const { data } = await client.get('/dashboard/stats', {
+        const data = await client.get('/dashboard/stats', {
           params: { window: windowMinutes }
         });
 

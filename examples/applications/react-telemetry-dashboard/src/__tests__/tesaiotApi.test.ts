@@ -1,219 +1,149 @@
 /**
- * Unit tests for TESAIoT API Client
+ * Unit tests for the Community Edition API client.
  *
- * Copyright (c) 2025 TESAIoT Platform (TESA)
- * Licensed under Apache License 2.0
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright TESAIoT Platform contributors
+ *
+ * These cover the shape the CE port actually has: reads are JWT-authenticated,
+ * so every call logs in first and then makes the real request — two fetches,
+ * not one — and telemetry comes from /api/v1/telemetry/unified/{id}, which is
+ * the endpoint CE exposes.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock fetch globally
+import {
+  configureApi,
+  fetchAIResults,
+  fetchDevices,
+  fetchTelemetryData,
+} from '../api/tesaiotApi';
+
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+global.fetch = mockFetch as unknown as typeof fetch;
 
-describe('TESAIoT API Client', () => {
-  beforeEach(() => {
-    mockFetch.mockClear();
+const BASE = 'https://localhost:21000';
+
+/** A successful login, so the next queued response is the one under test. */
+function queueLogin() {
+  mockFetch.mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    json: async () => ({ token: 'test-jwt' }),
+  });
+}
+
+function queueJson(body: unknown, status = 200) {
+  mockFetch.mockResolvedValueOnce({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+  });
+}
+
+beforeEach(() => {
+  mockFetch.mockReset();
+  // token: '' forces the login path; credentials satisfy ensureToken().
+  configureApi({
+    baseUrl: BASE,
+    token: '',
+    email: 'admin@localhost',
+    password: 'unused-because-fetch-is-mocked',
+  });
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+describe('authentication', () => {
+  it('logs in before the first read and sends the JWT as a Bearer token', async () => {
+    queueLogin();
+    queueJson({ data_points: [] });
+
+    await fetchTelemetryData('device-001', '', '');
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    const [loginUrl, loginInit] = mockFetch.mock.calls[0];
+    expect(loginUrl).toBe(`${BASE}/api/v1/auth/login`);
+    expect(loginInit.method).toBe('POST');
+
+    const [, dataInit] = mockFetch.mock.calls[1];
+    expect(dataInit.headers.Authorization).toBe('Bearer test-jwt');
   });
 
-  afterEach(() => {
-    vi.resetModules();
+  it('reuses the token it already holds instead of logging in again', async () => {
+    configureApi({ token: 'preset-jwt' });
+    queueJson({ data_points: [] });
+
+    await fetchTelemetryData('device-001', '', '');
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, init] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/v1/telemetry/unified/device-001');
+    expect(init.headers.Authorization).toBe('Bearer preset-jwt');
   });
 
-  describe('apiFetch', () => {
-    it('should include API key header in requests', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: [] }),
-      });
+  it('reports a failed login as a login failure, not as a data error', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 401 });
 
-      // Import the module
-      const { fetchTelemetryData } = await import('../api/tesaiotApi');
+    await expect(fetchDevices()).rejects.toThrow('Login failed (401)');
+  });
+});
 
-      await fetchTelemetryData('device-001', '2025-01-01', '2025-01-02');
+describe('fetchTelemetryData', () => {
+  it('asks CE for the unified endpoint with the requested limit', async () => {
+    queueLogin();
+    queueJson({ data_points: [] });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-API-Key': expect.any(String),
-          }),
-        })
-      );
-    });
+    await fetchTelemetryData('device-001', '', '', 25);
 
-    it('should throw error on non-OK response', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        text: () => Promise.resolve('Unauthorized'),
-      });
-
-      const { fetchTelemetryData } = await import('../api/tesaiotApi');
-
-      await expect(
-        fetchTelemetryData('device-001', '2025-01-01', '2025-01-02')
-      ).rejects.toThrow('API Error (401)');
-    });
+    const [url] = mockFetch.mock.calls[1];
+    expect(url).toBe(`${BASE}/api/v1/telemetry/unified/device-001?limit=25`);
   });
 
-  describe('fetchTelemetryData', () => {
-    it('should construct correct endpoint URL', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: [] }),
-      });
-
-      const { fetchTelemetryData } = await import('../api/tesaiotApi');
-
-      await fetchTelemetryData('device-001', '2025-01-01', '2025-01-02', 500);
-
-      const calledUrl = mockFetch.mock.calls[0][0] as string;
-      expect(calledUrl).toContain('/api/v1/telemetry/device-001/query');
-      expect(calledUrl).toContain('start_time=2025-01-01T00:00:00Z');
-      expect(calledUrl).toContain('end_time=2025-01-02T23:59:59Z');
-      expect(calledUrl).toContain('limit=500');
+  it('gives every point both timestamp and time', async () => {
+    queueLogin();
+    queueJson({
+      data_points: [{ timestamp: '2026-09-06T00:00:00Z', temperature: 25.5 }],
     });
 
-    it('should return empty array when data is missing', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({}),
-      });
+    const points = await fetchTelemetryData('device-001', '', '');
 
-      const { fetchTelemetryData } = await import('../api/tesaiotApi');
-
-      const result = await fetchTelemetryData('device-001', '2025-01-01', '2025-01-02');
-      expect(result).toEqual([]);
-    });
-
-    it('should return telemetry data array', async () => {
-      const mockData = [
-        { timestamp: '2025-01-01T10:00:00Z', temperature: 25.5 },
-        { timestamp: '2025-01-01T11:00:00Z', temperature: 26.0 },
-      ];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockData }),
-      });
-
-      const { fetchTelemetryData } = await import('../api/tesaiotApi');
-
-      const result = await fetchTelemetryData('device-001', '2025-01-01', '2025-01-02');
-      expect(result).toEqual(mockData);
-      expect(result).toHaveLength(2);
-    });
+    expect(points).toHaveLength(1);
+    expect(points[0].timestamp).toBe('2026-09-06T00:00:00Z');
+    expect(points[0].time).toBe('2026-09-06T00:00:00Z');
   });
 
-  describe('fetchAIResults', () => {
-    it('should extract AI fields from telemetry data', async () => {
-      const mockData = [
-        {
-          timestamp: '2025-01-01T10:00:00Z',
-          temperature: 25.5,
-          ai_confidence: 0.95,
-          ai_anomalyScore: 0.1,
-          ai_prediction: 'normal',
-        },
-        {
-          timestamp: '2025-01-01T11:00:00Z',
-          temperature: 45.0,
-          ai_confidence: 0.85,
-          ai_anomalyScore: 0.9,
-          ai_prediction: 'anomaly',
-        },
-      ];
+  it('surfaces a failed read instead of returning silently empty data', async () => {
+    queueLogin();
+    queueJson({ detail: 'nope' }, 500);
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockData }),
-      });
-
-      const { fetchAIResults } = await import('../api/tesaiotApi');
-
-      const result = await fetchAIResults('device-001');
-      expect(result).toHaveLength(2);
-      expect(result[0].confidence).toBe(0.95);
-      expect(result[0].prediction).toBe('normal');
-      expect(result[1].anomaly_score).toBe(0.9);
-    });
-
-    it('should filter out entries without AI data', async () => {
-      const mockData = [
-        { timestamp: '2025-01-01T10:00:00Z', temperature: 25.5 },
-        {
-          timestamp: '2025-01-01T11:00:00Z',
-          ai_confidence: 0.85,
-          ai_prediction: 'warning',
-        },
-      ];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ data: mockData }),
-      });
-
-      const { fetchAIResults } = await import('../api/tesaiotApi');
-
-      const result = await fetchAIResults('device-001');
-      expect(result).toHaveLength(1);
-      expect(result[0].prediction).toBe('warning');
-    });
+    // Telemetry propagates: an empty chart and a broken backend must not look
+    // the same to the caller. fetchAIResults is the one that swallows, because
+    // an install without AI fields is normal rather than an error.
+    await expect(fetchTelemetryData('device-001', '', '')).rejects.toThrow('API Error (500)');
   });
+});
 
-  describe('fetchDevices', () => {
-    it('should return device list', async () => {
-      const mockDevices = [
-        { device_id: 'device-001', name: 'Sensor A' },
-        { device_id: 'device-002', name: 'Sensor B' },
-      ];
+describe('fetchAIResults', () => {
+  it('is empty on an install with no AI fields, which is the CE default', async () => {
+    queueLogin();
+    queueJson({ data_points: [{ timestamp: '2026-09-06T00:00:00Z', temperature: 25 }] });
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ devices: mockDevices }),
-      });
-
-      const { fetchDevices } = await import('../api/tesaiotApi');
-
-      const result = await fetchDevices();
-      expect(result).toEqual(mockDevices);
-      expect(result).toHaveLength(2);
-    });
-
-    it('should return empty array when devices missing', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({}),
-      });
-
-      const { fetchDevices } = await import('../api/tesaiotApi');
-
-      const result = await fetchDevices();
-      expect(result).toEqual([]);
-    });
+    await expect(fetchAIResults('device-001')).resolves.toEqual([]);
   });
+});
 
-  describe('configureApi', () => {
-    it('should update API configuration', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ devices: [] }),
-      });
+describe('fetchDevices', () => {
+  it('maps the bare array CE returns', async () => {
+    queueLogin();
+    queueJson([{ device_id: 'sensor-1', name: 'sensor-1' }]);
 
-      const { configureApi, fetchDevices } = await import('../api/tesaiotApi');
+    const devices = await fetchDevices();
 
-      configureApi({ apiKey: 'new_api_key_12345' });
-      await fetchDevices();
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'X-API-Key': 'new_api_key_12345',
-          }),
-        })
-      );
-    });
+    expect(devices).toHaveLength(1);
+    expect(devices[0].device_id).toBe('sensor-1');
   });
 });

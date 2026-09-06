@@ -1,5 +1,5 @@
 import { Node, NodeDef, NodeInitializer } from 'node-red';
-import { AxiosInstance } from 'axios';
+import { TesaiotClient } from '../lib/client';
 
 interface TesaiotDeviceDataConfig extends NodeDef {
   gateway: string;
@@ -8,7 +8,7 @@ interface TesaiotDeviceDataConfig extends NodeDef {
 }
 
 type TesaiotDeviceDataNode = Node & {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 };
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -44,7 +44,7 @@ const toBoolean = (value: unknown): boolean => {
 };
 
 interface TesaiotApiGatewayNode extends Node {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 }
 
 const clampLimit = (value: number): number => {
@@ -170,7 +170,14 @@ const nodeInit: NodeInitializer = (RED): void => {
           limit
         };
 
-        const { data } = await client.get(`/devices/${deviceId}/telemetry`, { params });
+        // The fetch client returns the parsed body, so name the shape the node
+        // reads from it. Without a type argument it is `{}` and every field
+        // access below is a compile error.
+        const data = await client.get<{
+          count?: number;
+          latest_timestamp?: string;
+          telemetry?: unknown[];
+        }>(`/devices/${deviceId}/telemetry`, params);
 
         this.status({ fill: 'green', shape: 'dot', text: `telemetry (${limit})` });
         msg.payload = data;

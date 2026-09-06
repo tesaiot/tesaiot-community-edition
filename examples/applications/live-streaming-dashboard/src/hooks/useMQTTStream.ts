@@ -48,14 +48,14 @@ interface UseMQTTStreamResult {
 // Community Edition MQTT-over-WebSocket listener (loopback, plain ws).
 // Serve the dashboard over http for local use, or front an EMQX WSS listener with
 // nginx/APISIX TLS termination and use wss://<host>/mqtt.
-const DEFAULT_BROKER_URL = 'ws://localhost:8083/mqtt';
+export const DEFAULT_BROKER_URL = 'ws://localhost:8083/mqtt';
 // CE's per-device ACL scopes a device credential to its OWN topic. When no explicit
 // topic is provided we subscribe to `device/<username>/telemetry` (built in connect()).
 // A wildcard fleet view (device/+/telemetry) needs a privileged/service MQTT account.
 const DEFAULT_MAX_MESSAGES = 1000;
 
 /** CE uses per-device username/password — just require both to be present. */
-function validateCredentials(username: string, password: string): boolean {
+export function validateCredentials(username: string, password: string): boolean {
   return Boolean(username) && Boolean(password);
 }
 
@@ -64,7 +64,7 @@ function validateCredentials(username: string, password: string): boolean {
  *
  * Topic format: device/<device_id>/telemetry/<sensor_type>
  */
-function parseTopic(topic: string): { deviceId: string; sensorType: string } {
+export function parseTopic(topic: string): { deviceId: string; sensorType: string } {
   const parts = topic.split('/');
   return {
     deviceId: parts[1] || 'unknown',
@@ -79,7 +79,7 @@ function parseTopic(topic: string): { deviceId: string; sensorType: string } {
  * `{"device_id": ..., "timestamp": ..., "data": {metric: value, ...}}` —
  * flatten the inner `data` object so the chart sees the metrics directly.
  */
-function parsePayload(payload: Buffer): Record<string, unknown> {
+export function parsePayload(payload: Buffer): Record<string, unknown> {
   try {
     const parsed = JSON.parse(payload.toString());
     if (parsed && typeof parsed === 'object' && parsed.data && typeof parsed.data === 'object') {

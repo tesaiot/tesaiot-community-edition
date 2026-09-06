@@ -1,5 +1,5 @@
 import { Node, NodeDef, NodeInitializer } from 'node-red';
-import { AxiosInstance } from 'axios';
+import { TesaiotClient } from '../lib/client';
 
 interface TesaiotDeviceListsConfig extends NodeDef {
   gateway: string;
@@ -7,11 +7,11 @@ interface TesaiotDeviceListsConfig extends NodeDef {
 }
 
 type TesaiotDeviceListsNode = Node & {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 };
 
 interface TesaiotApiGatewayNode extends Node {
-  getClient: () => AxiosInstance;
+  getClient: () => TesaiotClient;
 }
 
 const nodeInit: NodeInitializer = (RED): void => {
@@ -50,7 +50,7 @@ const nodeInit: NodeInitializer = (RED): void => {
           params.search = search;
         }
 
-        const { data } = await client.get('/devices', { params });
+        const data = await client.get('/devices', params);
 
         this.status({ fill: 'green', shape: 'dot', text: `devices (${params.limit})` });
         msg.payload = data;
