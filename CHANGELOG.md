@@ -5,6 +5,88 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-09-06
+
+### Fixed
+
+- **Two model helpers called a pydantic 2 API while the project pins pydantic 1,
+  so they raised `AttributeError` on a live path.**
+  `CSRWorkflowStatusModel.to_mongo_dict()` and `EnhancedDeviceLog.to_mongo_dict()`
+  called `model_dump(by_alias=True, exclude_none=True)`, which exists only in
+  pydantic 2; `services/api/requirements.txt` pins 1.10.13. Every CSR workflow
+  status and every enhanced device log failed at the moment of writing the
+  document — `csr_workflow_service.py` and `enhanced_device_log_service.py` both
+  go through those helpers before inserting, and the EMQX events webhook reaches
+  the first of them when a device connects. The blueprint is guarded, so the API
+  still booted and the feature simply stopped working.
+  Both files state their target major in a comment a few lines above the fault
+  (`# Pydantic v1 compatibility - use allow_population_by_field_name instead of
+  v2's populate_by_name`), so this was a slip against the file's own stated
+  intent rather than a deliberate upgrade. Both now call
+  `dict(by_alias=True, exclude_none=True)`, the pydantic 1 spelling of the same
+  operation. Verified rather than assumed: both models rendered through
+  `to_mongo_dict()` under pydantic 1.10.13 with `.dict()` and under 2.9.2 with
+  `model_dump()` produce identical documents, including a case exercising nested
+  models, `None` values inside nested structures and an undeclared extra field.
+  Neither call site passes `mode=`, so no pydantic 2 behaviour is given up.
+  Migrating the service to pydantic 2 remains the right long-term answer — 1.10
+  is end of life — but it is separate work: `Field(regex=)` is removed in v2, and
+  the eight `allow_population_by_field_name` configs stop populating aliases
+  there, which on these models means `_id` silently becomes a random UUID.
+
+- **A form hook ran conditionally, which is the "rendered fewer hooks than
+  expected" crash.** `useFormField` called `useFormContext()` after an early
+  return, so the hook ran on some renders and not others. The call moved above
+  the guard, and the guard widened to cover a null form context.
+
+- **A block of JSX wrapped three sibling elements in one expression**, which is a
+  parse error. `tsc` stops at parse errors before any semantic checking, so that
+  single line was hiding 721 type errors across 136 files. Those remain — the
+  build does not type-check them today — but they are now visible to anyone who
+  turns type-checking on.
+
+- **Two CI jobs failed before they ran anything.** `shellcheck` had been red
+  since v1.3.0 on an unused variable in `reset-setup.sh`, and both Trivy jobs
+  died resolving an action tag upstream had removed, so nothing in this
+  repository had ever actually been scanned. A genuinely broken build looked
+  exactly like the status quo.
+
+### Security
+
+- **Removed `authlib`.** Trivy's first completed dependency scan reported
+  authlib 1.3.2 / CVE-2026-27962 as CRITICAL — an authentication bypass via the
+  JWK header. Nothing imported it: one grep hit across the repository, and that
+  hit was the requirements line itself. It came along when CE was split out of
+  the full platform. JWT handling here is PyJWT.
+
+- **The two dashboard examples no longer run nginx as root.** Both inherited
+  `nginx:alpine` and never dropped privileges. An example is what people copy
+  from, so shipping one that runs as root in a distribution documenting
+  ETSI EN 303 645 teaches the opposite of the point. They now use the treatment
+  the admin UI image already had, listening on 8080 because an unprivileged
+  process cannot bind below 1024; the published ports are unchanged.
+
+### Added
+
+- **Unit tests for model serialisation** (`services/api/tests/unit/test_model_serialisation.py`)
+  — six tests that import the real models and exercise `to_mongo_dict()`,
+  including the nested and `exclude_none` shapes. Proven in both directions: with
+  the fix reverted they fail, with it applied they pass.
+
+- **A guard against calling the wrong pydantic major**
+  (`scripts/check-pydantic-major.sh`, wired into the lint job). It reads the pin
+  out of `requirements.txt` and rejects the spellings that pin forbids, in both
+  directions, so a future migration flips the check by editing one line. Neither
+  `ruff` nor `compileall` could see the fault it guards against: `model_dump()`
+  is a valid attribute access to both, and CI installed neither pydantic nor the
+  models. The unit-test job now installs pydantic by reading the same pin rather
+  than repeating the version number.
+
+- **`docs/en/dependency-upgrades-2026-08.md`** records the triage of the
+  remaining 82 dependency findings — which can be done safely, which need their
+  own branch and test cycle, and which cannot be verified on the build host at
+  all.
+
 ## [1.3.1] - 2026-08-06
 
 ### Fixed
