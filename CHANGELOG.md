@@ -5,6 +5,69 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2026-09-06
+
+### Security
+
+- **A device certificate authenticated more than the device it was issued to.**
+  The MQTT auth webhook compared the certificate CN against the client id with
+  `client_id in peer_cert_cn or peer_cert_cn.startswith(client_id)` — containment,
+  where the comment beside it said "CN matches device_id". Against a running
+  broker, `sensor-10`'s own genuine certificate connected as `sensor-1`, received
+  CONNACK 0, published to `device/sensor-1/telemetry` and subscribed to
+  `device/sensor-1/commands`. Any device id that is a substring or prefix of
+  another device's id was a key to that device. The comparison is now equality,
+  and after the change that connection is refused while both devices still
+  authenticate as themselves.
+
+- **The Vault Agent's cache listener was reachable from every container.**
+  `vault-agent.hcl` bound `0.0.0.0:8100` with `tls_disable` and
+  `cache.use_auto_auth_token`, so anything on the internal network inherited the
+  agent's Vault identity without presenting a credential. From another container,
+  with no token, `POST pki-int/issue/emqx-server` returned a certificate for an
+  arbitrary common name — with its private key — signed by the intermediate CA.
+  Combined with the CN defect above, one compromised container could mint an
+  identity and then use it. The listener is now loopback-only; nothing consumed
+  it across the network.
+
+- **Logging out did not log you out.** `logout()` blacklists the token and the
+  Flask path checks that blacklist, but the FastAPI dependency never did, so a
+  token kept working on every FastAPI-served route after its owner logged out.
+  The dependency now consults the same blacklist, and fails closed only on a hit
+  so an unreachable Redis cannot lock anyone out.
+
+- **Tokens issued in the same second were byte-identical.** The JWT payload had
+  no `jti` and every other field is second-granularity: twelve rapid logins
+  produced four distinct tokens. Blacklisting one logged out every session that
+  had signed in during that second, and logging out then straight back in handed
+  you the token just blacklisted. Tokens now carry a `jti`.
+
+### Fixed
+
+- **The C device examples built nothing on a bare `make`.** `mg_fetch.mk`
+  defines `deps` and is included before `all` is declared, so `deps` became the
+  default goal: the command printed how to install a TLS library and exited 0
+  with no binary.
+- **`certs_credentials/README.md` named files the code does not open** — it asked
+  for `client.pem`/`client.key`, the client opens `client_cert.pem`/`client_key.pem`,
+  and the downloaded bundle contains `<device_id>.pem`/`<device_id>.key`. It also
+  omitted `api_key.txt`, which mTLS needs: without it the client sends a null MQTT
+  password and the broker answers `bad_username_or_password` after a successful
+  TLS handshake, which reads like a certificate fault.
+- **Setup steps sent self-hosters to a hosted portal** to collect credentials for
+  the instance they had just installed. They now point at the address `install.sh`
+  prints.
+- **`mqtt-telemetry-simulator` raised `TypeError` on every disconnect.** It selects
+  `CallbackAPIVersion.VERSION2` and requires `paho-mqtt>=2.0.0`, which passes
+  `disconnect_flags`; the handler did not accept it, so the exception was raised
+  inside the paho network thread and the reconnect path was never reached.
+
+### Added
+
+- Regression tests for the certificate-to-device binding
+  (`services/api/tests/unit/test_mtls_cn_binding.py`), covering the substring and
+  prefix cases that distinguish equality from containment.
+
 ## [1.3.4] - 2026-09-06
 
 ### Fixed
