@@ -155,6 +155,22 @@ jobs:
       - name: Lint
         # eslint without --fix so CI fails instead of silently rewriting.
         run: npx eslint src
+      # `any` is a warning (see eslint.config.js for why), so the ratchet is what
+      # holds the line: the count may fall, never rise. A check that only ever
+      # passes is not a check, so this one has a number it can fail against.
+      - name: The `any` count must not grow
+        run: |
+          baseline=$(tr -d '[:space:]' < .eslint-any-baseline)
+          count=$(npx eslint src -f json \
+            | jq '[.[].messages[] | select(.ruleId == "@typescript-eslint/no-explicit-any")] | length')
+          echo "explicit any: $count (baseline $baseline)"
+          if [ "$count" -gt "$baseline" ]; then
+            echo "::error::$count explicit-any uses, up from $baseline. Type the new code, or justify raising .eslint-any-baseline."
+            exit 1
+          fi
+          if [ "$count" -lt "$baseline" ]; then
+            echo "::notice::$count explicit-any uses, down from $baseline - lower .eslint-any-baseline to lock the gain in."
+          fi
       - name: Type-check & build
         run: npm run build
 

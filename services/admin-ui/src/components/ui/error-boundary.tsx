@@ -172,7 +172,7 @@ class ErrorBoundary extends Component<Props, State> {
 export default ErrorBoundary;
 
 // Higher-order component for easy wrapping
-export function withErrorBoundary<P extends {}>(
+export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   errorBoundaryProps?: Omit<Props, 'children'>
 ) {

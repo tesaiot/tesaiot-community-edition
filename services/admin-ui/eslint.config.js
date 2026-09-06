@@ -45,6 +45,22 @@ export default tseslint.config(
         ]
       }],
 
+      // ═══════════════════════════════════════════════════════════════════════
+      // `any` IS A WARNING, AND THE COUNT IS RATCHETED
+      // ═══════════════════════════════════════════════════════════════════════
+      // There are 899 of these. While the rule was an error, `npx eslint src`
+      // exited 1, the Build admin UI job died at its Lint step, and the two
+      // steps after it — tsc and vite build — never ran at all. So the job that
+      // exists to prove the UI still builds proved nothing, for every commit
+      // since the rule started failing.
+      //
+      // Downgrading it does not forgive the 899: CI counts them and fails if the
+      // number grows (see .eslint-any-baseline and the ratchet step in ci.yml).
+      // New code cannot add one, existing code can be typed properly a file at a
+      // time, and the build is verified again in the meantime. Removing them is
+      // a typing effort, not a cleanup — 899 call sites is its own work package.
+      '@typescript-eslint/no-explicit-any': 'warn',
+
       // Warn about potential case-sensitive import issues
       '@typescript-eslint/no-unused-vars': ['warn', {
         argsIgnorePattern: '^_',

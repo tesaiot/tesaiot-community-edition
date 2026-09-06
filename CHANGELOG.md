@@ -5,6 +5,24 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-09-06
+
+### Fixed
+
+- **The job that proves the admin UI still builds had not built anything for
+  months.** `Build admin UI` runs `npx eslint src` before `tsc` and `vite build`,
+  and eslint exited 1 on 900 errors — 899 of them `no-explicit-any` — so the two
+  steps that actually verify the build never ran. A genuinely broken UI and a UI
+  with 899 untyped values looked identical from CI.
+  `no-explicit-any` is now a warning, and the count is ratcheted: CI reads
+  `services/admin-ui/.eslint-any-baseline` (899) and fails if the number grows.
+  New code cannot add one, the existing ones can be typed a file at a time, and
+  the build is verified again in the meantime. Removing all 899 is a typing
+  effort with its own work package, not a cleanup.
+  The one error that was not `no-explicit-any` is fixed rather than downgraded:
+  `withErrorBoundary<P extends {}>` in `error-boundary.tsx` now constrains to
+  `object`, because `{}` admits `0` and `""`.
+
 ## [1.3.2] - 2026-09-06
 
 ### Fixed
