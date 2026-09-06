@@ -5,6 +5,47 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2026-09-06
+
+### Fixed
+
+- **A `POST` with no body returned 500 on eleven endpoints that do not need one.**
+  Each reads `request.get_json() or {}` — the `or {}` says the body is optional,
+  and one docstring says so outright — but Flask raises 415 inside `get_json()`
+  before the `or` is evaluated, and the generic handler renders that as
+  *"An unexpected error occurred"*. So the documented
+  `curl -X POST .../regenerate-api-key -H "Authorization: Bearer …"` failed while
+  the same call carrying `-d '{}'` succeeded, which is why it survived: every
+  internal caller sends JSON. `silent=True` on all eleven.
+- **The three web examples did not build, test, or point at your own install.**
+  `nodered-integration` failed to compile: `lib/client.ts` was ported to fetch
+  while all five nodes still typed it as `AxiosInstance` and called it with
+  axios semantics. `react-telemetry-dashboard` proxied `/api` to a hosted
+  service, shipped a test file written against the pre-CE client (all ten cases
+  failing), and had no `test` script. `live-streaming-dashboard` carried a
+  cloud broker URL in `.env.example` and its README table although the code had
+  been repointed, embedded a screenshot that does not exist, asked for a jsdom
+  environment it did not depend on, had no tests, and ran `vitest` in watch
+  mode so `npm test` never exited.
+- **The C device examples built nothing on a bare `make`** — `mg_fetch.mk`
+  defines `deps` and is included before `all` is declared, so `deps` became the
+  default goal. Their `certs_credentials/README.md` also named files the code
+  does not open and omitted `api_key.txt`, which mTLS needs.
+- **`mqtt-telemetry-simulator` raised `TypeError` on every disconnect**, so its
+  reconnect path was unreachable: paho 2.x passes `disconnect_flags`, which the
+  handler did not accept.
+- **The React dashboard documented an authentication it does not use.** The UI
+  had an API-key field feeding a config value nothing sends; reads are JWT-only.
+
+### Changed
+
+- `examples/README.md` now opens with a how-to that runs: register a device,
+  collect credentials, point an example at your install, and confirm the rows
+  reached TimescaleDB. Every command in it was executed against a running stack
+  — including the one that turned out to return 500.
+- `examples/images/screenshots/react-telemetry-dashboard.png` recaptured against
+  a live install; the previous image showed a UI that no longer exists.
+
 ## [1.3.5] - 2026-09-06
 
 ### Security
