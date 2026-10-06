@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TESAIoT Community Edition Architecture",
+    "output": "architect/tesaiot-architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560]
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "Browser / Operator", "sublabel": "admin console", "pos": [30, 60], "size": [118, 56] },
+    { "id": "nginx", "type": "security", "label": "nginx", "sublabel": "TLS terminator", "tag": ":443 / :9444", "pos": [240, 60], "size": [128, 60] },
+    { "id": "admin_ui", "type": "frontend", "label": "Admin UI", "sublabel": "React SPA", "pos": [460, 50], "size": [140, 60] },
+    { "id": "vault", "type": "security", "label": "HashiCorp Vault", "sublabel": "PKI + vault-agent", "pos": [890, 50], "size": [130, 58] },
+    { "id": "devices", "type": "external", "label": "IoT Devices", "sublabel": "MQTT + HTTPS", "pos": [30, 450], "size": [118, 56] },
+    { "id": "apisix", "type": "cloud", "label": "APISIX", "sublabel": "API gateway", "tag": ":9443", "pos": [240, 450], "size": [128, 60] },
+    { "id": "emqx", "type": "messagebus", "label": "EMQX", "sublabel": "MQTT 5 broker", "tag": ":8883 / :8884", "pos": [460, 450], "size": [140, 60] },
+    { "id": "mqtt_bridge", "type": "backend", "label": "mqtt-bridge", "sublabel": "read-only forwarder", "pos": [690, 450], "size": [140, 58] },
+    { "id": "api", "type": "backend", "label": "tesa-api", "sublabel": "Flask + FastAPI", "tag": ":5566", "pos": [560, 220], "size": [160, 68] },
+    { "id": "mongodb", "type": "database", "label": "MongoDB", "sublabel": "registry", "pos": [890, 170], "size": [130, 58] },
+    { "id": "timescaledb", "type": "database", "label": "TimescaleDB", "sublabel": "telemetry", "pos": [890, 270], "size": [130, 58] },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "cache + rate limit", "pos": [890, 370], "size": [130, 58] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Docker host / single organization", "wraps": ["nginx", "apisix", "admin_ui", "emqx", "api", "mqtt_bridge", "mongodb", "timescaledb", "redis", "vault"], "pad": 22 },
+    { "kind": "security-group", "label": "tesa-external (LAN edge)", "wraps": ["nginx", "apisix"], "pad": 14 },
+    { "kind": "security-group", "label": "tesa-internal (backend only)", "wraps": ["admin_ui", "emqx", "mqtt_bridge", "api", "mongodb", "timescaledb", "redis", "vault"], "pad": 16 }
+  ],
+  "connections": [
+    { "from": "browser", "to": "nginx", "label": "HTTPS :443", "variant": "emphasis" },
+    { "from": "nginx", "to": "admin_ui", "label": "SPA" },
+    { "from": "nginx", "to": "api", "label": "/api proxy", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "via": [[304, 150], [640, 150]] },
+    { "from": "devices", "to": "nginx", "label": "mTLS :9444", "variant": "security", "fromSide": "top", "toSide": "bottom", "via": [[89, 340], [304, 340]] },
+    { "from": "devices", "to": "apisix", "label": "X-API-Key :9443" },
+    { "from": "apisix", "to": "api", "label": "upstream" },
+    { "from": "devices", "to": "emqx", "label": "MQTT TLS", "fromSide": "bottom", "toSide": "bottom", "via": [[89, 560], [530, 560]] },
+    { "from": "emqx", "to": "api", "label": "auth / ACL webhook", "variant": "dashed", "fromSide": "top", "toSide": "left", "via": [[530, 254]], "labelAt": [530, 405] },
+    { "from": "emqx", "to": "mqtt_bridge", "label": "telemetry" },
+    { "from": "mqtt_bridge", "to": "api", "label": "forward", "fromSide": "top", "toSide": "right" },
+    { "from": "api", "to": "mongodb", "label": "registry", "fromSide": "right", "toSide": "left", "via": [[770, 254], [770, 199]], "labelAt": [864, 199] },
+    { "from": "api", "to": "timescaledb", "label": "telemetry", "fromSide": "right", "toSide": "left", "via": [[790, 254], [790, 299]], "labelAt": [848, 299] },
+    { "from": "api", "to": "redis", "label": "cache", "fromSide": "right", "toSide": "left", "via": [[810, 254], [810, 399]], "labelAt": [858, 399] },
+    { "from": "api", "to": "vault", "label": "PKI sign", "variant": "security", "fromSide": "right", "toSide": "left", "via": [[830, 254], [830, 79]], "labelAt": [862, 79] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Edge & Ingest", "items": ["nginx terminates serverTLS :443 and mTLS :9444", "APISIX adds API-key auth and rate limits on :9443", "Only edge proxies sit on the LAN-reachable network"] },
+    { "dot": "violet", "title": "Application Tier", "items": ["tesa-api is the Flask monolith plus FastAPI mount", "EMQX delegates auth and ACL to API webhooks", "mqtt-bridge forwards telemetry and runs read-only"] },
+    { "dot": "emerald", "title": "State & PKI", "items": ["MongoDB stores users, devices, and certificates", "TimescaleDB stores time-series telemetry", "Vault issues device and service certs; vault-agent renews them"] }
+  ]
+}
