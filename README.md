@@ -144,76 +144,8 @@ certificate signed by the install's own Vault PKI, then mutual-TLS publish —
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph Devices["IoT Devices & Clients"]
-        BROWSER["Browser / Operator"]
-        DEV_MQTT["Device (MQTT mTLS/serverTLS)"]
-        DEV_HTTP["Device (HTTPS telemetry)"]
-    end
+![TESAIoT Community Edition](architect/tesaiot-architecture.visual-check.1440x900.light.png)
 
-    subgraph Edge["Edge / TLS termination"]
-        NGINX["nginx<br/>443 serverTLS · 9444 mTLS"]
-        APISIX["APISIX gateway<br/>9080/9443 · admin 9180"]
-        EMQX["EMQX broker<br/>1883 · 8883 mTLS · 8884 serverTLS · 18083 dashboard"]
-    end
-
-    subgraph App["Application tier"]
-        API["tesa-api (Flask)<br/>:5566"]
-        UI["admin-ui (React SPA)"]
-        BRIDGE["mqtt-bridge"]
-    end
-
-    subgraph Sec["Security / PKI"]
-        VAULT["HashiCorp Vault<br/>PKI · KV · :8200"]
-        AGENT["vault-agent<br/>renders & renews certs"]
-    end
-
-    subgraph Data["Data stores"]
-        MONGO["MongoDB<br/>users · devices · certs"]
-        TS["TimescaleDB<br/>telemetry hypertables"]
-        REDIS["Redis<br/>cache · rate limit"]
-    end
-
-    BROWSER --> NGINX --> UI
-    BROWSER --> NGINX --> API
-    DEV_HTTP --> NGINX --> API
-    DEV_HTTP --> APISIX --> API
-    DEV_MQTT --> EMQX --> API
-    EMQX --> BRIDGE --> API
-    API --> MONGO
-    API --> TS
-    API --> REDIS
-    API --> VAULT
-    AGENT --> VAULT
-    AGENT -. server certs .-> EMQX
-    AGENT -. api token .-> API
-    BRIDGE --> TS
-```
-
-```
-                         +-------------------+
-  Browser / Operator --> |  nginx  :443/:9444|  serverTLS + mTLS termination
-                         +---------+---------+
-                                   |
-        +--------------------------+--------------------------+
-        |                          |                          |
-   +----v----+              +------v------+            +------v------+
-   | admin-ui|              |  tesa-api   |<-----------|   APISIX    |  API-key gateway
-   | (React) |              | Flask :5566 |   /api/*   |  :9080/9443 |
-   +---------+              +--+--+--+--+-+            +-------------+
-                              |  |  |  |
-        +---------------------+  |  |  +----------------------+
-        |               +-------+  +-------+                  |
-   +----v----+     +-----v-----+        +--v-----+      +-----v-----+
-   | MongoDB |     |TimescaleDB|        | Redis  |      |   Vault   | PKI + KV
-   | :27017  |     |   :5432   |        | :6379  |      |   :8200   |
-   +---------+     +-----------+        +--------+      +-----+-----+
-                                                             |
-   IoT devices --MQTT--> EMQX :8883(mTLS)/:8884(serverTLS) --+ (vault-agent renews certs)
-                          |
-                          +--> mqtt-bridge --> tesa-api --> TimescaleDB
-```
 
 **11 containers:** `vault`, `vault-agent`, `mongodb`, `timescaledb`, `redis`,
 `api`, `admin-ui`, `emqx`, `mqtt-bridge`, `nginx`, `apisix`.
