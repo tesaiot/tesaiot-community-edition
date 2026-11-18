@@ -504,8 +504,19 @@ def _device_api_key_record(api_key, device):
     }
 
 
-def _validate_api_key_request(api_key, db):
+def _validate_api_key_request(api_key, db, allow_org_key=False):
     """Shared API key validation used by the API-key decorators.
+
+    ``allow_org_key`` says whether an organisation key (``tesaiot_org_*``) is an
+    acceptable credential for the route. It defaults to False: an org key is a
+    read credential (role ``user``, scopes ``devices:read telemetry:read``), and
+    the decorators that guard WRITE routes (``require_api_key``,
+    ``require_api_key_or_mtls``, ``require_telemetry_ingest``) never look at a
+    role or a scope, so they must not be handed one. Only
+    ``require_auth_or_api_key``, whose routes are paired with
+    ``@require_permission``, passes True. A valid org key presented where it is
+    not accepted is 403 ``API_KEY_READ_ONLY`` ("valid, but not for this"); an
+    unknown one stays 401, so a caller learns nothing about which keys exist.
 
     Returns:
         tuple: (api_key_record, error_response) - exactly one is set.
@@ -554,6 +565,13 @@ def _validate_api_key_request(api_key, db):
     if api_key.startswith('tesaiot_org_'):
         from ..services import org_api_key_service
         org_key = org_api_key_service.validate_api_key(api_key)
+        if org_key and not allow_org_key:
+            logger.warning(f"Org API key refused on a write route {request.path} (org {org_key.get('organization_id')})")
+            return None, (jsonify({
+                'error': 'This API key is read-only',
+                'message': 'An organization API key can read telemetry; it cannot write it',
+                'code': 'API_KEY_READ_ONLY'
+            }), 403)
         if org_key:
             scopes = org_key.get('scopes') or []
             org_id = org_key.get('organization_id')
@@ -619,7 +637,7 @@ def require_auth_or_api_key(f):
                     'error': 'Authentication unavailable',
                     'code': 'AUTH_UNAVAILABLE'
                 }), 503
-            api_key_record, error_response = _validate_api_key_request(api_key, db)
+            api_key_record, error_response = _validate_api_key_request(api_key, db, allow_org_key=True)
             if error_response:
                 return error_response
             g.api_key_record = api_key_record
