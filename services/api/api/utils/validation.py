@@ -43,6 +43,10 @@ MAX_FIELD_LENGTH = 1000
 # optional; the host must still start and end with an alphanumeric character.
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$')
 DEVICE_ID_REGEX = re.compile(r'^[a-zA-Z0-9_-]{3,64}$')
+# Prefixes a device id may not start with (compared without regard to case). `tesa_mqtt_`
+# names MQTT API tokens in the broker ACL's vocabulary; a device whose id (and, for server_tls,
+# username) starts with it must never be mistaken for one.
+RESERVED_DEVICE_ID_PREFIXES = ('tesa_mqtt_',)
 
 # ---------------------------------------------------------------------------
 # Emergency rate-limit bypass (env-driven; defaults OFF)
@@ -228,6 +232,9 @@ def validate_device_id(device_id: str) -> bool:
     if not device_id or not isinstance(device_id, str):
         return False
         
+    if device_id.lower().startswith(RESERVED_DEVICE_ID_PREFIXES):
+        return False
+
     return bool(DEVICE_ID_REGEX.match(device_id))
 
 def sanitize_string(value: str, max_length: int = MAX_FIELD_LENGTH) -> str:

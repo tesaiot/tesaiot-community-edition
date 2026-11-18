@@ -238,28 +238,16 @@ def emqx_acl_webhook():
         
         is_internal_service = any(client_id.startswith(pattern) for pattern in internal_service_patterns)
         
-        # Check for MQTT API token clients (WSS third-party integration)
-        # API tokens are used as both username and client_id prefix
-        is_api_token_client = username and username.startswith('tesa_mqtt_')
-
-        if is_api_token_client:
-            # API token clients can ONLY subscribe to telemetry topics, cannot publish
-            if action == 'subscribe':
-                # Allow subscribing to telemetry topics for all devices in their organization
-                # Topic patterns: device/+/telemetry/#, device/<device_id>/telemetry, device/<device_id>/telemetry/<sensor>
-                if topic.startswith('device/') and '/telemetry' in topic:
-                    logger.info(f"API token ACL allowed: {username[:30]}... subscribe to {topic}")
-                    return jsonify({'result': 'allow'}), 200
-                elif topic.startswith('devices/') and '/telemetry' in topic:
-                    logger.info(f"API token ACL allowed: {username[:30]}... subscribe to {topic}")
-                    return jsonify({'result': 'allow'}), 200
-                else:
-                    logger.warning(f"API token ACL denied: {username[:30]}... subscribe to {topic} (not a telemetry topic)")
-                    return jsonify({'result': 'deny'}), 200
-            elif action == 'publish':
-                # API tokens cannot publish
-                logger.warning(f"API token ACL denied: {username[:30]}... publish to {topic} (publish not allowed for API tokens)")
-                return jsonify({'result': 'deny'}), 200
+        # There is no "API token client" here. An earlier version let any username that
+        # started with `tesa_mqtt_` subscribe to every device's telemetry. CE has no
+        # service that issues such tokens, and the only thing the branch looked at was
+        # the username, which for a server_tls device is its own device id: registering
+        # a device called tesa_mqtt_x was enough to read the whole fleet. A client with
+        # that username is an ordinary device now: the ACL below gives it its own topics
+        # and nothing else, and utils.validation refuses to register the id at all.
+        if username and username.lower().startswith('tesa_mqtt_'):
+            logger.warning(f"ACL: client {client_id!r} uses the reserved 'tesa_mqtt_' username prefix; "
+                           f"treated as an ordinary device ({action} {topic})")
 
         if is_internal_service:
             # v2026.02: Allow internal services to subscribe to $SYS topics (Clear Retained on Connect)
