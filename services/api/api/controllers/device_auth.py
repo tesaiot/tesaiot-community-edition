@@ -20,6 +20,7 @@ from bson import ObjectId
 from ..core.auth import require_auth
 from ..services.device_auth_service import device_auth_service
 from ..core.database import get_db
+from ..services.telemetry_cache_service import invalidate_telemetry_cache_on_ingest
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +113,7 @@ def authenticated_telemetry(device_id):
         }
         
         db.telemetry.insert_one(telemetry_record)
+        invalidate_telemetry_cache_on_ingest(device_id)  # reads must not hide this row
         
         # Update device last seen and auth usage
         db.devices.update_one(
@@ -309,6 +311,7 @@ def uuid_authenticated_telemetry(device_uuid):
         }
         
         db.telemetry.insert_one(telemetry_record)
+        invalidate_telemetry_cache_on_ingest(device_uuid)  # reads must not hide this row
         
         # Update last seen
         db.devices.update_one(
@@ -376,6 +379,7 @@ def mobile_proxy_telemetry():
         }
         
         db.telemetry.insert_one(telemetry_record)
+        invalidate_telemetry_cache_on_ingest(device_data.get('device_id'))  # reads must not hide this row
         
         logger.info(f"Mobile proxy telemetry received for device {device_data.get('device_id')}")
         
