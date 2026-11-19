@@ -19,6 +19,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bundles OpenResty 1.25.3.2, and no fixed OpenResty release exists yet.
   `apisix.enable_http2: false` is our interim measure until one does; see
   `SECURITY.md`. No CE client of 9443 needs HTTP/2.
+- **Dependency advisories down to zero.** At the start of this work pip-audit
+  reported 67 distinct advisories in the `api` requirements, npm audit 9 in
+  `admin-ui`, and Trivy 76 HIGH/CRITICAL findings in the Node-RED example's
+  lockfile. All three scanners are now clean.
+  - `api`: Werkzeug 3.1.9, PyJWT 2.15.0, pymongo 4.18.3 with motor 3.7.0,
+    cryptography 50.0.0 with pyOpenSSL 26.4.0, aiohttp 3.14.4, msgpack 1.2.3;
+    `mqtt-bridge`: python-dotenv 1.2.2.
+  - **FastAPI 0.133.0, Starlette 1.3.1 and pydantic 2.7.4** for the
+    device-management mount, the framework migration 1.3.7 deferred. FastAPI
+    from 0.126 on requires pydantic 2, so the models move to the pydantic 2
+    API; the behaviour pydantic 1 gave implicitly (optional fields without a
+    default, number-to-string coercion) is now explicit, and the old and new
+    models were compared case by case. One visible change: a request to
+    `/api/v1/device-management/*` with no `Authorization` header now gets
+    401 instead of 403, which is what newer FastAPI returns for a missing
+    bearer token. The admin UI answers a 401 by asking the user to sign in
+    again (`services/api/apiClient.ts`).
+  - **python-jose is gone.** Its only caller, the FastAPI bearer-token check,
+    now uses PyJWT like every other JWT path. That removes python-jose's
+    unfixed CVE-2026-85394 and, with it, ecdsa and pyasn1.
+  - `admin-ui`: npm audit fix, plus zod 4.6.6 and vitest 4.1.12 (both major).
+  - The Node-RED example moves to Node-RED 5.0.10 and therefore Node.js 22.9:
+    Node-RED 4 depends on an npm 10 that bundles vulnerable packages.
 
 ## [1.3.7] - 2026-09-06
 

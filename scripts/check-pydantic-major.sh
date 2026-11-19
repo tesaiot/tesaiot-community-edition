@@ -32,12 +32,17 @@ echo "pydantic pinned at $pin (major $major) in $REQ"
 
 fail=0
 report() {  # report <label> <pattern> [file:line exemptions...]
+  # Comment lines are not code and are skipped. A hit whose code also matches
+  # $EXCLUDE (when set) is skipped too.
   local label="$1" pattern="$2"; shift 2
   local hits
   hits="$(grep -rnE --include='*.py' -- "$pattern" $TARGETS || true)"
   [ -n "$hits" ] || return 0
   while IFS= read -r hit; do
     local loc="${hit%%:*}"; local rest="${hit#*:}"; loc="$loc:${rest%%:*}"
+    local code="${rest#*:}"
+    if [[ "$code" =~ ^[[:space:]]*# ]]; then continue; fi
+    if [ -n "${EXCLUDE:-}" ] && grep -qE -- "$EXCLUDE" <<< "$code"; then continue; fi
     for allowed in "$@"; do
       if [ "$loc" = "$allowed" ]; then continue 2; fi
     done
@@ -64,9 +69,21 @@ if [ "$major" = "1" ]; then
     "$PM:208" "$PM:233" "$PM:265" "$PM:286"
 else
   # The mirror image, for after the migration.
-  report "a pydantic v1 API"       '\.dict\(|\.json\(|@validator\('
-  report "a pydantic v1 config"    'class Config:|allow_population_by_field_name'
-  report "a v1-only Field argument" 'Field\([^)]*regex='
+  report "a pydantic v1 API" \
+    '\.dict\(|\.parse_obj\(|\.parse_raw\(|\.parse_file\(|\.from_orm\(|\.copy\(update=|\.__fields__|\.schema\(\)|\.schema_json\(|\.update_forward_refs\(|@validator\(|@root_validator'
+  report "a pydantic v1 config key" \
+    'allow_population_by_field_name|orm_mode *=|allow_mutation *=|(^|[^_[:alnum:]])schema_extra *='
+  report "a v1-only field argument" \
+    '(Field|constr|conlist|conset|confrozenset)\([^)]*(regex|min_items|max_items|const)='
+  # .json() on a model is pydantic 1. The one other .json() in this tree is
+  # requests' Response.json(), always on a variable named response/resp/res/r,
+  # so those receivers are excluded rather than whole files.
+  EXCLUDE='(^|[^_[:alnum:]])(response|resp|res|r)\.json\(' \
+    report "a pydantic v1 API" '\.json\('
+  # A nested `class Config:` is a pydantic 1 model config. The Flask settings
+  # classes in this tree are module-level, which is why the indentation decides.
+  report "a pydantic v1 config" '^[[:space:]]+class Config:'
+  # Not covered: a Field( whose v1-only argument sits on a later line.
 fi
 
 if [ "$fail" -eq 0 ]; then

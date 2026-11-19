@@ -20,7 +20,7 @@ CSR (Certificate Signing Request) workflow with PSoC Edge + OPTIGA Trust M devic
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 import uuid
 
 
@@ -97,17 +97,18 @@ class CSREventType(str, Enum):
 
 class LogErrorDetail(BaseModel):
     """Error details for log entries"""
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
+
     code: str = Field(..., description="Error code (e.g., TLS_CERT_REQUIRED)")
     message: str = Field(..., description="Human-readable error message")
     stack: Optional[str] = Field(None, description="Stack trace if available")
     suggestion: Optional[str] = Field(None, description="Suggested action to resolve")
 
-    class Config:
-        extra = "allow"
-
 
 class LogDetails(BaseModel):
     """Extended details for log entries"""
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
+
     client_ip: Optional[str] = Field(None, description="Client IP address")
     client_port: Optional[int] = Field(None, description="Client port")
     tls_version: Optional[str] = Field(None, description="TLS version (e.g., TLS 1.3)")
@@ -117,9 +118,6 @@ class LogDetails(BaseModel):
     mqtt_topic: Optional[str] = Field(None, description="MQTT topic")
     mqtt_qos: Optional[int] = Field(None, description="MQTT QoS level")
     payload_size: Optional[int] = Field(None, description="Payload size in bytes")
-
-    class Config:
-        extra = "allow"
 
 
 class EnhancedDeviceLog(BaseModel):
@@ -155,13 +153,14 @@ class EnhancedDeviceLog(BaseModel):
     phase1_category: Optional[str] = Field(None, description="Phase 1 activity log category")
     severity_score: Optional[int] = Field(None, description="Severity score (1-5) for sorting")
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat() if v else None
-        }
-        extra = "allow"
-        # Pydantic v1 compatibility - use allow_population_by_field_name instead of v2's populate_by_name
-        allow_population_by_field_name = True
+    # No json_encoders: pydantic 2 deprecates them, and they only ever shaped
+    # JSON-mode output, which nothing produces from this model. Pydantic 2's own
+    # JSON form for datetime is ISO 8601 as well.
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        coerce_numbers_to_str=True,
+    )
 
     def calculate_severity_score(self) -> int:
         """Calculate severity score based on log level"""
@@ -177,7 +176,11 @@ class EnhancedDeviceLog(BaseModel):
 
     def to_mongo_dict(self) -> Dict[str, Any]:
         """Convert to MongoDB-compatible dictionary"""
-        data = self.dict(by_alias=True, exclude_none=True)
+        # details and error are assigned as plain dicts by the callers
+        # (enhanced_device_log_service, device_logs_ws) without validation, as
+        # they were under pydantic 1. warnings=False keeps pydantic 2 from
+        # warning about that on every log write; the dicts serialise unchanged.
+        data = self.model_dump(by_alias=True, exclude_none=True, warnings=False)
 
         # Ensure timestamp is datetime
         if isinstance(data.get('timestamp'), str):
@@ -213,8 +216,7 @@ class EnhancedDeviceLogCreate(BaseModel):
     correlation_id: Optional[str] = Field(None, description="Correlation ID")
     error: Optional[Dict[str, Any]] = Field(None, description="Error details")
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class EnhancedDeviceLogResponse(BaseModel):
@@ -233,9 +235,7 @@ class EnhancedDeviceLogResponse(BaseModel):
     phase1_category: Optional[str] = None
     severity_score: Optional[int] = None
 
-    class Config:
-        # Pydantic v1 compatibility - use allow_population_by_field_name instead of v2's populate_by_name
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True, coerce_numbers_to_str=True)
 
 
 class EnhancedDeviceLogListResponse(BaseModel):

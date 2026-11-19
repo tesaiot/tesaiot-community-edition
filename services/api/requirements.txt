@@ -10,7 +10,7 @@ Flask==3.1.3
 # Werkzeug still pinned explicitly rather than floating: Flask's own constraint
 # is a lower bound, and Werkzeug majors have removed APIs before (which is why
 # 2.3.8 was pinned here in the first place).
-Werkzeug==3.1.8
+Werkzeug==3.1.9
 Flask-Cors==6.0.5
 Flask-JWT-Extended==4.7.4
 Flask-Limiter==4.1.1
@@ -18,12 +18,23 @@ simple-websocket==1.0.0
 gunicorn==23.0.0
 
 # FastAPI sub-application (telemetry/dashboard module) mounted via a2wsgi
-fastapi==0.100.1
+# fastapi 0.100.1 carried PYSEC-2024-38, and its Starlette (0.27.0) seven
+# advisories, the last fixed only in Starlette 1.3.1 (PYSEC-2026-249). FastAPI
+# 0.133.0 is the first release that supports Starlette 1.x. Starlette is pinned
+# here, not left to FastAPI's open lower bound, so the image cannot fall back
+# to a vulnerable release. Every FastAPI >= 0.126 requires pydantic 2; see the
+# pydantic pin below.
+fastapi==0.133.0
+starlette==1.3.1
 a2wsgi==1.10.4
 
 # Datastores
-pymongo==4.6.3
-motor==3.4.0
+# pymongo 4.18.3 is the lowest release that clears PYSEC-2026-4294..4297 and
+# CVE-2026-106435. motor moves with it: motor 3.4-3.5 import pymongo internals
+# that were removed in pymongo 4.9, and motor 3.6 caps pymongo below 4.10, so
+# 3.7.0 is the lowest motor that runs on this pymongo.
+pymongo==4.18.3
+motor==3.7.0
 psycopg2-binary==2.9.7
 redis==4.6.0
 
@@ -36,13 +47,25 @@ hvac==1.1.1
 # HS256 tokens with its own JWT_SECRET (api/core/auth.py), so the practical
 # exposure is low — but it is a small, same-major bump, so there is no reason
 # to carry the finding.
-PyJWT==2.13.0
-python-jose==3.4.0
+#
+# 2.15.0 is the lowest release that clears the 2026 batch (PYSEC-2026-4140..4152,
+# PYSEC-2026-4183, GHSA-pxh4-856f-4h89), two of which are fixed only in 2.15.
+PyJWT==2.15.0
+# python-jose removed 2026-11-19. Its one caller (api/auth/dependencies.py, the
+# FastAPI bearer-token check) now uses PyJWT, like every other JWT path here.
+# python-jose 3.5.0 is the latest release and still carries CVE-2026-85394 /
+# PYSEC-2026-4298 (HMAC key confusion), and it pulled in ecdsa (CVE-2024-23342,
+# no fix planned upstream) and pyasn1 0.4.x (eight open advisories).
 bcrypt==4.0.1
 # cryptography 42.0.8 (CVE fixes); pyOpenSSL bumped in lockstep because
 # pyOpenSSL 23.2.0 caps cryptography at <42.
-cryptography==46.0.3
-pyOpenSSL==25.3.0
+#
+# cryptography 50.0.0 is the lowest release that clears every open advisory
+# (PYSEC-2026-3552 is fixed only in 50.0.0). pyOpenSSL 26.4.0 is the first
+# release that accepts cryptography 50 (26.3.x caps it below 50) and clears
+# PYSEC-2026-2268/2269. Nothing in this service imports OpenSSL directly.
+cryptography==50.0.0
+pyOpenSSL==26.4.0
 # authlib removed 2026-08-06. Nothing in this service imported it — one grep hit
 # across the whole repository, and that hit was this line — and `pip show` in a
 # fully installed environment reported no reverse dependencies. It appears to
@@ -59,10 +82,14 @@ paho-mqtt==2.1.0
 
 # HTTP clients (APISIX admin calls, internal HTTP, email-over-HTTP)
 requests==2.33.0
-aiohttp==3.14.2
+aiohttp==3.14.4
 
 # Validation / serialization
-pydantic==1.10.13
+# pydantic 2 because FastAPI >= 0.126 no longer supports pydantic 1, and no
+# FastAPI that allows pydantic 1 allows a Starlette with the 2026 fixes.
+# 2.7.4 is the last patch of 2.7, the oldest minor FastAPI 0.133 accepts.
+# scripts/check-pydantic-major.sh reads this pin and now rejects v1 spellings.
+pydantic==2.7.4
 marshmallow==3.26.2
 jsonschema==4.17.3
 
@@ -73,6 +100,6 @@ pyyaml>=6.0.1
 aiofiles>=23.0.0
 python-magic==0.4.27
 qrcode[pil]==7.4.2
-msgpack==1.2.1
+msgpack==1.2.3
 structlog>=23.2.0
 orjson>=3.9.0

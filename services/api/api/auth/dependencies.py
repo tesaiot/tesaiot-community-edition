@@ -9,7 +9,7 @@ import logging
 import os
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
+import jwt
 
 from ..core.database import db_manager, get_redis
 from ..core.rbac import RBAC
@@ -60,13 +60,19 @@ def get_current_user(
                 detail="Server authentication is not configured",
             )
 
+        # PyJWT, the library the Flask path (core/auth.py) and Flask-JWT-Extended
+        # already use. python-jose was carried for this one call and has an
+        # unfixed advisory (CVE-2026-85394) plus ecdsa/pyasn1 below it. With the
+        # algorithm pinned to HS256, PyJWT verifies the signature and the exp,
+        # nbf, iat and aud claims (aud is rejected when present, because no
+        # audience is configured), as python-jose did.
         try:
             payload = jwt.decode(
                 token,
                 secret_key,
                 algorithms=['HS256']
             )
-        except JWTError as e:
+        except jwt.PyJWTError as e:
             logger.warning(f"JWT validation failed: {e}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

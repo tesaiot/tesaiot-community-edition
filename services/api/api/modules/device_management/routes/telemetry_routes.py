@@ -59,7 +59,7 @@ async def ingest_telemetry(
             priority=priority_enum,
             tags=data.get("tags", []),
             metadata=data.get("metadata", {}),
-            user=current_user.dict()
+            user=current_user.model_dump()
         )
         
         return result
@@ -115,7 +115,7 @@ async def batch_ingest_telemetry(
                     priority=telemetry_data.get("priority", "normal"),
                     tags=telemetry_data.get("tags", []),
                     metadata=telemetry_data.get("metadata", {}),
-                    user=current_user.dict()
+                    user=current_user.model_dump()
                 )
                 
                 results["successful"] += 1

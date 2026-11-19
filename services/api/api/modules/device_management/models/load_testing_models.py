@@ -13,7 +13,7 @@ This module defines data models for load testing scenarios, patterns, and result
 
 from typing import Dict, List, Optional, Any, Literal
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
 
@@ -67,7 +67,8 @@ class TestScenarioModel(BaseModel):
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
-    @validator('device_distribution')
+    @field_validator('device_distribution')
+    @classmethod
     def validate_distribution(cls, v):
         total = sum(v.values())
         if abs(total - 1.0) > 0.01:  # Allow small floating point errors
@@ -213,10 +214,9 @@ class TestResult(BaseModel):
     # Raw data reference
     raw_data_path: Optional[str] = Field(None, description="Path to raw test data")
     
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    # No json_encoders: pydantic 2 deprecates them, and they only ever shaped
+    # JSON-mode output, which nothing produces from this model. Pydantic 2's own
+    # JSON form for datetime is ISO 8601 as well.
 
 
 class DeviceSimulationProfile(BaseModel):

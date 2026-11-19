@@ -3,13 +3,14 @@
 
 """``to_mongo_dict()`` must work on the pydantic major the image installs.
 
-Both of these model files declare their target in a comment — "Pydantic v1
-compatibility - use allow_population_by_field_name instead of v2's
-populate_by_name" — and then called ``model_dump()``, which exists only in
-pydantic 2. requirements.txt pins 1.10.13, so every call raised
+Both of these model files once declared pydantic 1 as their target in a comment
+and then called ``model_dump()``, which exists only in pydantic 2, while
+requirements.txt pinned 1.10.13. Every call raised
 ``AttributeError: object has no attribute 'model_dump'`` on a live path: the CSR
 workflow tracker (services/api/api/services/csr_workflow_service.py) and the
 enhanced device log writer both go through ``to_mongo_dict()`` before inserting.
+The image has since moved to pydantic 2 (1.3.8); these tests hold the same
+contract on the new major.
 
 Nothing caught it. ruff sees a valid attribute access, compileall sees valid
 syntax, and CI installed neither pydantic nor the models. These tests import the
@@ -124,3 +125,45 @@ def test_nested_steps_and_error_serialise(csr):
     assert doc['error']['code'] == 'E_BAD_CSR'
     assert 'suggestion' not in doc['error']
     assert 'key' not in doc['csr_info'] or doc['csr_info'].get('key') is None
+
+
+# --- pydantic 2 migration: behaviour that pydantic 1 gave for free ---------------
+#
+# Each case below was compared against the pydantic 1.10.13 build of the same
+# models before the pin moved, and produced identical output.
+
+
+def test_plain_dict_details_serialise_without_warning(device_log):
+    """The log writers assign plain dicts to ``details`` and ``error``.
+
+    enhanced_device_log_service and device_logs_ws do this without validation.
+    Pydantic 1 serialised the dicts as they were; pydantic 2 does too but warns
+    on every write unless told not to.
+    """
+    import warnings
+    entry = device_log.EnhancedDeviceLog(
+        device_id='dev-1', event_type='mqtt_connected', message='hello', timestamp=_FIXED)
+    entry.details = {'client_ip': '10.0.0.1', 'client_port': 8883}
+    entry.error = {'code': 'E_TLS', 'message': 'handshake failed'}
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        doc = entry.to_mongo_dict()
+    assert doc['details'] == {'client_ip': '10.0.0.1', 'client_port': 8883}
+    assert doc['error']['code'] == 'E_TLS'
+
+
+def test_numeric_ids_still_coerce_to_str(csr):
+    """Pydantic 1 turned a number into a string for a ``str`` field; 2 refuses unless asked."""
+    workflow = csr.CSRWorkflowStatusModel(
+        device_id=123, correlation_id=456, started_at=_FIXED, updated_at=_FIXED)
+    doc = workflow.to_mongo_dict()
+    assert doc['device_id'] == '123'
+    assert doc['correlation_id'] == '456'
+
+
+def test_optional_without_default_is_still_optional(csr):
+    """``Optional[str]`` with no default was optional in pydantic 1 and required in 2."""
+    response = csr.CSRWorkflowStatusResponse(
+        device_id='dev-1', correlation_id='corr-1', workflow_status='active',
+        steps={}, started_at='2026-09-06T03:21:00', progress_percentage=0)
+    assert response.current_step is None

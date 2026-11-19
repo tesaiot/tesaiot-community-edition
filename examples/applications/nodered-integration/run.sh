@@ -43,7 +43,7 @@ Commands
   clean              Remove node_modules and dist artifacts
 
 Environment
-  NODE_VERSION requirement: >= 18.18 (use nvm or Homebrew node@20 on macOS)
+  NODE_VERSION requirement: >= 22.9 (Node-RED 5; use nvm or Homebrew node@22 on macOS)
   DOCKER_COMPOSE_BIN override the docker compose executable if required
 USAGE
 }
@@ -57,13 +57,13 @@ ensure_command() {
 }
 
 ensure_node_version() {
-  # The FlowFuse dashboard build requires modern Node.js - bail out early if too old.
+  # Node-RED 5 requires Node.js 22.9 or later - bail out early if too old.
   ensure_command node
   local version major minor patch
   version="$(node -v | sed 's/^v//')"
   IFS='.' read -r major minor patch <<<"$version"
-  if (( major < 18 )) || { (( major == 18 )) && (( minor < 18 )); }; then
-    echo "Node version >= 18.18.0 is required. Current: v$version" >&2
+  if (( major < 22 )) || { (( major == 22 )) && (( minor < 9 )); }; then
+    echo "Node version >= 22.9.0 is required. Current: v$version" >&2
     exit 1
   fi
 }

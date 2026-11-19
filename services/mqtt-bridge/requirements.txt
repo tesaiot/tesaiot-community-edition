@@ -11,4 +11,4 @@ paho-mqtt==2.1.0
 requests==2.33.0
 
 # Optional .env loading convenience (not imported directly, safe to keep)
-python-dotenv==1.0.1
+python-dotenv==1.2.2
