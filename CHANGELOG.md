@@ -31,7 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     from 0.126 on requires pydantic 2, so the models move to the pydantic 2
     API; the behaviour pydantic 1 gave implicitly (optional fields without a
     default, number-to-string coercion) is now explicit, and the old and new
-    models were compared case by case.
+    models were compared case by case. One visible change: a request to
+    `/api/v1/device-management/*` with no `Authorization` header now gets
+    401 instead of 403, which is what newer FastAPI returns for a missing
+    bearer token. The admin UI answers a 401 by asking the user to sign in
+    again (`services/api/apiClient.ts`).
   - **python-jose is gone.** Its only caller, the FastAPI bearer-token check,
     now uses PyJWT like every other JWT path. That removes python-jose's
     unfixed CVE-2026-85394 and, with it, ecdsa and pyasn1.
