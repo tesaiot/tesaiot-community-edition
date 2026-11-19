@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8] - 2026-11-19
+
 ### Security
 
 - **NGINX CVE-2026-123007 (HTTP/2 flow control) and the other CVEs nginx
