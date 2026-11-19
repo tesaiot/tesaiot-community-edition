@@ -20,6 +20,17 @@ HTTPS, and watch it live — all running on one Docker host.
 <!-- ![OpenSSF Best Practices](https://www.bestpractices.dev/projects/<id>/badge) -->
 <!-- ![CI](https://github.com/<org>/<repo>/actions/workflows/ci.yml/badge.svg) -->
 
+## What's new in v1.3.8
+
+A security release: upgrade from v1.3.7 with `docker compose pull && docker compose up -d`.
+
+- **NGINX CVE-2026-123007 fixed.** `tesa-nginx` and the `admin-ui` image now run `nginx:1.30.7-alpine`.
+- **APISIX serves HTTP/1.1 only on 9443** until a fixed OpenResty ships (see [`SECURITY.md`](SECURITY.md)).
+- **No open dependency advisories.** pip-audit, npm audit and Trivy all report zero findings. FastAPI moved to 0.133 with pydantic 2, and python-jose was replaced by PyJWT.
+- **One visible change:** a device-management request with no token now gets `401` instead of `403`.
+
+Full details are in [`CHANGELOG.md`](CHANGELOG.md#138---2026-11-19) and on the [v1.3.8 release page](https://github.com/tesaiot/tesaiot-community-edition/releases/tag/v1.3.8).
+
 ---
 
 ## What it does
