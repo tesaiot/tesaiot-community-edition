@@ -22,14 +22,33 @@ HTTPS, and watch it live — all running on one Docker host.
 
 ## What's new in v1.3.8
 
-A security release: upgrade from v1.3.7 with `docker compose pull && docker compose up -d`.
+A security release. To upgrade from v1.3.7, run `docker compose pull && docker compose up -d`; there are no data migrations.
 
-- **NGINX CVE-2026-123007 fixed.** `tesa-nginx` and the `admin-ui` image now run `nginx:1.30.7-alpine`.
-- **APISIX serves HTTP/1.1 only on 9443** until a fixed OpenResty ships (see [`SECURITY.md`](SECURITY.md)).
-- **No open dependency advisories.** pip-audit, npm audit and Trivy all report zero findings. FastAPI moved to 0.133 with pydantic 2, and python-jose was replaced by PyJWT.
+- **Organization API keys are read-only.** Before this release, a key issued for reading could also write telemetry. It now gets `403 API_KEY_READ_ONLY` on every write route.
+- **No device can read another device's data.** Before this release, a device whose id started with `tesa_mqtt_` received the whole fleet's telemetry. That rule is gone, and the platform now refuses device ids with that prefix.
+- **NGINX CVE-2026-123007 fixed.** `tesa-nginx` and the `admin-ui` image run `nginx:1.30.7-alpine`. APISIX serves HTTP/1.1 only on 9443 until a fixed OpenResty ships (see [`SECURITY.md`](SECURITY.md)).
+- **No open dependency advisories.** pip-audit, npm audit and Trivy all report zero findings, and CI fails on any new HIGH or CRITICAL finding. FastAPI moved to 0.133 with pydantic 2, and PyJWT replaced python-jose.
+- **Fixed: a telemetry read no longer lags the latest write by up to 5 minutes.**
 - **One visible change:** a device-management request with no token now gets `401` instead of `403`.
 
 Full details are in [`CHANGELOG.md`](CHANGELOG.md#138---2026-11-19) and on the [v1.3.8 release page](https://github.com/tesaiot/tesaiot-community-edition/releases/tag/v1.3.8).
+
+## Security hardening
+
+These protections are on by default. The links point to where each one is implemented or documented.
+
+| Area | In place |
+|---|---|
+| **Secrets** | Every install generates its own random secrets, and the API refuses to start in production while any secret is still a `CHANGEME` placeholder ([`scripts/generate-secrets.sh`](scripts/generate-secrets.sh), [`config.py`](services/api/api/core/config.py)). |
+| **Device identity** | A unique X.509 certificate per device from a two-tier Vault PKI. The certificate's common name is set by the server to the device id. Private keys stay in Vault. |
+| **Transport** | TLS 1.2 and 1.3 only, AEAD ciphers only (no CBC, no SHA-1). MQTT is offered only over TLS on the network. The mTLS listener requires a client certificate and checks revocation (CRL) during the handshake ([security-tls-mtls.md](docs/en/security-tls-mtls.md)). |
+| **Authorization** | Each device can publish and subscribe only on its own topics. Organization API keys can read but cannot write. Unknown credentials fail closed. |
+| **Accounts** | bcrypt password hashing, per-IP and per-account lockout, `Retry-After` on every `429`, and constant-time secret comparison. |
+| **Attack surface** | The API and the databases are not published to the host, and management ports bind to `127.0.0.1`. Networks are segmented. Containers run with `no-new-privileges`, and the bridge also runs read-only with all capabilities dropped. |
+| **Supply chain** | CI runs dependency scanning (pip-audit, npm audit, Trivy), secret scanning and image scanning, and fails on HIGH or CRITICAL findings. |
+| **Disclosure** | A coordinated vulnerability disclosure policy in English and Thai ([`SECURITY.md`](SECURITY.md)). |
+
+How this maps to ETSI EN 303 645 and the NCSA Consumer IoT guidelines, including what is **not** covered yet, is in [compliance-en-303-645-ncsa.md](docs/en/compliance-en-303-645-ncsa.md). Two of the open items are that images are not yet signed and there is no standalone threat-model document. Operators still own their deployment: read the hardening checklist in [`SECURITY.md`](SECURITY.md#hardening-reminders-for-operators) before going live.
 
 ---
 

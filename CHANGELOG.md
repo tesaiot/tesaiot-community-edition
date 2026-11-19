@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **An organization API key could write telemetry.** The API-key checks on
+  `POST /api/v1/telemetry`, `/telemetry/batch` and `/devices/telemetry` never
+  looked at the key's role or scopes, so a key issued as `devices:read
+  telemetry:read` was accepted for writes. An org key on a write route is now
+  `403 API_KEY_READ_ONLY`; an unknown key stays `401`.
+- **A device id starting `tesa_mqtt_` could read the whole fleet.** The EMQX ACL
+  webhook gave any such username a subscription to `device/+/telemetry`, and a
+  serverTLS device's username is its device id, so registering `tesa_mqtt_x` was
+  enough (measured: 56 messages from 4 other devices in 70 s). The branch is
+  removed, and `validate_device_id` refuses the reserved prefix in any case.
 - **NGINX CVE-2026-123007 (HTTP/2 flow control) and the other CVEs nginx
   fixed on 2026-11-18**, among them CVE-2026-123633, CVE-2026-121810,
   CVE-2026-123634 and CVE-2026-118899. `tesa-nginx` and the `admin-ui` image
@@ -44,6 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `admin-ui`: npm audit fix, plus zod 4.6.6 and vitest 4.1.12 (both major).
   - The Node-RED example moves to Node-RED 5.0.10 and therefore Node.js 22.9:
     Node-RED 4 depends on an npm 10 that bundles vulnerable packages.
+
+
+### Fixed
+
+- **A telemetry read lagged the write by up to five minutes.** Reads cache a
+  device's latest values for 300 s, but only one ingest path dropped that cache,
+  so a poller kept seeing the first value (measured: `seq=1` for 70 s while the
+  device published every 5 s). Every function that stores telemetry now drops
+  the device's cached reads after the row is stored, and a source check fails
+  for any new one that forgets.
 
 ## [1.3.7] - 2026-09-06
 
