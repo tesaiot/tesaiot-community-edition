@@ -2,7 +2,7 @@
 
 ARG NODE_RED_VERSION=3.1.9-18
 
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /workspace
 
 COPY package.json tsconfig.json ./

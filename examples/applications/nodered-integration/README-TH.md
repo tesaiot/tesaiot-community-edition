@@ -76,7 +76,7 @@ nodered-to-platform/
 
 - หาก dashboard ไม่แสดงข้อมูล ตรวจสอบให้แน่ใจว่าเชื่อมต่อพอร์ต 1880, 1883/8883 ได้ และ API key ถูกต้อง
 - ถ้าแดชบอร์ดยังว่าง ให้ import flow ใหม่ เพราะ `ui-template` จะเรนเดอร์ HTML จาก `msg.payload`
-- หาก build ไม่ผ่าน ให้รัน `npm install` และตรวจสอบว่า Node เวอร์ชัน ≥ 18.18
+- หาก build ไม่ผ่าน ให้รัน `npm install` และตรวจสอบว่า Node เวอร์ชัน ≥ 22.9
 
 ---
 
