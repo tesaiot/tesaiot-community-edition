@@ -272,8 +272,11 @@ def c_device_delete():
 def c_mqtt_bridge():
     rc, out = dexec("tesa-mqtt-bridge", "sh", "-c",
                     "cat /proc/1/comm 2>/dev/null; echo")
-    # The bridge logs its successful MQTT connection; assert via recent logs.
-    p = subprocess.run(["docker", "logs", "--tail", "200", "tesa-mqtt-bridge"],
+    # The bridge logs its successful MQTT connection once, when it starts. On a stack that
+    # has been running a while the busy bridge has logged far more than 200 lines since, so
+    # a fixed tail made this check fail on any healthy long-running install. Read the whole
+    # log: Docker rotates it (the compose logging anchor caps its size), so it stays bounded.
+    p = subprocess.run(["docker", "logs", "tesa-mqtt-bridge"],
                        capture_output=True, text=True)
     log = p.stdout + p.stderr
     connected = "Connected to MQTT broker" in log and "Successfully authenticated" in log

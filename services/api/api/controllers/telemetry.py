@@ -23,6 +23,7 @@ from ..utils.validation import (
     validate_device_id, sanitize_string, validate_request_size
 )
 from ..utils.timefmt import iso_from_utc_naive
+from ..services.telemetry_cache_service import invalidate_telemetry_cache_on_ingest
 
 # Protected Update (OTA) is out of scope for the Community Edition.
 logger = logging.getLogger(__name__)
@@ -159,7 +160,15 @@ def store_mongodb_telemetry(device_id, timestamp, data, metadata, organization_i
         }
         
         result = db.telemetry.insert_one(telemetry_doc)
-        
+
+        # The read routes cache a device's latest values for 300 s. Drop them AFTER the row is
+        # stored (before it, a read in between would cache the old value again), and never let a
+        # Redis failure fail a write that already succeeded.
+        try:
+            invalidate_telemetry_cache_on_ingest(device_id)
+        except Exception as cache_error:
+            logger.warning(f"Could not drop the telemetry read cache for {device_id}: {cache_error}")
+
         logger.debug(f"Stored telemetry in MongoDB: {result.inserted_id}")
         return str(result.inserted_id)
         

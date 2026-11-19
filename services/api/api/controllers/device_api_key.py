@@ -28,6 +28,7 @@ from ..services.api_key_service import (
     get_api_key_stats
 )
 from ..core.database import get_db
+from ..services.telemetry_cache_service import invalidate_telemetry_cache_on_ingest
 from ..core.rbac import require_permission
 from ..core.auth import require_api_key_or_mtls, require_auth
 
@@ -328,6 +329,7 @@ def submit_telemetry():
         # Store in database
         db = get_db()
         result = db.telemetry.insert_one(telemetry_data)
+        invalidate_telemetry_cache_on_ingest(g.device_id)  # reads must not hide this row
         
         # Update device last activity
         db.devices.update_one(

@@ -26,6 +26,7 @@ from bson import ObjectId
 import hashlib
 
 from ..core.database import get_db, get_redis
+from ..services.telemetry_cache_service import invalidate_telemetry_cache_on_ingest
 from ..core.auth import (
     require_auth, authenticate_mtls_request, validate_device_api_key,
     extract_api_key_from_request,
@@ -389,6 +390,7 @@ def submit_telemetry():
         # Store telemetry
         db = get_db()
         result = db.telemetry.insert_one(telemetry_record)
+        invalidate_telemetry_cache_on_ingest(device['device_id'])  # reads must not hide this row
         
         # Log telemetry event
         logger.info(f"Telemetry received from device {device['device_id']}")
@@ -555,6 +557,7 @@ def submit_telemetry_batch():
         if records:
             result = db.telemetry.insert_many(records)
             inserted_count = len(result.inserted_ids)
+            invalidate_telemetry_cache_on_ingest(device['device_id'])  # reads must not hide these rows
             
             # Update device stats
             db.devices.update_one(

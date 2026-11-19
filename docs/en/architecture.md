@@ -23,8 +23,8 @@ a single host for a single organization.
 | 7 | `tesa-admin-ui` | built `tesa-admin-ui` (React SPA via nginx) | Admin console + the Telemetry Dashboard inside Device Details. |
 | 8 | `tesa-emqx` | `emqx/emqx:5.10.0` | MQTT broker: plain/serverTLS/mTLS listeners, webhook auth/ACL. |
 | 9 | `tesa-mqtt-bridge` | built `tesa-mqtt-bridge` | Subscribes to EMQX, forwards telemetry to the API → TimescaleDB/MongoDB. Runs read-only, no capabilities. |
-| 10 | `tesa-nginx` | `nginx:1.27.5-alpine3.21` | Edge TLS termination + reverse proxy (`:80` redirect, `:443` serverTLS, `:9444` mTLS ingest). |
-| 11 | `tesa-apisix` | `apache/apisix:3.11.0-debian` | API gateway in standalone YAML mode (no etcd): API-key auth, rate limiting, serverTLS/mTLS. |
+| 10 | `tesa-nginx` | `nginx:1.30.7-alpine` | Edge TLS termination + reverse proxy (`:80` redirect, `:443` serverTLS, `:9444` mTLS ingest). |
+| 11 | `tesa-apisix` | `apache/apisix:3.11.0-debian` | API gateway in standalone YAML mode (no etcd): API-key auth, rate limiting, serverTLS/mTLS. HTTP/2 is off (CVE-2026-123007; see `SECURITY.md`). |
 
 ---
 

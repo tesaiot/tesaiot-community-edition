@@ -17,6 +17,7 @@ import time
 from typing import Dict, Optional, Any
 from datetime import datetime
 import logging
+from .telemetry_cache_service import invalidate_telemetry_cache_on_ingest
 import requests
 
 from ..core.database import get_db, get_redis
@@ -432,6 +433,7 @@ class DeviceAuthService:
                 
                 try:
                     self.db.telemetry.insert_one(telemetry_record)
+                    invalidate_telemetry_cache_on_ingest(device_uuid)  # reads must not hide this row
                     processed += 1
                     
                     # Update last seen

@@ -63,7 +63,7 @@ In `conf.d/30-iot-mtls.conf`:
 
 ```yaml
 nginx:
-  image: nginx:1.27.5-alpine3.21
+  image: nginx:1.30.7-alpine
   volumes:
     - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
