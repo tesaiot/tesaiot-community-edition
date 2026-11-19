@@ -39,8 +39,8 @@ stack ประกอบด้วย 11 services ที่จัดการผ�
 | `admin-ui` | tesa-admin-ui | React SPA (nginx) | — (ภายใน) |
 | `emqx` | emqx/emqx:5.10.0 | MQTT broker | 1883, 8883, 8884, 8083, 8084, 18083 |
 | `mqtt-bridge` | tesa-mqtt-bridge | สะพาน telemetry EMQX → API | — |
-| `nginx` | nginx:1.27.5-alpine | TLS termination + reverse proxy | 80, 443, 9444 |
-| `apisix` | apache/apisix:3.11.0-debian | API gateway (standalone YAML) | 9080, 9443, 9180 |
+| `nginx` | nginx:1.30.7-alpine | TLS termination + reverse proxy | 80, 443, 9444 |
+| `apisix` | apache/apisix:3.11.0-debian | API gateway (standalone YAML, ปิด HTTP/2) | 9080, 9443, 9180 |
 
 > APISIX ทำงานในโหมด standalone YAML จึง **ไม่ต้องใช้ etcd**
 

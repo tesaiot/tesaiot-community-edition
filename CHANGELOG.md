@@ -5,6 +5,21 @@ All notable changes to TESAIoT Community Edition are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- **NGINX CVE-2026-123007 (HTTP/2 flow control) and the other CVEs nginx
+  fixed on 2026-11-18**, among them CVE-2026-123633, CVE-2026-121810,
+  CVE-2026-123634 and CVE-2026-118899. `tesa-nginx` and the `admin-ui` image
+  move from `nginx:1.27.5-alpine3.21` to `nginx:1.30.7-alpine`, which fixes
+  all of them.
+  The edge keeps HTTP/2 on 443.
+- **APISIX serves HTTP/1.1 only on 9443.** `apache/apisix:3.11.0-debian`
+  bundles OpenResty 1.25.3.2, and no fixed OpenResty release exists yet.
+  `apisix.enable_http2: false` is our interim measure until one does; see
+  `SECURITY.md`. No CE client of 9443 needs HTTP/2.
+
 ## [1.3.7] - 2026-09-06
 
 ### Security

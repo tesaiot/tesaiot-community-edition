@@ -24,7 +24,7 @@ directory — not vendored here.
 | Service | Build context | Image tag | Stack | Port(s) | Role |
 |---|---|---|---|---|---|
 | **api** | `./services/api` | `tesa-api` | Python — Flask monolith + FastAPI device-management mount (served by gunicorn) | `5566` | Core REST API: user management, device/identity management, certificate lifecycle (Vault PKI), telemetry & dashboard endpoints |
-| **admin-ui** | `./services/admin-ui` | `tesa-admin-ui` | React + Vite, served by nginx (pinned `nginx:1.27.5-alpine3.21`) | behind `nginx` (443) | Admin web console: users, devices, certificates, and the IoT telemetry dashboard inside Device Details |
+| **admin-ui** | `./services/admin-ui` | `tesa-admin-ui` | React + Vite, served by nginx (pinned `nginx:1.30.7-alpine`) | behind `nginx` (443) | Admin web console: users, devices, certificates, and the IoT telemetry dashboard inside Device Details |
 | **mqtt-bridge** | `./services/mqtt-bridge` | `tesa-mqtt-bridge` | Python | none (egress only) | Subscribes to EMQX, normalises telemetry, and forwards it over HTTP to the `api` (which persists to TimescaleDB / MongoDB — the bridge never writes the databases directly) |
 
 Build tags are parameterised as `${BUILD_TAG:-latest}` in `docker-compose.yml`.
@@ -68,8 +68,8 @@ Defined in [`../docker-compose.yml`](../docker-compose.yml):
 | `timescaledb` | `timescale/timescaledb:2.17.2-pg14` | `5432` |
 | `redis` | `redis:7.4.4-alpine` | `6379` |
 | `emqx` | `emqx/emqx:5.10.0` | `1883` (plain), `8883` (mTLS), `8884` (serverTLS), `8083/8084` (WS/WSS), `18083` (dashboard) |
-| `nginx` | `nginx:1.27.5-alpine3.21` | `80`, `443`, `9444` |
-| `apisix` | `apache/apisix:3.11.0-debian` | `9080` (http), `9443` (https/mTLS), `9180` (admin) |
+| `nginx` | `nginx:1.30.7-alpine` | `80`, `443`, `9444` |
+| `apisix` | `apache/apisix:3.11.0-debian` | `9080` (http), `9443` (https/mTLS, HTTP/1.1 only), `9180` (admin) |
 
 > Exact image versions are the single source of truth in `../docker-compose.yml`.
 > To upgrade an upstream component, bump its tag there — no source changes needed.

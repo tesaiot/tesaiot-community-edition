@@ -40,8 +40,8 @@ Community Edition เป็น stack แบบ single-organization ที่จ�
 | `admin-ui` | tesa-admin-ui | React SPA เสิร์ฟด้วย nginx (พอร์ต 80 ภายใน) |
 | `emqx` | emqx/emqx:5.10.0 | MQTT broker — serverTLS + mTLS, auth/ACL ผ่าน API webhook |
 | `mqtt-bridge` | tesa-mqtt-bridge | สะพาน telemetry: EMQX → API → TimescaleDB/MongoDB |
-| `nginx` | nginx:1.27.5-alpine | TLS termination + reverse proxy (80/443/9444) |
-| `apisix` | apache/apisix:3.11.0-debian | API gateway โหมด standalone YAML (ไม่ใช้ etcd) |
+| `nginx` | nginx:1.30.7-alpine | TLS termination + reverse proxy (80/443/9444) |
+| `apisix` | apache/apisix:3.11.0-debian | API gateway โหมด standalone YAML (ไม่ใช้ etcd) ปิด HTTP/2 (CVE-2026-123007 ดู `SECURITY.md`) |
 
 ## เครือข่าย
 

@@ -6,6 +6,9 @@
 # (routes / ssls / consumers) are loaded from apisix.yaml at boot.
 
 apisix:
+  # CVE-2026-123007 (HTTP/2 flow control, nginx 1.9.5-1.31.8): APISIX 3.11 ships OpenResty
+  # 1.25.3.2, which has no fixed release yet. HTTP/2 stays off on every listener (9443 and 9080) until it does.
+  enable_http2: false
   enable_ipv6: false
   node_listen: 9080
   # NOTE: APISIX runs in standalone YAML mode (deployment.config_provider: yaml,

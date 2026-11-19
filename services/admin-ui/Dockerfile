@@ -55,7 +55,7 @@ RUN test -f dist/index.html || (echo "Build failed!" && exit 1)
 
 # Stage 2: Serve with nginx (pinned to the same version as the platform edge
 # nginx in docker-compose.yml)
-FROM nginx:1.27.5-alpine3.21
+FROM nginx:1.30.7-alpine
 
 # Build arguments for build info + image labels
 ARG CACHEBUST=1

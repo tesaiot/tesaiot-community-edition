@@ -122,6 +122,31 @@ minimum:
   possible.
 - Keep Docker images and the host patched.
 
+### NGINX CVE-2026-123007 and related CVEs (2026-11-18)
+
+nginx.org lists memory corruption in HTTP/2 flow control (CVE-2026-123007,
+major, 1.9.5-1.31.8) among ten CVEs fixed on the same day. The ones that touch
+this stack are CVE-2026-123633 (HTTP/2), CVE-2026-121810 (HTTP/3),
+CVE-2026-123634 (resolver) and CVE-2026-118899 (request body over TLS 1.3).
+All ten are fixed in nginx 1.30.7 and 1.31.9.
+
+- `tesa-nginx` and the `admin-ui` image are pinned to `nginx:1.30.7-alpine`.
+  Pull and recreate: `docker compose pull nginx && docker compose up -d nginx`,
+  and rebuild `admin-ui`.
+- `tesa-apisix` (`apache/apisix:3.11.0-debian`) bundles OpenResty 1.25.3.2,
+  whose nginx core is inside the vulnerable range, and no fixed OpenResty
+  release exists yet. `config/apisix/config.yaml.tpl` sets
+  `apisix.enable_http2: false`, so port 9443 negotiates HTTP/1.1 only. This is
+  our own interim measure, not a vendor-listed mitigation: it removes the
+  HTTP/2 code path the advisory is about, and it does not address the resolver
+  or TLS 1.3 issues. Keep it until APISIX ships a runtime with a fixed nginx
+  core. Set the key at the `apisix:` level; APISIX 3.9 and later refuse the
+  old per-port `enable_http2` key and the container restarts in a loop.
+- Check from outside the host, with your `DOMAIN` as SNI (without it APISIX
+  refuses the handshake, and no ALPN line is printed either way):
+  `openssl s_client -connect <host>:9443 -servername <DOMAIN> -alpn h2,http/1.1 </dev/null | grep ALPN`
+  must print `ALPN protocol: http/1.1`.
+
 ---
 ---
 
@@ -240,3 +265,27 @@ FastAPI, React) ควรรายงานไปยังโครงการ�
 - ตั้งค่า TLS ให้ถูกต้อง และเก็บกุญแจ root ของ PKI ไว้แบบ offline/sealed
   เท่าที่เป็นไปได้
 - อัปเดต Docker image และระบบปฏิบัติการของเครื่องโฮสต์ให้ทันสมัยเสมอ
+
+### NGINX CVE-2026-123007 และ CVE ที่เกี่ยวข้อง (2026-11-18)
+
+nginx.org ประกาศช่องโหว่หน่วยความจำเสียหายใน HTTP/2 flow control
+(CVE-2026-123007 ระดับ major รุ่น 1.9.5-1.31.8) เป็นหนึ่งในสิบ CVE ที่แก้ในวันเดียวกัน
+ตัวที่เกี่ยวกับระบบนี้คือ CVE-2026-123633 (HTTP/2), CVE-2026-121810 (HTTP/3),
+CVE-2026-123634 (resolver) และ CVE-2026-118899 (การอ่าน request body ผ่าน TLS 1.3)
+ทั้งสิบตัวแก้แล้วใน nginx 1.30.7 และ 1.31.9
+
+- `tesa-nginx` และ image ของ `admin-ui` ตรึงไว้ที่ `nginx:1.30.7-alpine`
+  ให้ pull แล้วสร้าง container ใหม่ด้วย `docker compose pull nginx && docker compose up -d nginx`
+  และ build `admin-ui` ใหม่
+- `tesa-apisix` (`apache/apisix:3.11.0-debian`) มาพร้อม OpenResty 1.25.3.2 ซึ่ง nginx
+  ภายในอยู่ในช่วงรุ่นที่มีช่องโหว่ และยังไม่มี OpenResty รุ่นที่แก้แล้ว
+  `config/apisix/config.yaml.tpl` จึงตั้ง `apisix.enable_http2: false` ให้พอร์ต 9443
+  ใช้ได้เฉพาะ HTTP/1.1 นี่เป็นมาตรการชั่วคราวของเราเอง ไม่ใช่วิธีบรรเทาที่ผู้ผลิตระบุ
+  มันตัดเส้นทาง HTTP/2 ที่ประกาศพูดถึงออก แต่ไม่ได้แก้ปัญหา resolver หรือ TLS 1.3
+  ให้คงค่านี้ไว้จนกว่า APISIX จะออก runtime ที่ใช้ nginx รุ่นที่แก้แล้ว
+  ต้องตั้งค่าที่ระดับ `apisix:` เท่านั้น APISIX 3.9 ขึ้นไปไม่รับคีย์ `enable_http2`
+  แบบรายพอร์ตแบบเก่า และ container จะรีสตาร์ตวนไม่หยุด
+- ตรวจจากนอกเครื่อง โดยใส่ `DOMAIN` ของคุณเป็น SNI (ถ้าไม่ใส่ APISIX จะปฏิเสธ
+  การเชื่อมต่อ และไม่แสดงบรรทัด ALPN ไม่ว่าจะปิด HTTP/2 หรือไม่):
+  `openssl s_client -connect <host>:9443 -servername <DOMAIN> -alpn h2,http/1.1 </dev/null | grep ALPN`
+  ต้องแสดง `ALPN protocol: http/1.1`
