@@ -5,7 +5,7 @@
 # Apache License, Version 2.0 by the copyright owner. See the NOTICE file in the
 # distribution root for details.
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
@@ -15,7 +15,7 @@ class DeviceCreateDTO(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     device_type: str = Field(..., description="Device type: sensor, actuator, gateway, controller, hybrid")
     protocol: str = Field(default="mqtt", description="Connection protocol")
-    mac_address: Optional[str] = Field(None, regex="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
+    mac_address: Optional[str] = Field(None, pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
     ip_address: Optional[str] = Field(None)
     firmware_version: Optional[str] = Field(None, max_length=50)
     hardware_version: Optional[str] = Field(None, max_length=50)
@@ -26,33 +26,34 @@ class DeviceCreateDTO(BaseModel):
     group_ids: Optional[List[str]] = Field(default_factory=list)
     auto_generate_certificate: bool = Field(default=True)
     
-    @validator('device_type')
+    @field_validator('device_type')
+    @classmethod
     def validate_device_type(cls, v):
         valid_types = ["sensor", "actuator", "gateway", "controller", "hybrid"]
         if v not in valid_types:
             raise ValueError(f"Device type must be one of: {', '.join(valid_types)}")
         return v
     
-    @validator('protocol')
+    @field_validator('protocol')
+    @classmethod
     def validate_protocol(cls, v):
         valid_protocols = ["mqtt", "https", "websocket", "coap", "lorawan"]
         if v not in valid_protocols:
             raise ValueError(f"Protocol must be one of: {', '.join(valid_protocols)}")
         return v
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "Temperature Sensor 01",
-                "device_type": "sensor",
-                "protocol": "mqtt",
-                "mac_address": "00:1A:2B:3C:4D:5E",
-                "firmware_version": "1.2.3",
-                "location": {"lat": 13.7563, "lng": 100.5018},
-                "tags": ["temperature", "indoor"],
-                "auto_generate_certificate": True
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "name": "Temperature Sensor 01",
+            "device_type": "sensor",
+            "protocol": "mqtt",
+            "mac_address": "00:1A:2B:3C:4D:5E",
+            "firmware_version": "1.2.3",
+            "location": {"lat": 13.7563, "lng": 100.5018},
+            "tags": ["temperature", "indoor"],
+            "auto_generate_certificate": True
         }
+    })
 
 
 class DeviceUpdateDTO(BaseModel):
@@ -65,14 +66,13 @@ class DeviceUpdateDTO(BaseModel):
     tags: Optional[List[str]] = Field(None)
     group_ids: Optional[List[str]] = Field(None)
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "name": "Temperature Sensor 01 - Updated",
-                "firmware_version": "1.2.4",
-                "location": {"lat": 13.7563, "lng": 100.5018, "floor": 2}
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "name": "Temperature Sensor 01 - Updated",
+            "firmware_version": "1.2.4",
+            "location": {"lat": 13.7563, "lng": 100.5018, "floor": 2}
         }
+    })
 
 
 class DeviceResponseDTO(BaseModel):
@@ -83,24 +83,23 @@ class DeviceResponseDTO(BaseModel):
     device_type: str
     status: str
     protocol: str
-    mac_address: Optional[str]
-    ip_address: Optional[str]
-    firmware_version: Optional[str]
-    hardware_version: Optional[str]
-    serial_number: Optional[str]
-    location: Optional[Dict[str, Any]]
+    mac_address: Optional[str] = None
+    ip_address: Optional[str] = None
+    firmware_version: Optional[str] = None
+    hardware_version: Optional[str] = None
+    serial_number: Optional[str] = None
+    location: Optional[Dict[str, Any]] = None
     metadata: Dict[str, Any]
     tags: List[str]
     created_at: datetime
     updated_at: datetime
-    last_seen: Optional[datetime]
-    certificate_id: Optional[str]
+    last_seen: Optional[datetime] = None
+    certificate_id: Optional[str] = None
     group_ids: List[str]
     
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    # No json_encoders: pydantic 2 deprecates them, and they only ever shaped
+    # JSON-mode output, which nothing produces from this model. Pydantic 2's own
+    # JSON form for datetime is ISO 8601 as well.
 
 
 class DeviceListQueryDTO(BaseModel):
@@ -114,7 +113,7 @@ class DeviceListQueryDTO(BaseModel):
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
     sort_by: str = Field(default="created_at")
-    sort_order: str = Field(default="desc", regex="^(asc|desc)$")
+    sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
 
 
 class DeviceListResponseDTO(BaseModel):
@@ -133,15 +132,14 @@ class DeviceCommandDTO(BaseModel):
     timeout_seconds: int = Field(default=30, ge=1, le=300)
     max_retries: int = Field(default=3, ge=0, le=10)
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "command_type": "restart",
-                "payload": {"force": False, "delay_seconds": 5},
-                "timeout_seconds": 60,
-                "max_retries": 3
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "command_type": "restart",
+            "payload": {"force": False, "delay_seconds": 5},
+            "timeout_seconds": 60,
+            "max_retries": 3
         }
+    })
 
 
 class DeviceCommandResponseDTO(BaseModel):
@@ -151,16 +149,15 @@ class DeviceCommandResponseDTO(BaseModel):
     command_type: str
     status: str
     created_at: datetime
-    sent_at: Optional[datetime]
-    acknowledged_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    response: Optional[Dict[str, Any]]
-    error: Optional[str]
+    sent_at: Optional[datetime] = None
+    acknowledged_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    response: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
     
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    # No json_encoders: pydantic 2 deprecates them, and they only ever shaped
+    # JSON-mode output, which nothing produces from this model. Pydantic 2's own
+    # JSON form for datetime is ISO 8601 as well.
 
 
 class DeviceStatusUpdateDTO(BaseModel):
@@ -169,7 +166,8 @@ class DeviceStatusUpdateDTO(BaseModel):
     reason: Optional[str] = Field(None, max_length=255)
     metadata: Optional[Dict[str, Any]] = Field(None)
     
-    @validator('status')
+    @field_validator('status')
+    @classmethod
     def validate_status(cls, v):
         valid_statuses = ["active", "inactive", "maintenance", "error", "offline"]
         if v not in valid_statuses:
@@ -183,26 +181,26 @@ class DeviceConfigurationDTO(BaseModel):
     template_id: Optional[str] = Field(None)
     validate_before_apply: bool = Field(default=True)
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "configuration": {
-                    "sampling_interval": 60,
-                    "reporting_interval": 300,
-                    "thresholds": {"temperature": {"min": -10, "max": 50}}
-                },
-                "validate_before_apply": True
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "configuration": {
+                "sampling_interval": 60,
+                "reporting_interval": 300,
+                "thresholds": {"temperature": {"min": -10, "max": 50}}
+            },
+            "validate_before_apply": True
         }
+    })
 
 
 class BulkDeviceOperationDTO(BaseModel):
     """DTO for bulk device operations"""
-    device_ids: List[str] = Field(..., min_items=1, max_items=100)
+    device_ids: List[str] = Field(..., min_length=1, max_length=100)
     operation: str = Field(..., description="update, delete, command")
     data: Optional[Dict[str, Any]] = Field(None)
     
-    @validator('operation')
+    @field_validator('operation')
+    @classmethod
     def validate_operation(cls, v):
         valid_operations = ["update", "delete", "command"]
         if v not in valid_operations:
@@ -213,20 +211,19 @@ class BulkDeviceOperationDTO(BaseModel):
 class DeviceProvisioningDTO(BaseModel):
     """DTO for device provisioning"""
     template_id: Optional[str] = Field(None)
-    devices: List[DeviceCreateDTO] = Field(..., min_items=1, max_items=100)
+    devices: List[DeviceCreateDTO] = Field(..., min_length=1, max_length=100)
     auto_start: bool = Field(default=False)
     
-    class Config:
-        schema_extra = {
-            "example": {
-                "template_id": "default-sensor-template",
-                "devices": [
-                    {
-                        "name": "Sensor 001",
-                        "device_type": "sensor",
-                        "mac_address": "00:1A:2B:3C:4D:5E"
-                    }
-                ],
-                "auto_start": True
-            }
+    model_config = ConfigDict(json_schema_extra={
+        "example": {
+            "template_id": "default-sensor-template",
+            "devices": [
+                {
+                    "name": "Sensor 001",
+                    "device_type": "sensor",
+                    "mac_address": "00:1A:2B:3C:4D:5E"
+                }
+            ],
+            "auto_start": True
         }
+    })

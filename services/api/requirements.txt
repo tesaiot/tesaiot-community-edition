@@ -18,7 +18,14 @@ simple-websocket==1.0.0
 gunicorn==23.0.0
 
 # FastAPI sub-application (telemetry/dashboard module) mounted via a2wsgi
-fastapi==0.100.1
+# fastapi 0.100.1 carried PYSEC-2024-38, and its Starlette (0.27.0) seven
+# advisories, the last fixed only in Starlette 1.3.1 (PYSEC-2026-249). FastAPI
+# 0.133.0 is the first release that supports Starlette 1.x. Starlette is pinned
+# here, not left to FastAPI's open lower bound, so the image cannot fall back
+# to a vulnerable release. Every FastAPI >= 0.126 requires pydantic 2; see the
+# pydantic pin below.
+fastapi==0.133.0
+starlette==1.3.1
 a2wsgi==1.10.4
 
 # Datastores
@@ -78,7 +85,11 @@ requests==2.33.0
 aiohttp==3.14.4
 
 # Validation / serialization
-pydantic==1.10.13
+# pydantic 2 because FastAPI >= 0.126 no longer supports pydantic 1, and no
+# FastAPI that allows pydantic 1 allows a Starlette with the 2026 fixes.
+# 2.7.4 is the last patch of 2.7, the oldest minor FastAPI 0.133 accepts.
+# scripts/check-pydantic-major.sh reads this pin and now rejects v1 spellings.
+pydantic==2.7.4
 marshmallow==3.26.2
 jsonschema==4.17.3
 

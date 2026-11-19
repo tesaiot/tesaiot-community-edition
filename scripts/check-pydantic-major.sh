@@ -32,12 +32,16 @@ echo "pydantic pinned at $pin (major $major) in $REQ"
 
 fail=0
 report() {  # report <label> <pattern> [file:line exemptions...]
+  # Searches $SEARCH (default: $TARGETS). Comment lines are not code and are skipped.
   local label="$1" pattern="$2"; shift 2
-  local hits
-  hits="$(grep -rnE --include='*.py' -- "$pattern" $TARGETS || true)"
+  local hits search="${SEARCH:-$TARGETS}"
+  [ -n "$search" ] || return 0
+  hits="$(grep -rnE --include='*.py' -- "$pattern" $search || true)"
   [ -n "$hits" ] || return 0
   while IFS= read -r hit; do
     local loc="${hit%%:*}"; local rest="${hit#*:}"; loc="$loc:${rest%%:*}"
+    local code="${rest#*:}"
+    if [[ "$code" =~ ^[[:space:]]*# ]]; then continue; fi
     for allowed in "$@"; do
       if [ "$loc" = "$allowed" ]; then continue 2; fi
     done
@@ -64,9 +68,19 @@ if [ "$major" = "1" ]; then
     "$PM:208" "$PM:233" "$PM:265" "$PM:286"
 else
   # The mirror image, for after the migration.
-  report "a pydantic v1 API"       '\.dict\(|\.json\(|@validator\('
-  report "a pydantic v1 config"    'class Config:|allow_population_by_field_name'
-  report "a v1-only Field argument" 'Field\([^)]*regex='
+  #
+  # .dict() means nothing here except pydantic 1, so it is checked everywhere:
+  # current_user.dict() sat in a route file that never imports pydantic. .json()
+  # and `class Config:` do have other meanings in this tree (requests'
+  # Response.json(), the Flask app's own Config classes), so those two are checked
+  # only in files that import pydantic. Searching them everywhere reported
+  # twenty-odd false hits on the first run.
+  report "a pydantic v1 API"        '\.dict\(|@validator\(|@root_validator\('
+  report "a pydantic v1 config key" 'allow_population_by_field_name|orm_mode *=|(^|[^_[:alnum:]])schema_extra *='
+  report "a v1-only Field argument" 'Field\([^)]*(regex|min_items|max_items|const)='
+  pydantic_files="$(grep -rlE --include='*.py' '^[[:space:]]*(from pydantic|import pydantic)' $TARGETS || true)"
+  SEARCH="$pydantic_files" report "a pydantic v1 API"    '\.json\('
+  SEARCH="$pydantic_files" report "a pydantic v1 config" 'class Config:'
 fi
 
 if [ "$fail" -eq 0 ]; then

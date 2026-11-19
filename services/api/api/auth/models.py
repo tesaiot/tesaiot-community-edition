@@ -5,7 +5,7 @@
 # Apache License, Version 2.0 by the copyright owner. See the NOTICE file in the
 # distribution root for details.
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 
@@ -27,9 +27,8 @@ class User(BaseModel):
     org_id: str = Field(..., description="Organization ID", alias="organization_id")
     name: Optional[str] = Field(None, description="User display name")
 
-    class Config:
-        # Pydantic v1 uses 'allow_population_by_field_name' instead of v2's 'populate_by_name'
-        allow_population_by_field_name = True  # Allow both org_id and organization_id
+    # Allow both org_id and organization_id
+    model_config = ConfigDict(populate_by_name=True)
 
     @classmethod
     def from_flask_user(cls, flask_user: dict) -> "User":

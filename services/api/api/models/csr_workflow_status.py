@@ -20,7 +20,7 @@ Trust M device certificate provisioning.
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 import uuid
 
 
@@ -71,8 +71,7 @@ class WorkflowStepDetail(BaseModel):
     details: Optional[str] = Field(None, description="Additional details")
     duration_ms: Optional[int] = Field(None, description="Duration since previous step (ms)")
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class WorkflowError(BaseModel):
@@ -83,8 +82,7 @@ class WorkflowError(BaseModel):
     suggestion: Optional[str] = Field(None, description="Suggested resolution")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class CSRWorkflowStatusModel(BaseModel):
@@ -125,13 +123,14 @@ class CSRWorkflowStatusModel(BaseModel):
     csr_info: Optional[Dict[str, Any]] = Field(None, description="CSR details")
     certificate_info: Optional[Dict[str, Any]] = Field(None, description="Certificate details")
 
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat() if v else None
-        }
-        extra = "allow"
-        # Pydantic v1 compatibility - use allow_population_by_field_name instead of v2's populate_by_name
-        allow_population_by_field_name = True
+    # No json_encoders: pydantic 2 deprecates them, and they only ever shaped
+    # JSON-mode output, which nothing produces from this model. Pydantic 2's own
+    # JSON form for datetime is ISO 8601 as well.
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        coerce_numbers_to_str=True,
+    )
 
     def get_progress_percentage(self) -> int:
         """Calculate workflow progress percentage"""
@@ -161,7 +160,7 @@ class CSRWorkflowStatusModel(BaseModel):
 
     def to_mongo_dict(self) -> Dict[str, Any]:
         """Convert to MongoDB-compatible dictionary"""
-        data = self.dict(by_alias=True, exclude_none=True)
+        data = self.model_dump(by_alias=True, exclude_none=True, warnings=False)
 
         # Ensure timestamps are datetime objects
         for field in ['started_at', 'completed_at', 'updated_at']:
@@ -184,8 +183,7 @@ class CSRWorkflowStatusCreate(BaseModel):
     organization_id: Optional[str] = Field(None, description="Organization ID")
     correlation_id: Optional[str] = Field(None, description="Correlation ID (auto-generated if not provided)")
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class CSRWorkflowStepUpdate(BaseModel):
@@ -194,8 +192,7 @@ class CSRWorkflowStepUpdate(BaseModel):
     status: StepStatus = Field(..., description="New status")
     details: Optional[str] = Field(None, description="Additional details")
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class CSRWorkflowStatusResponse(BaseModel):
@@ -203,7 +200,7 @@ class CSRWorkflowStatusResponse(BaseModel):
     device_id: str
     correlation_id: str
     workflow_status: str
-    current_step: Optional[str]
+    current_step: Optional[str] = None
     steps: Dict[str, Dict[str, Any]]
     started_at: str
     completed_at: Optional[str] = None
@@ -211,8 +208,7 @@ class CSRWorkflowStatusResponse(BaseModel):
     progress_percentage: int
     total_duration_ms: Optional[int] = None
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow", coerce_numbers_to_str=True)
 
 
 class CSRWorkflowListResponse(BaseModel):
