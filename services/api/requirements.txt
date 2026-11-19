@@ -44,7 +44,11 @@ hvac==1.1.1
 # 2.15.0 is the lowest release that clears the 2026 batch (PYSEC-2026-4140..4152,
 # PYSEC-2026-4183, GHSA-pxh4-856f-4h89), two of which are fixed only in 2.15.
 PyJWT==2.15.0
-python-jose==3.4.0
+# python-jose removed 2026-11-19. Its one caller (api/auth/dependencies.py, the
+# FastAPI bearer-token check) now uses PyJWT, like every other JWT path here.
+# python-jose 3.5.0 is the latest release and still carries CVE-2026-85394 /
+# PYSEC-2026-4298 (HMAC key confusion), and it pulled in ecdsa (CVE-2024-23342,
+# no fix planned upstream) and pyasn1 0.4.x (eight open advisories).
 bcrypt==4.0.1
 # cryptography 42.0.8 (CVE fixes); pyOpenSSL bumped in lockstep because
 # pyOpenSSL 23.2.0 caps cryptography at <42.
